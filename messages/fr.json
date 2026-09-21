@@ -1,0 +1,128 @@
+{
+  "common": {
+    "companyTagline": "Énergie solaire & électricité — installateur certifié ANME",
+    "requestQuote": "Demander un devis",
+    "learnMore": "En savoir plus",
+    "discoverServices": "Découvrir nos services",
+    "viewProjects": "Voir nos réalisations",
+    "contactUs": "Nous contacter",
+    "backHome": "Retour à l'accueil",
+    "comingSoon": "Bientôt disponible",
+    "comingSoonBody": "Cette section est en cours de préparation. Revenez bientôt !",
+    "loading": "Chargement…",
+    "phase": "Étape"
+  },
+  "nav": {
+    "home": "Accueil",
+    "services": "Services",
+    "projects": "Réalisations",
+    "about": "À propos",
+    "team": "Équipe",
+    "faq": "FAQ",
+    "blog": "Actualités",
+    "contact": "Contact",
+    "devis": "Devis",
+    "legalNotice": "Mentions légales",
+    "privacy": "Politique de confidentialité",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "switchLanguage": "Changer de langue"
+  },
+  "home": {
+    "heroBadge": "Installateur solaire certifié ANME",
+    "heroTitle": "L'énergie solaire, au service de votre avenir",
+    "heroSubtitle": "Growing Technologies conçoit et installe des solutions solaires et électriques fiables à Sbeitla et dans toute la Tunisie du centre.",
+    "activitiesTitle": "Nos cinq activités",
+    "activitiesSubtitle": "Une expertise complète, du photovoltaïque à la moyenne tension.",
+    "statsTitle": "Notre expérience en chiffres",
+    "projectsTitle": "Réalisations récentes",
+    "projectsSubtitle": "Quelques projets livrés à travers la région.",
+    "ctaTitle": "Prêt à réduire votre facture d'énergie ?",
+    "ctaSubtitle": "Demandez un devis gratuit et adapté à votre activité.",
+    "whyTitle": "Pourquoi Growing Technologies",
+    "whySubtitle": "Un partenaire de confiance, du premier contact à la maintenance.",
+    "why": {
+      "certified": "Certification ANME",
+      "certifiedBody": "Installateur agréé, dossiers de subvention et démarches STEG maîtrisés.",
+      "local": "Ancrage local",
+      "localBody": "Basés à Sbeitla, nous intervenons rapidement dans toute la région du centre.",
+      "turnkey": "Clés en main",
+      "turnkeyBody": "Étude, installation, mise en service et maintenance par une seule équipe.",
+      "support": "Accompagnement",
+      "supportBody": "Conseil, suivi de production et service après-vente réactif."
+    }
+  },
+  "services": {
+    "title": "Nos services",
+    "subtitle": "Cinq domaines d'expertise pour l'énergie et l'électricité.",
+    "benefitsTitle": "Bénéfices",
+    "processTitle": "Notre démarche",
+    "requestForActivity": "Demander un devis pour ce service",
+    "allServices": "Tous les services"
+  },
+  "projects": {
+    "title": "Nos réalisations",
+    "subtitle": "Des projets livrés pour des clients résidentiels, agricoles, industriels et publics.",
+    "filterAll": "Toutes",
+    "filterActivity": "Activité",
+    "filterRegion": "Région",
+    "filterClientType": "Type de client",
+    "power": "Puissance",
+    "region": "Région",
+    "client": "Client",
+    "noResults": "Aucune réalisation ne correspond à ces filtres.",
+    "clientType": {
+      "residentiel": "Résidentiel",
+      "agricole": "Agricole",
+      "industriel": "Industriel",
+      "public": "Public / B2G"
+    }
+  },
+  "about": {
+    "title": "À propos de Growing Technologies",
+    "subtitle": "Installateur solaire et électricien certifié ANME, basé à Sbeitla.",
+    "storyTitle": "Notre histoire",
+    "story": "Growing Technologies accompagne particuliers, agriculteurs, industriels et collectivités dans leur transition énergétique. De l'installation photovoltaïque raccordée au réseau au poste de transformation moyenne tension, nous couvrons toute la chaîne de l'énergie.",
+    "valuesTitle": "Nos valeurs",
+    "values": {
+      "quality": "Qualité",
+      "qualityBody": "Des installations conformes, durables et performantes.",
+      "proximity": "Proximité",
+      "proximityBody": "Un interlocuteur local, disponible et à l'écoute.",
+      "transparency": "Transparence",
+      "transparencyBody": "Des devis clairs, TVA 19 % incluse, sans surprise."
+    },
+    "legalTitle": "Informations légales",
+    "matriculeFiscal": "Matricule fiscal",
+    "certification": "Certification"
+  },
+  "contact": {
+    "title": "Contactez-nous",
+    "subtitle": "Une question, un projet ? Écrivez-nous ou passez à l'atelier.",
+    "phone": "Téléphone",
+    "email": "E-mail",
+    "address": "Adresse",
+    "hours": "Horaires",
+    "hoursValue": "Lun–Sam, 8h–18h",
+    "preferDevis": "Vous avez un projet précis ? La demande de devis est plus rapide.",
+    "mapTitle": "Nous trouver"
+  },
+  "footer": {
+    "tagline": "Énergie solaire & électricité — Sbeitla, Tunisie.",
+    "quickLinks": "Liens rapides",
+    "activities": "Activités",
+    "contact": "Contact",
+    "legal": "Légal",
+    "rights": "Tous droits réservés.",
+    "matricule": "Matricule fiscal"
+  },
+  "devis": {
+    "title": "Demande de devis",
+    "subtitle": "Décrivez votre projet en quelques étapes. Réponse rapide et gratuite.",
+    "comingSoonNote": "Le formulaire multi-étapes arrive dans la prochaine phase. En attendant, contactez-nous directement."
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "subtitle": "La page que vous cherchez n'existe pas ou a été déplacée."
+  }
+}

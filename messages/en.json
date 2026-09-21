@@ -1,0 +1,128 @@
+{
+  "common": {
+    "companyTagline": "Solar energy & electrical works — ANME-certified installer",
+    "requestQuote": "Request a quote",
+    "learnMore": "Learn more",
+    "discoverServices": "Discover our services",
+    "viewProjects": "View our projects",
+    "contactUs": "Contact us",
+    "backHome": "Back to home",
+    "comingSoon": "Coming soon",
+    "comingSoonBody": "This section is being prepared. Check back soon!",
+    "loading": "Loading…",
+    "phase": "Step"
+  },
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "projects": "Projects",
+    "about": "About",
+    "team": "Team",
+    "faq": "FAQ",
+    "blog": "News",
+    "contact": "Contact",
+    "devis": "Quote",
+    "legalNotice": "Legal notice",
+    "privacy": "Privacy policy",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "switchLanguage": "Switch language"
+  },
+  "home": {
+    "heroBadge": "ANME-certified solar installer",
+    "heroTitle": "Solar energy, working for your future",
+    "heroSubtitle": "Growing Technologies designs and installs reliable solar and electrical solutions in Sbeitla and across central Tunisia.",
+    "activitiesTitle": "Our five activities",
+    "activitiesSubtitle": "End-to-end expertise, from photovoltaics to medium voltage.",
+    "statsTitle": "Our experience in numbers",
+    "projectsTitle": "Recent projects",
+    "projectsSubtitle": "A few projects delivered across the region.",
+    "ctaTitle": "Ready to cut your energy bill?",
+    "ctaSubtitle": "Request a free quote tailored to your activity.",
+    "whyTitle": "Why Growing Technologies",
+    "whySubtitle": "A trusted partner, from first contact to maintenance.",
+    "why": {
+      "certified": "ANME certification",
+      "certifiedBody": "Approved installer with mastery of subsidy files and STEG procedures.",
+      "local": "Local presence",
+      "localBody": "Based in Sbeitla, we respond quickly across central Tunisia.",
+      "turnkey": "Turnkey delivery",
+      "turnkeyBody": "Study, installation, commissioning and maintenance by one team.",
+      "support": "Ongoing support",
+      "supportBody": "Advice, production monitoring and responsive after-sales service."
+    }
+  },
+  "services": {
+    "title": "Our services",
+    "subtitle": "Five areas of expertise in energy and electrical works.",
+    "benefitsTitle": "Benefits",
+    "processTitle": "Our process",
+    "requestForActivity": "Request a quote for this service",
+    "allServices": "All services"
+  },
+  "projects": {
+    "title": "Our projects",
+    "subtitle": "Projects delivered for residential, agricultural, industrial and public clients.",
+    "filterAll": "All",
+    "filterActivity": "Activity",
+    "filterRegion": "Region",
+    "filterClientType": "Client type",
+    "power": "Power",
+    "region": "Region",
+    "client": "Client",
+    "noResults": "No project matches these filters.",
+    "clientType": {
+      "residentiel": "Residential",
+      "agricole": "Agricultural",
+      "industriel": "Industrial",
+      "public": "Public / B2G"
+    }
+  },
+  "about": {
+    "title": "About Growing Technologies",
+    "subtitle": "ANME-certified solar installer and electrician, based in Sbeitla.",
+    "storyTitle": "Our story",
+    "story": "Growing Technologies supports individuals, farmers, industry and public bodies through their energy transition. From grid-connected photovoltaics to medium-voltage substations, we cover the whole energy chain.",
+    "valuesTitle": "Our values",
+    "values": {
+      "quality": "Quality",
+      "qualityBody": "Compliant, durable and high-performing installations.",
+      "proximity": "Proximity",
+      "proximityBody": "A local, available and attentive point of contact.",
+      "transparency": "Transparency",
+      "transparencyBody": "Clear quotes, 19% VAT included, no surprises."
+    },
+    "legalTitle": "Legal information",
+    "matriculeFiscal": "Tax ID (matricule fiscal)",
+    "certification": "Certification"
+  },
+  "contact": {
+    "title": "Contact us",
+    "subtitle": "A question or a project? Write to us or drop by the workshop.",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "hours": "Hours",
+    "hoursValue": "Mon–Sat, 8am–6pm",
+    "preferDevis": "Have a specific project? The quote request is faster.",
+    "mapTitle": "Find us"
+  },
+  "footer": {
+    "tagline": "Solar energy & electrical works — Sbeitla, Tunisia.",
+    "quickLinks": "Quick links",
+    "activities": "Activities",
+    "contact": "Contact",
+    "legal": "Legal",
+    "rights": "All rights reserved.",
+    "matricule": "Tax ID"
+  },
+  "devis": {
+    "title": "Quote request",
+    "subtitle": "Describe your project in a few steps. Fast, free response.",
+    "comingSoonNote": "The multi-step form arrives in the next phase. In the meantime, contact us directly."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "subtitle": "The page you are looking for does not exist or has moved."
+  }
+}
