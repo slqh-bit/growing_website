@@ -1,0 +1,40 @@
+# Growing Technologies — reverse proxy with automatic HTTPS.
+# Values come from deploy/.env via docker-compose (SITE_DOMAIN, ACME_EMAIL).
+# DNS: A/AAAA records for SITE_DOMAIN and www.SITE_DOMAIN → this server,
+# ports 80 and 443 open. Certificates are kept in the caddy_data volume.
+
+{
+	email {$ACME_EMAIL}
+	{$CADDY_GLOBAL_OPTIONS}
+}
+
+# One canonical origin: Payload only accepts the admin cookie from SERVER_URL,
+# and duplicate hosts would split SEO signals.
+www.{$SITE_DOMAIN} {
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
+
+{$SITE_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		# 1 year; no includeSubDomains in case other subdomains aren't on HTTPS yet.
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	# Media uploads from the admin (photos, PDFs).
+	request_body {
+		max_size 50MB
+	}
+
+	reverse_proxy app:3000 {
+		# Overwrites any client-sent value: the devis rate limiter trusts it.
+		header_up X-Real-IP {remote_host}
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

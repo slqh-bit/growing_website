@@ -28,13 +28,15 @@ export function takeToken(key: string, limit: number, windowMs: number, now = Da
 }
 
 /**
- * Client IP as set by the reverse proxy (Caddy/Nginx, Phase 7). Only trust
- * X-Forwarded-For when the app is reachable exclusively through that proxy.
+ * Client IP as set by the reverse proxy. The bundled Caddyfile (deploy/)
+ * overwrites X-Real-IP with the TCP peer address, so it can't be spoofed and
+ * wins; X-Forwarded-For is the fallback for other proxies. Either is only
+ * trustworthy when the app is reachable exclusively through that proxy.
  */
 export function clientIp(headers: Headers): string {
   return (
-    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     headers.get("x-real-ip")?.trim() ||
+    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "unknown"
   );
 }

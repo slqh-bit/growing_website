@@ -2,7 +2,7 @@
 #   npm run db:up      → start Postgres on 127.0.0.1:5432
 #   npm run db:down    → stop it (data persists in the `pgdata` volume)
 #
-# Phase 7 extends this file with the app container, media volume and backups.
+# Production (app + Caddy HTTPS + backups) lives in deploy/ — see DEPLOY.md.
 services:
   postgres:
     image: postgres:16-alpine

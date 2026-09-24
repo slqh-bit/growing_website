@@ -1,0 +1,145 @@
+# ---------------------------------------------------------------------------
+# Growing Technologies — production stack (single VPS)
+#
+#   cd deploy && cp .env.production.example .env   # then fill it in
+#   docker compose up -d --build
+#
+#   caddy  → :80/:443, automatic HTTPS (Let's Encrypt), www → apex redirect
+#   app    → Next.js + Payload (internal :3000 only)
+#   db     → PostgreSQL 16 (internal only, never published)
+#   backup → nightly pg_dump + media archive into ./backups, with retention
+#   tools  → one-off CLI container: seed, migrations, payload commands
+#            docker compose --profile tools run --rm tools npm run seed
+#
+# See DEPLOY.md for the full runbook (first deploy, updates, restore drill).
+# ---------------------------------------------------------------------------
+
+name: growingtech
+
+x-app-env: &app-env
+  DATABASE_URI: postgres://${POSTGRES_USER:-growingtech}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}@db:5432/${POSTGRES_DB:-growingtech}
+  PAYLOAD_SECRET: ${PAYLOAD_SECRET:?set PAYLOAD_SECRET in deploy/.env}
+  SERVER_URL: https://${SITE_DOMAIN:?set SITE_DOMAIN in deploy/.env}
+  DEFAULT_LOCALE: ${DEFAULT_LOCALE:-fr}
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASS: ${SMTP_PASS:-}
+  MAIL_FROM: ${MAIL_FROM:-}
+  MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Growing Technologies}
+  DEVIS_NOTIFY_EMAIL: ${DEVIS_NOTIFY_EMAIL:-}
+  TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+  TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+  TELEGRAM_API_URL: ${TELEGRAM_API_URL:-}
+  PLAUSIBLE_DOMAIN: ${PLAUSIBLE_DOMAIN:-}
+  PLAUSIBLE_SRC: ${PLAUSIBLE_SRC:-}
+
+x-build: &build
+  context: ..
+  args:
+    NEXT_PUBLIC_SITE_URL: https://${SITE_DOMAIN}
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-growingtech}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-growingtech}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [internal]
+
+  app:
+    build:
+      <<: *build
+      target: runner
+    image: growingtech-web:latest
+    restart: unless-stopped
+    environment: *app-env
+    volumes:
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [internal, web]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in deploy/.env (Let's Encrypt expiry notices)}
+      # Extra Caddy global options. Leave empty in production (Let's Encrypt);
+      # "local_certs" = Caddy's own CA, to test the stack without public DNS.
+      CADDY_GLOBAL_OPTIONS: ${CADDY_GLOBAL_OPTIONS:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data # certificates — keep this volume
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    networks: [web]
+
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/scripts/backup-loop.sh"]
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-growingtech}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-growingtech}
+      BACKUP_HOUR: ${BACKUP_HOUR:-3}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+      TZ: ${TZ:-Africa/Tunis}
+    volumes:
+      - ./backup:/scripts:ro
+      # Not /media: Alpine ships folders there that Docker would copy into an empty volume.
+      - media:/data/media:ro
+      - ./backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [internal]
+
+  tools:
+    profiles: [tools]
+    build:
+      <<: *build
+      target: builder
+    image: growingtech-tools:latest
+    environment:
+      <<: *app-env
+      NODE_ENV: production
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+    volumes:
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [internal]
+    command: ["npm", "run", "payload", "--", "migrate:status"]
+
+volumes:
+  pgdata:
+  media:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
+    internal: true # db/backup have no route to the internet
+  web:

@@ -45,3 +45,7 @@ yarn-error.log*
 # payload / media (later phases)
 /media
 /uploads
+
+# production deploy (deploy/)
+/deploy/.env
+/deploy/backups/
