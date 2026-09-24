@@ -121,8 +121,82 @@
   },
   "devis": {
     "title": "Demande de devis",
-    "subtitle": "Décrivez votre projet en quelques étapes. Réponse rapide et gratuite.",
-    "comingSoonNote": "Le formulaire multi-étapes arrive dans la prochaine phase. En attendant, contactez-nous directement."
+    "subtitle": "Décrivez votre projet en 4 étapes. Gratuit, sans engagement, réponse sous 48 h ouvrées.",
+    "stepOf": "Étape {current}/{total}",
+    "steps": {
+      "activity": "Activité",
+      "technical": "Besoins techniques",
+      "contact": "Site & contact",
+      "review": "Récapitulatif"
+    },
+    "stepIntro": {
+      "activity": "Quel type de projet souhaitez-vous réaliser ?",
+      "technical": "Ces informations nous aident à dimensionner votre installation. Répondez à ce que vous savez : nous préciserons le reste ensemble.",
+      "contact": "Où se situe le projet et comment vous joindre ?",
+      "review": "Vérifiez vos informations avant l'envoi."
+    },
+    "next": "Continuer",
+    "back": "Retour",
+    "submit": "Envoyer ma demande",
+    "submitting": "Envoi en cours…",
+    "edit": "Modifier",
+    "optional": "facultatif",
+    "requiredNote": "* champ obligatoire",
+    "select": "Choisir…",
+    "moreInfo": "Plus d'informations",
+    "placeholders": {
+      "fullName": "Prénom et nom",
+      "phone": "98 123 456",
+      "email": "vous@exemple.tn",
+      "address": "Ville, délégation, repère…",
+      "textarea": "Décrivez en quelques mots…"
+    },
+    "phoneHint": "Numéro tunisien à 8 chiffres.",
+    "emailHint": "Pour recevoir la confirmation de votre demande.",
+    "consent": "J'accepte que mes données soient utilisées pour traiter ma demande, conformément à la <link>politique de confidentialité</link>.",
+    "review": {
+      "activity": "Activité",
+      "technical": "Besoins techniques",
+      "contact": "Site & contact",
+      "empty": "Aucune précision technique — nous en discuterons ensemble."
+    },
+    "errors": {
+      "required": "Ce champ est obligatoire.",
+      "chooseActivity": "Choisissez une activité pour continuer.",
+      "invalidPhone": "Numéro invalide : 8 chiffres, ex. 98 123 456.",
+      "invalidEmail": "Adresse e-mail invalide.",
+      "number": "Saisissez un nombre positif.",
+      "tooLarge": "Valeur trop élevée.",
+      "tooLong": "Texte trop long.",
+      "invalidOption": "Choix invalide.",
+      "consent": "Votre accord est nécessaire pour traiter la demande.",
+      "billOrConsumption": "Indiquez votre facture mensuelle ou votre consommation.",
+      "describeWork": "Décrivez les travaux en quelques mots (10 caractères minimum).",
+      "fixErrors": "Veuillez corriger les champs signalés.",
+      "rateLimited": "Trop de demandes envoyées depuis votre connexion. Réessayez dans quelques minutes ou appelez-nous.",
+      "server": "Votre demande n'a pas pu être enregistrée. Réessayez ou appelez-nous.",
+      "network": "Connexion impossible. Vérifiez votre réseau puis réessayez.",
+      "retry": "Réessayer"
+    },
+    "success": {
+      "title": "Demande envoyée !",
+      "body": "Merci {name}. Notre équipe étudie votre projet et vous recontacte sous 48 h ouvrées.",
+      "reference": "Votre référence",
+      "copy": "Copier",
+      "copied": "Copié !",
+      "keepRef": "Conservez cette référence pour le suivi de votre dossier.",
+      "emailSent": "Un e-mail de confirmation a été envoyé à {email}.",
+      "backHome": "Retour à l'accueil",
+      "newRequest": "Nouvelle demande"
+    },
+    "aside": {
+      "title": "Pourquoi nous confier votre projet ?",
+      "free": "Devis gratuit et sans engagement",
+      "fast": "Réponse sous 48 h ouvrées",
+      "certified": "Installateur certifié ANME",
+      "subsidies": "Accompagnement subventions et démarches STEG",
+      "preferCall": "Vous préférez nous parler ?"
+    }
   },
   "notFound": {
     "title": "Page introuvable",

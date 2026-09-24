@@ -2,20 +2,19 @@ import { randomBytes } from "crypto";
 import type { CollectionConfig, Field } from "payload";
 import { admins, authenticated } from "../cms/access";
 import { groups, t3 } from "../cms/labels";
+import { devisStatusOptions } from "../cms/options";
 import {
   activityOptions,
   contactChannelOptions,
-  devisStatusOptions,
   governorateOptions,
-} from "../cms/options";
+  phaseOptions,
+  propertyTypeOptions,
+  roofTypeOptions,
+  siteTypeOptions,
+  waterSourceOptions,
+} from "../lib/devis/options";
+import { isValidTnPhone, normalizeTnPhone } from "../lib/devis/phone";
 import { locales } from "../i18n/config";
-
-/** Tunisian mobile/landline: 8 digits starting 2–9, optional +216 / 00216 prefix. */
-export const TN_PHONE_PATTERN = /^(?:\+216|00216)?[2-9]\d{7}$/;
-
-export function normalizeTnPhone(value: string): string {
-  return value.replace(/[\s.-]/g, "");
-}
 
 /** Human-friendly lead reference, e.g. GT-260924-7K2Q. */
 function generateReference(date = new Date()): string {
@@ -51,22 +50,14 @@ const technicalFields: Field[] = [
             name: "roofType",
             type: "select",
             label: t3("Type de toiture", "Roof type", "نوع السطح"),
-            options: [
-              { value: "terrasse", label: t3("Terrasse béton", "Concrete flat roof", "سطح خرساني") },
-              { value: "tuiles", label: t3("Tuiles", "Tiles", "قرميد") },
-              { value: "bac-acier", label: t3("Bac acier", "Steel sheet", "صفائح فولاذية") },
-              { value: "sol", label: t3("Au sol", "Ground-mounted", "على الأرض") },
-            ],
+            options: [...roofTypeOptions],
           },
           { name: "roofSurfaceM2", type: "number", min: 0, label: t3("Surface disponible (m²)", "Available area (m²)", "المساحة المتاحة (م²)") },
           {
             name: "phase",
             type: "select",
             label: t3("Raccordement", "Supply", "نوع الربط"),
-            options: [
-              { value: "mono", label: t3("Monophasé", "Single-phase", "أحادي الطور") },
-              { value: "tri", label: t3("Triphasé", "Three-phase", "ثلاثي الطور") },
-            ],
+            options: [...phaseOptions],
           },
         ],
       },
@@ -74,12 +65,7 @@ const technicalFields: Field[] = [
         name: "propertyType",
         type: "select",
         label: t3("Type de bâtiment", "Property type", "نوع المبنى"),
-        options: [
-          { value: "residentiel", label: t3("Résidentiel", "Residential", "سكني") },
-          { value: "commercial", label: t3("Commercial", "Commercial", "تجاري") },
-          { value: "industriel", label: t3("Industriel", "Industrial", "صناعي") },
-          { value: "agricole", label: t3("Agricole", "Agricultural", "فلاحي") },
-        ],
+        options: [...propertyTypeOptions],
       },
     ],
   },
@@ -96,11 +82,7 @@ const technicalFields: Field[] = [
             name: "waterSource",
             type: "select",
             label: t3("Source d'eau", "Water source", "مصدر المياه"),
-            options: [
-              { value: "puits", label: t3("Puits", "Well", "بئر") },
-              { value: "forage", label: t3("Forage", "Borehole", "حفر") },
-              { value: "surface", label: t3("Surface (bassin, oued)", "Surface (basin, river)", "سطحي (حوض، وادي)") },
-            ],
+            options: [...waterSourceOptions],
           },
           { name: "depthM", type: "number", min: 0, label: t3("Profondeur (m)", "Depth (m)", "العمق (م)") },
         ],
@@ -146,13 +128,7 @@ const technicalFields: Field[] = [
             name: "siteType",
             type: "select",
             label: t3("Type de site", "Site type", "نوع الموقع"),
-            options: [
-              { value: "residentiel", label: t3("Résidentiel", "Residential", "سكني") },
-              { value: "tertiaire", label: t3("Tertiaire", "Commercial", "خدمي") },
-              { value: "industriel", label: t3("Industriel", "Industrial", "صناعي") },
-              { value: "agricole", label: t3("Agricole", "Agricultural", "فلاحي") },
-              { value: "public", label: t3("Public", "Public", "عمومي") },
-            ],
+            options: [...siteTypeOptions],
           },
           { name: "indicativePowerKva", type: "number", min: 0, label: t3("Puissance indicative (kVA)", "Indicative power (kVA)", "القدرة التقديرية (ك.ف.أ)") },
         ],
@@ -238,7 +214,7 @@ export const DevisRequests: CollectionConfig = {
       name: "activity",
       type: "select",
       required: true,
-      options: activityOptions,
+      options: [...activityOptions],
       index: true,
       label: t3("Activité", "Activity", "النشاط"),
     },
@@ -265,7 +241,7 @@ export const DevisRequests: CollectionConfig = {
               required: true,
               label: t3("Téléphone", "Phone", "الهاتف"),
               validate: (value: string | null | undefined) =>
-                (typeof value === "string" && TN_PHONE_PATTERN.test(normalizeTnPhone(value))) ||
+                (typeof value === "string" && isValidTnPhone(value)) ||
                 "Numéro tunisien invalide (8 chiffres, ex. 98 123 456 ou +216 98 123 456).",
             },
             { name: "email", type: "email", label: t3("E-mail", "Email", "البريد الإلكتروني") },
@@ -278,7 +254,7 @@ export const DevisRequests: CollectionConfig = {
               name: "region",
               type: "select",
               required: true,
-              options: governorateOptions,
+              options: [...governorateOptions],
               index: true,
               label: t3("Gouvernorat", "Governorate", "الولاية"),
             },
@@ -286,7 +262,7 @@ export const DevisRequests: CollectionConfig = {
               name: "preferredChannel",
               type: "select",
               defaultValue: "call",
-              options: contactChannelOptions,
+              options: [...contactChannelOptions],
               label: t3("Canal préféré", "Preferred channel", "وسيلة الاتصال المفضّلة"),
             },
           ],

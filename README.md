@@ -14,7 +14,8 @@ Tunisia. Built per [`growing-technologies-website-devplan.md`](./growing-technol
 | Styling      | Tailwind CSS v4 + CSS logical properties (RTL)                  |
 | i18n         | next-intl (`/ar`, `/fr`, `/en`, default `fr`)                   |
 | Animations   | CSS reveal-on-scroll; Framer Motion for interactive widgets     |
-| Forms        | Zod + React Hook Form (devis engine, Phase 5)                   |
+| Forms        | Zod + React Hook Form (shared client/server validation)          |
+| Email        | Nodemailer over SMTP (Payload email adapter)                    |
 
 > **Version pin:** Payload 3.90 supports Next `15.4.11–15.4.x` or `≥16.3.3`, so
 > `next` is pinned to the patched `15.4.11` and all `payload`/`@payloadcms/*`
@@ -80,8 +81,12 @@ so the change is live on the next request — only for the pages that use it, an
 only in the edited language. Public reads go through `overrideAccess: false`, so
 the site can never show what an anonymous visitor isn't allowed to read.
 
-> The seed skips revalidation (it runs outside the web server). If you re-seed a
-> **running** site, restart it with a clean `.next/cache` or re-save a document.
+> Changes made **outside the app** (seed, manual SQL) are not seen by the cache:
+> saves in the admin revalidate automatically, but the seed does not. After
+> re-seeding a running site, clear both cache layers — the data cache
+> (`.next/cache`, which survives `next build`) and the rendered pages (written
+> under `.next/server`, which survive restarts): `rm -rf .next/cache && npm run
+> build`, then restart. A fresh Docker image build starts with empty caches.
 
 **Schema changes** (adding/changing fields):
 
@@ -93,11 +98,57 @@ npm run generate:importmap         # only if admin components changed
 
 In development the schema is auto-pushed to your local DB. In production it is
 **never** pushed: pending migrations run automatically at server start
-(`prodMigrations`). To seed a production database, run
+(`prodMigrations`).
+
+> ⚠️ Never run `npm run dev` against the **production** database. Dev mode
+> pushes the schema and leaves a "dev" marker in `payload_migrations`; the next
+> production start then stops at an interactive migration prompt (and hangs in
+> a container). If it happens: `DELETE FROM payload_migrations WHERE batch = -1;`
+
+> ⚠️ `SERVER_URL` (or `NEXT_PUBLIC_SITE_URL`) must be the exact origin the admin
+> is opened from. Payload only accepts the admin cookie from that origin, so a
+> mismatch (e.g. `www.` vs bare domain, or another port) makes every save fail
+> with *"Vous n'êtes pas autorisé à effectuer cette action"* (403).
+
+To seed a production database, run
 `NODE_ENV=production npm run seed` so it uses migrations instead of a push.
 
 The seed is idempotent (re-running updates in place) and never changes an
 existing user's password.
+
+## Devis (quote requests)
+
+`/{locale}/devis` is a 4-step form: **activity → technical needs (adapted to the
+activity, with tooltips) → site & contact → review + consent**. Service pages link
+to it with the activity preselected (`/devis?activite=pompage`).
+
+| Piece | Where |
+| --- | --- |
+| Field catalogue (labels, units, tooltips in fr/ar/en) | `src/lib/devis/fields.ts` |
+| Option lists (shared with the admin) | `src/lib/devis/options.ts` |
+| Validation (per step + full, message keys) | `src/lib/devis/schema.ts` |
+| Server action (anti-spam, rate limit, save) | `src/lib/devis/actions.ts` |
+| Team email, client auto-reply, Telegram | `src/lib/devis/notify.ts` |
+| Form UI | `src/components/devis/` |
+
+On submit the server re-validates everything, stores the lead in **Demandes de
+devis** (status *nouveau*, reference `GT-YYMMDD-XXXX`) and answers immediately;
+notifications are sent right after the response, each channel independently
+(a mail outage never loses a lead):
+
+- **Team email** (French, to `DEVIS_NOTIFY_EMAIL`) with the full summary, a
+  reply-to set to the client and a link to the lead in the admin.
+- **Client auto-reply** (French, only if an email was given) — reference and next
+  steps only; free-text fields are never echoed back (no spam relay).
+- **Telegram** message if `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` are set.
+
+**Anti-spam:** hidden honeypot field and a minimum fill time (bots get a fake
+success and nothing is stored), plus a per-IP limit of 5 requests / 15 min.
+The client IP comes from `X-Forwarded-For`, so the app must only be reachable
+through the reverse proxy (Phase 7); the limiter is in-memory (single instance).
+
+Phone numbers accept spaces, `+216`/`00216` and Arabic-Indic digits, and are
+stored as `+216XXXXXXXX`.
 
 ## Scripts
 
@@ -116,7 +167,8 @@ existing user's password.
 - [x] **CMS wiring** — every public page reads from Payload (cached, tag-based
       revalidation on save), block renderers for Pages, editor-created pages at
       `/{slug}`, CMS images via `next/image`, localized error state, `/team`.
-- [ ] **Phase 5** — Devis (multi-step quote) engine → writes to *Demandes de devis*.
+- [x] **Phase 5** — Devis engine: 4-step trilingual form, shared Zod validation,
+      server action, anti-spam, team/client emails, Telegram, admin workflow.
 - [ ] **Phase 7** — SEO, performance, Docker deploy (app + Postgres + media).
 
 ## Structure

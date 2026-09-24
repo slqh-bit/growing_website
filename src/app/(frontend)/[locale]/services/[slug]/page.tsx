@@ -62,7 +62,7 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
       <PageHeader eyebrow={t("title")} title={service.title} subtitle={service.shortDescription}>
         <div className="mt-2 flex flex-wrap gap-3">
           <Button asChild variant="solar">
-            <Link href="/devis">
+            <Link href={`/devis?activite=${service.activityKey}`}>
               {t("requestForActivity")}
               <ArrowRight className="size-4 rtl:rotate-180" />
             </Link>
@@ -136,7 +136,7 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
                 </>
               )}
               <Button asChild variant="solar" className="mt-6 w-full">
-                <Link href="/devis">{tc("requestQuote")}</Link>
+                <Link href={`/devis?activite=${service.activityKey}`}>{tc("requestQuote")}</Link>
               </Button>
             </Reveal>
           </aside>

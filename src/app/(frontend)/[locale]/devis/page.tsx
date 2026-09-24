@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Phone, Mail, Send, ArrowRight, ListChecks, SlidersHorizontal, MapPinned, CheckCircle2 } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { BadgeCheck, Clock, FileCheck2, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
+import { getServices, getSiteSettings } from "@/lib/cms/queries";
+import { activityOptions } from "@/lib/devis/options";
 import { buildMetadata } from "@/lib/metadata";
-import { getSiteSettings } from "@/lib/cms/queries";
 import { Container } from "@/components/ui/container";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/sections/page-header";
-import { Reveal, RevealGroup } from "@/components/motion/reveal";
+import { Reveal } from "@/components/motion/reveal";
+import { DevisForm } from "@/components/devis/devis-form";
+import type { ActivityChoice } from "@/components/devis/steps";
 
 export async function generateMetadata({
   params,
@@ -21,85 +21,86 @@ export async function generateMetadata({
   return buildMetadata({ locale, path: "/devis", title: t("title"), description: t("subtitle") });
 }
 
-export default async function DevisPage({
-  params,
-}: {
-  params: Promise<{ locale: Locale }>;
-}) {
+/** Devis (quote request) page — the conversion engine (devplan §6). */
+export default async function DevisPage({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations({ locale, namespace: "devis" });
-  const [tc, settings] = await Promise.all([
-    getTranslations({ locale, namespace: "common" }),
+  const [t, services, settings] = await Promise.all([
+    getTranslations({ locale, namespace: "devis" }),
+    getServices(locale),
     getSiteSettings(locale),
   ]);
 
-  const steps = [
-    { icon: ListChecks, titles: { fr: "Activité", ar: "النشاط", en: "Activity" } },
-    { icon: SlidersHorizontal, titles: { fr: "Besoins techniques", ar: "الحاجيات الفنية", en: "Technical needs" } },
-    { icon: MapPinned, titles: { fr: "Site & contact", ar: "الموقع والاتصال", en: "Site & contact" } },
-    { icon: CheckCircle2, titles: { fr: "Récapitulatif", ar: "الملخّص", en: "Review" } },
-  ] as const;
+  // All five activities are always offered; the CMS service (if any) supplies
+  // the editable title, description and icon.
+  const activities: ActivityChoice[] = activityOptions.map((option) => {
+    const service = services.find((s) => s.activityKey === option.value);
+    return {
+      value: option.value,
+      title: service?.title ?? option.label[locale],
+      description: service?.shortDescription ?? "",
+      icon: service?.icon ?? "Sun",
+    };
+  });
 
-  const phoneClean = settings.phone.replace(/\s/g, "");
+  const digits = (value: string) => value.replace(/[^\d+]/g, "");
+  const reasons = [
+    { icon: FileCheck2, text: t("aside.free") },
+    { icon: Clock, text: t("aside.fast") },
+    { icon: ShieldCheck, text: t("aside.certified") },
+    { icon: BadgeCheck, text: t("aside.subsidies") },
+  ];
 
   return (
     <>
       <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
-      <section className="py-16 sm:py-20">
-        <Container className="max-w-4xl">
-          {/* Step preview / progress indicator */}
-          <RevealGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {steps.map((step, i) => {
-              const Icon = step.icon;
-              const label = step.titles[locale] ?? step.titles.fr;
-              return (
-                <Reveal key={i}>
-                  <div className="relative flex h-full flex-col gap-3 rounded-2xl border border-border bg-surface p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="inline-flex size-11 items-center justify-center rounded-xl bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-200">
-                        <Icon className="size-5" aria-hidden />
-                      </span>
-                      <span className="text-xs font-semibold text-muted-foreground">
-                        {tc("phase")} {i + 1}/4
-                      </span>
-                    </div>
-                    <p className="font-semibold text-foreground">{label}</p>
-                  </div>
-                </Reveal>
-              );
-            })}
-          </RevealGroup>
+      <section className="py-12 sm:py-16">
+        <Container className="grid gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <DevisForm activities={activities} locale={locale} privacyHref={`/${locale}/politique-confidentialite`} />
+          </div>
 
-          {/* Coming soon note + direct contact */}
-          <Reveal className="mt-10 rounded-3xl border border-primary-200 bg-primary-50 p-8 text-center dark:border-primary-900 dark:bg-primary-950/40">
-            <Badge variant="accent" className="mb-4">
-              {tc("comingSoon")}
-            </Badge>
-            <p className="mx-auto max-w-xl text-foreground">{t("comingSoonNote")}</p>
-            <div className="mt-6 flex flex-col flex-wrap items-center justify-center gap-3 sm:flex-row">
-              <Button asChild variant="solar">
-                <a href={`tel:${phoneClean}`}>
-                  <Phone className="size-4" />
+          <aside className="flex flex-col gap-4">
+            <Reveal className="rounded-3xl border border-border bg-surface-muted/60 p-6">
+              <h2 className="text-lg font-bold text-foreground">{t("aside.title")}</h2>
+              <ul className="mt-4 space-y-3">
+                {reasons.map(({ icon: Icon, text }) => (
+                  <li key={text} className="flex items-start gap-3 text-sm text-foreground/90">
+                    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-200">
+                      <Icon className="size-4" aria-hidden />
+                    </span>
+                    <span className="pt-1.5">{text}</span>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+
+            <Reveal className="bg-solar rounded-3xl p-6 text-white shadow-md">
+              <p className="font-semibold">{t("aside.preferCall")}</p>
+              <div className="mt-4 flex flex-col gap-2">
+                <a
+                  href={`tel:${digits(settings.phone)}`}
+                  className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 font-semibold backdrop-blur-sm transition-colors hover:bg-white/25"
+                  dir="ltr"
+                >
+                  <Phone className="size-4" aria-hidden />
                   {settings.phone}
                 </a>
-              </Button>
-              <Button asChild variant="outline">
-                <a href={`mailto:${settings.email}`}>
-                  <Mail className="size-4" />
-                  {settings.email}
-                </a>
-              </Button>
-              <Button asChild variant="ghost">
-                <Link href="/contact">
-                  <Send className="size-4" />
-                  {tc("contactUs")}
-                  <ArrowRight className="size-4 rtl:rotate-180" />
-                </Link>
-              </Button>
-            </div>
-          </Reveal>
+                {settings.whatsapp && (
+                  <a
+                    href={`https://wa.me/${digits(settings.whatsapp).replace(/^\+/, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 font-semibold backdrop-blur-sm transition-colors hover:bg-white/25"
+                  >
+                    <MessageCircle className="size-4" aria-hidden />
+                    WhatsApp
+                  </a>
+                )}
+              </div>
+            </Reveal>
+          </aside>
         </Container>
       </section>
     </>

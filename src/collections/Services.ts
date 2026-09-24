@@ -42,7 +42,7 @@ export const Services: CollectionConfig = {
           type: "select",
           required: true,
           unique: true,
-          options: activityOptions,
+          options: [...activityOptions],
           label: t3("Activité", "Activity", "النشاط"),
           admin: {
             width: "50%",
