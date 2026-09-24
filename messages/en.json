@@ -1,0 +1,214 @@
+{
+  "common": {
+    "companyTagline": "Solar energy & electrical works — ANME-certified installer",
+    "requestQuote": "Request a quote",
+    "learnMore": "Learn more",
+    "discoverServices": "Discover our services",
+    "viewProjects": "View our projects",
+    "contactUs": "Contact us",
+    "backHome": "Back to home",
+    "comingSoon": "Coming soon",
+    "comingSoonBody": "This section is being prepared. Check back soon!",
+    "loading": "Loading…",
+    "phase": "Step",
+    "skipToContent": "Skip to content"
+  },
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "projects": "Projects",
+    "about": "About",
+    "team": "Team",
+    "faq": "FAQ",
+    "blog": "News",
+    "contact": "Contact",
+    "devis": "Quote",
+    "legalNotice": "Legal notice",
+    "privacy": "Privacy policy",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "switchLanguage": "Switch language",
+    "toggleTheme": "Toggle light/dark theme"
+  },
+  "home": {
+    "heroBadge": "ANME-certified solar installer",
+    "heroTitle": "Solar energy, working for your future",
+    "heroSubtitle": "Growing Technologies designs and installs reliable solar and electrical solutions in Sbeitla and across central Tunisia.",
+    "activitiesTitle": "Our five activities",
+    "activitiesSubtitle": "End-to-end expertise, from photovoltaics to medium voltage.",
+    "statsTitle": "Our experience in numbers",
+    "projectsTitle": "Recent projects",
+    "projectsSubtitle": "A few projects delivered across the region.",
+    "ctaTitle": "Ready to cut your energy bill?",
+    "ctaSubtitle": "Request a free quote tailored to your activity.",
+    "whyTitle": "Why Growing Technologies",
+    "whySubtitle": "A trusted partner, from first contact to maintenance.",
+    "why": {
+      "certified": "ANME certification",
+      "certifiedBody": "Approved installer with mastery of subsidy files and STEG procedures.",
+      "local": "Local presence",
+      "localBody": "Based in Sbeitla, we respond quickly across central Tunisia.",
+      "turnkey": "Turnkey delivery",
+      "turnkeyBody": "Study, installation, commissioning and maintenance by one team.",
+      "support": "Ongoing support",
+      "supportBody": "Advice, production monitoring and responsive after-sales service."
+    }
+  },
+  "services": {
+    "title": "Our services",
+    "subtitle": "Five areas of expertise in energy and electrical works.",
+    "benefitsTitle": "Benefits",
+    "processTitle": "Our process",
+    "requestForActivity": "Request a quote for this service",
+    "allServices": "All services"
+  },
+  "projects": {
+    "title": "Our projects",
+    "subtitle": "Projects delivered for residential, agricultural, industrial and public clients.",
+    "filterAll": "All",
+    "filterActivity": "Activity",
+    "filterRegion": "Region",
+    "filterClientType": "Client type",
+    "power": "Power",
+    "region": "Region",
+    "client": "Client",
+    "noResults": "No project matches these filters.",
+    "clientType": {
+      "residentiel": "Residential",
+      "agricole": "Agricultural",
+      "industriel": "Industrial",
+      "public": "Public / B2G"
+    },
+    "date": "Date"
+  },
+  "about": {
+    "title": "About Growing Technologies",
+    "subtitle": "ANME-certified solar installer and electrician, based in Sbeitla.",
+    "storyTitle": "Our story",
+    "story": "Growing Technologies supports individuals, farmers, industry and public bodies through their energy transition. From grid-connected photovoltaics to medium-voltage substations, we cover the whole energy chain.",
+    "valuesTitle": "Our values",
+    "values": {
+      "quality": "Quality",
+      "qualityBody": "Compliant, durable and high-performing installations.",
+      "proximity": "Proximity",
+      "proximityBody": "A local, available and attentive point of contact.",
+      "transparency": "Transparency",
+      "transparencyBody": "Clear quotes, 19% VAT included, no surprises."
+    },
+    "legalTitle": "Legal information",
+    "matriculeFiscal": "Tax ID (matricule fiscal)",
+    "certification": "Certification"
+  },
+  "contact": {
+    "title": "Contact us",
+    "subtitle": "A question or a project? Write to us or drop by the workshop.",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "hours": "Hours",
+    "hoursValue": "Mon–Sat, 8am–6pm",
+    "preferDevis": "Have a specific project? The quote request is faster.",
+    "mapTitle": "Find us"
+  },
+  "footer": {
+    "tagline": "Solar energy & electrical works — Sbeitla, Tunisia.",
+    "quickLinks": "Quick links",
+    "activities": "Activities",
+    "contact": "Contact",
+    "legal": "Legal",
+    "rights": "All rights reserved.",
+    "matricule": "Tax ID"
+  },
+  "devis": {
+    "title": "Quote request",
+    "subtitle": "Describe your project in 4 steps. Free, no commitment, answer within 2 working days.",
+    "stepOf": "Step {current}/{total}",
+    "steps": {
+      "activity": "Activity",
+      "technical": "Technical needs",
+      "contact": "Site & contact",
+      "review": "Review"
+    },
+    "stepIntro": {
+      "activity": "What kind of project do you have in mind?",
+      "technical": "This helps us size your installation. Answer what you know — we'll work out the rest together.",
+      "contact": "Where is the project and how can we reach you?",
+      "review": "Check your details before sending."
+    },
+    "next": "Continue",
+    "back": "Back",
+    "submit": "Send my request",
+    "submitting": "Sending…",
+    "edit": "Edit",
+    "optional": "optional",
+    "requiredNote": "* required field",
+    "select": "Choose…",
+    "moreInfo": "More information",
+    "placeholders": {
+      "fullName": "First and last name",
+      "phone": "98 123 456",
+      "email": "you@example.tn",
+      "address": "Town, delegation, landmark…",
+      "textarea": "Describe in a few words…"
+    },
+    "phoneHint": "Tunisian number, 8 digits.",
+    "emailHint": "To receive a confirmation of your request.",
+    "consent": "I agree that my data is used to process my request, as described in the <link>privacy policy</link>.",
+    "review": {
+      "activity": "Activity",
+      "technical": "Technical needs",
+      "contact": "Site & contact",
+      "empty": "No technical details — we'll go through them together."
+    },
+    "errors": {
+      "required": "This field is required.",
+      "chooseActivity": "Choose an activity to continue.",
+      "invalidPhone": "Invalid number: 8 digits, e.g. 98 123 456.",
+      "invalidEmail": "Invalid email address.",
+      "number": "Enter a positive number.",
+      "tooLarge": "Value too large.",
+      "tooLong": "Text too long.",
+      "invalidOption": "Invalid choice.",
+      "consent": "Your consent is needed to process the request.",
+      "billOrConsumption": "Enter your monthly bill or your consumption.",
+      "describeWork": "Describe the work in a few words (at least 10 characters).",
+      "fixErrors": "Please fix the highlighted fields.",
+      "rateLimited": "Too many requests from your connection. Try again in a few minutes or call us.",
+      "server": "Your request could not be saved. Please try again or call us.",
+      "network": "Connection failed. Check your network and try again.",
+      "retry": "Try again"
+    },
+    "success": {
+      "title": "Request sent!",
+      "body": "Thank you {name}. Our team is reviewing your project and will contact you within 2 working days.",
+      "reference": "Your reference",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "keepRef": "Keep this reference to follow up on your request.",
+      "emailSent": "A confirmation email was sent to {email}.",
+      "backHome": "Back to home",
+      "newRequest": "New request"
+    },
+    "aside": {
+      "title": "Why choose us for your project?",
+      "free": "Free quote, no commitment",
+      "fast": "Answer within 2 working days",
+      "certified": "ANME-certified installer",
+      "subsidies": "Help with subsidies and STEG paperwork",
+      "preferCall": "Prefer to talk to us?"
+    }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "subtitle": "The page you are looking for does not exist or has moved."
+  },
+  "team": {
+    "title": "Our team",
+    "subtitle": "Qualified technicians and engineers, serving you across the region."
+  },
+  "error": {
+    "title": "Something went wrong",
+    "subtitle": "The content could not be loaded. Please try again in a moment.",
+    "retry": "Try again"
+  }
+}
