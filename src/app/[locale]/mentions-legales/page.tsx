@@ -1,13 +1,24 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
+import { buildMetadata } from "@/lib/metadata";
 import { siteSettings } from "@/content/site";
 import { LegalLayout } from "@/components/sections/legal-layout";
 
-export const metadata: Metadata = {
-  title: "Mentions légales",
-  description: "Mentions légales de Growing Technologies.",
-};
+// Legal text is authored in French for every locale (project language rule).
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return buildMetadata({
+    locale,
+    path: "/mentions-legales",
+    title: "Mentions légales",
+    description: "Mentions légales de Growing Technologies.",
+  });
+}
 
 export default async function MentionsLegalesPage({
   params,

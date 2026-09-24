@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
+import { buildMetadata } from "@/lib/metadata";
 import { services } from "@/content/services";
 import { Container } from "@/components/ui/container";
 import { PageHeader } from "@/components/sections/page-header";
@@ -15,7 +16,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "services" });
-  return { title: t("title"), description: t("subtitle") };
+  return buildMetadata({ locale, path: "/services", title: t("title"), description: t("subtitle") });
 }
 
 export default async function ServicesPage({

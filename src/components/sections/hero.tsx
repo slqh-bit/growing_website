@@ -24,23 +24,23 @@ export async function Hero({ locale }: { locale: Locale }) {
 
       <Container className="grid items-center gap-12 py-20 lg:grid-cols-2 lg:py-28">
         <div className="flex flex-col items-start gap-6">
-          <Reveal>
+          <Reveal immediate>
             <Badge variant="primary" className="gap-1.5">
               <ShieldCheck className="size-3.5" aria-hidden />
               {t("heroBadge")}
             </Badge>
           </Reveal>
-          <Reveal delay={0.05}>
+          <Reveal immediate delay={0.05}>
             <h1 className="text-balance text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
               {t("heroTitle")}
             </h1>
           </Reveal>
-          <Reveal delay={0.1}>
+          <Reveal immediate delay={0.1}>
             <p className="max-w-xl text-pretty text-lg text-muted-foreground">
               {t("heroSubtitle")}
             </p>
           </Reveal>
-          <Reveal delay={0.15} className="flex flex-col gap-3 sm:flex-row">
+          <Reveal immediate delay={0.15} className="flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg" variant="solar">
               <Link href="/devis">
                 {tc("requestQuote")}
@@ -51,7 +51,7 @@ export async function Hero({ locale }: { locale: Locale }) {
               <Link href="/services">{tc("discoverServices")}</Link>
             </Button>
           </Reveal>
-          <Reveal delay={0.2} className="flex items-center gap-2 pt-2 text-sm text-muted-foreground">
+          <Reveal immediate delay={0.2} className="flex items-center gap-2 pt-2 text-sm text-muted-foreground">
             <span className="inline-flex -space-x-1">
               {siteSettings.stats.slice(0, 3).map((s) => (
                 <span
@@ -67,7 +67,7 @@ export async function Hero({ locale }: { locale: Locale }) {
         </div>
 
         {/* Visual panel */}
-        <Reveal delay={0.1} className="relative">
+        <Reveal immediate delay={0.1} className="relative">
           <div className="bg-solar relative aspect-square overflow-hidden rounded-3xl shadow-2xl sm:aspect-[4/5] lg:aspect-square">
             <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(0deg,transparent_24%,rgba(255,255,255,.3)_25%,rgba(255,255,255,.3)_26%,transparent_27%,transparent_74%,rgba(255,255,255,.3)_75%,rgba(255,255,255,.3)_76%,transparent_77%),linear-gradient(90deg,transparent_24%,rgba(255,255,255,.3)_25%,rgba(255,255,255,.3)_26%,transparent_27%,transparent_74%,rgba(255,255,255,.3)_75%,rgba(255,255,255,.3)_76%,transparent_77%)] [background-size:36px_36px]" />
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8 text-center text-white">

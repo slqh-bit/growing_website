@@ -32,10 +32,6 @@
   --color-accent-800: oklch(0.47 0.11 62);
   --color-accent-900: oklch(0.4 0.09 60);
 
-  /* Fonts (wired to next/font variables in layout) */
-  --font-sans: var(--font-latin), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
-  --font-arabic: var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
-
   /* Radii */
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
@@ -64,6 +60,10 @@
 }
 
 @theme inline {
+  /* Fonts: next/font exposes --font-inter / --font-plex-arabic on <html>. */
+  --font-sans: var(--font-inter), var(--font-plex-arabic), ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: var(--font-plex-arabic), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
@@ -86,7 +86,7 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: var(--font-sans);
+    font-family: var(--font-inter), var(--font-plex-arabic), ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -94,7 +94,7 @@
   /* Arabic locale uses the Arabic-first font stack */
   :lang(ar) body,
   [dir="rtl"] body {
-    font-family: var(--font-arabic);
+    font-family: var(--font-plex-arabic), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   }
 
   :focus-visible {
@@ -118,6 +118,51 @@
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+
+  [data-js] .reveal,
+  .reveal-now {
+    transform: none !important;
+    transition-delay: 0s !important;
+    animation: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Reveal-on-scroll                                                    */
+/* Content is only hidden when <html data-js> is set by the head       */
+/* script, so no-JS visitors and crawlers always see it. If the app    */
+/* never hydrates, the head script removes data-js after a timeout.    */
+/* ------------------------------------------------------------------ */
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Above-the-fold content: pure CSS, runs on first paint without JS. */
+.reveal-now {
+  animation: reveal-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--reveal-delay, 0s);
+}
+
+[data-js] .reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+[data-js] .reveal[data-visible] {
+  opacity: 1;
+  transform: none;
 }
 
 /* Utility: subtle solar gradient used across heroes and CTAs */

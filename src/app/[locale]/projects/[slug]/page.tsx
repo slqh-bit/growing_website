@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { MapPin, Zap, Calendar, Users, ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
+import { buildMetadata } from "@/lib/metadata";
 import { getProject, projectSlugs } from "@/content/projects";
 import { getServiceByKey } from "@/content/services";
 import { t as tr } from "@/content/types";
@@ -26,7 +27,12 @@ export async function generateMetadata({
   const { locale, slug } = await params;
   const project = getProject(slug);
   if (!project) return {};
-  return { title: tr(project.title, locale), description: tr(project.summary, locale) };
+  return buildMetadata({
+    locale,
+    path: `/projects/${slug}`,
+    title: tr(project.title, locale),
+    description: tr(project.summary, locale),
+  });
 }
 
 export default async function ProjectDetailPage({
@@ -53,7 +59,7 @@ export default async function ProjectDetailPage({
     ...(project.powerKwc != null
       ? [{ icon: Zap, label: t("power"), value: `${project.powerKwc} kWc` }]
       : []),
-    { icon: Calendar, label: "Date", value: dateFmt },
+    { icon: Calendar, label: t("date"), value: dateFmt },
   ];
 
   return (
@@ -62,7 +68,7 @@ export default async function ProjectDetailPage({
       <section className="bg-solar relative overflow-hidden">
         <div className="absolute inset-0 opacity-15 [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:24px_24px]" />
         <Container className="relative py-16 sm:py-20">
-          <Reveal className="flex flex-col gap-5 text-white">
+          <Reveal immediate className="flex flex-col gap-5 text-white">
             <Button asChild variant="outline" size="sm" className="w-fit border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white">
               <Link href="/projects">
                 <ArrowLeft className="size-4 rtl:rotate-180" />

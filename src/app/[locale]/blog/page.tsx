@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
+import { buildMetadata } from "@/lib/metadata";
 import { ComingSoon } from "@/components/sections/coming-soon";
 
 export async function generateMetadata({
@@ -10,7 +11,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const tn = await getTranslations({ locale, namespace: "nav" });
-  return { title: tn("blog") };
+  // "Coming soon" stub: keep it out of the index until real articles exist.
+  return buildMetadata({ locale, path: "/blog", title: tn("blog"), noindex: true });
 }
 
 export default async function BlogPage({

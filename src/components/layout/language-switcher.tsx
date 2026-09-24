@@ -40,8 +40,11 @@ export function LanguageSwitcher({ className }: { className?: string }) {
     setOpen(false);
     if (next === active) return;
     // `pathname` from next-intl is the resolved, locale-agnostic path; the
-    // router re-prefixes it with the chosen locale.
-    router.replace(pathname, { locale: next });
+    // router re-prefixes it with the chosen locale. Query and hash are read
+    // at click time (useSearchParams would force a Suspense boundary on every
+    // statically rendered page). `push` keeps the previous language in history.
+    const { search, hash } = window.location;
+    router.push(`${pathname}${search}${hash}`, { locale: next });
   }
 
   return (

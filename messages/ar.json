@@ -10,7 +10,8 @@
     "comingSoon": "قريباً",
     "comingSoonBody": "هذا القسم قيد الإعداد. عُد إلينا قريباً!",
     "loading": "جارٍ التحميل…",
-    "phase": "الخطوة"
+    "phase": "الخطوة",
+    "skipToContent": "تخطَّ إلى المحتوى"
   },
   "nav": {
     "home": "الرئيسية",
@@ -26,7 +27,8 @@
     "privacy": "سياسة الخصوصية",
     "openMenu": "افتح القائمة",
     "closeMenu": "أغلق القائمة",
-    "switchLanguage": "تغيير اللغة"
+    "switchLanguage": "تغيير اللغة",
+    "toggleTheme": "التبديل بين الوضع الفاتح والداكن"
   },
   "home": {
     "heroBadge": "مركّب شمسي معتمد من الوكالة الوطنية للتحكم في الطاقة",
@@ -76,7 +78,8 @@
       "agricole": "فلاحي",
       "industriel": "صناعي",
       "public": "عمومي"
-    }
+    },
+    "date": "التاريخ"
   },
   "about": {
     "title": "عن Growing Technologies",

@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { projects } from "@/content/projects";
-import { getServiceByKey } from "@/content/services";
-import { t as tr } from "@/content/types";
+import { buildMetadata } from "@/lib/metadata";
 import { Container } from "@/components/ui/container";
 import { PageHeader } from "@/components/sections/page-header";
-import { ProjectsExplorer, type ProjectView } from "@/components/sections/projects-explorer";
+import { ProjectsExplorer } from "@/components/sections/projects-explorer";
+import { toProjectView } from "@/components/sections/project-card";
 import { CtaBand } from "@/components/sections/cta-band";
 
 export async function generateMetadata({
@@ -16,7 +16,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "projects" });
-  return { title: t("title"), description: t("subtitle") };
+  return buildMetadata({ locale, path: "/projects", title: t("title"), description: t("subtitle") });
 }
 
 export default async function ProjectsPage({
@@ -28,21 +28,7 @@ export default async function ProjectsPage({
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "projects" });
 
-  const views: ProjectView[] = projects.map((p) => {
-    const service = getServiceByKey(p.activityKey);
-    return {
-      slug: p.slug,
-      title: tr(p.title, locale),
-      summary: tr(p.summary, locale),
-      region: tr(p.region, locale),
-      clientType: p.clientType,
-      clientTypeLabel: t(`clientType.${p.clientType}`),
-      activityKey: p.activityKey,
-      activityLabel: service ? tr(service.title, locale) : p.activityKey,
-      icon: service?.icon ?? "Sun",
-      powerKwc: p.powerKwc,
-    };
-  });
+  const views = projects.map((p) => toProjectView(p, locale, t));
 
   return (
     <>

@@ -10,7 +10,8 @@
     "comingSoon": "Bientôt disponible",
     "comingSoonBody": "Cette section est en cours de préparation. Revenez bientôt !",
     "loading": "Chargement…",
-    "phase": "Étape"
+    "phase": "Étape",
+    "skipToContent": "Aller au contenu"
   },
   "nav": {
     "home": "Accueil",
@@ -26,7 +27,8 @@
     "privacy": "Politique de confidentialité",
     "openMenu": "Ouvrir le menu",
     "closeMenu": "Fermer le menu",
-    "switchLanguage": "Changer de langue"
+    "switchLanguage": "Changer de langue",
+    "toggleTheme": "Basculer le thème clair/sombre"
   },
   "home": {
     "heroBadge": "Installateur solaire certifié ANME",
@@ -76,7 +78,8 @@
       "agricole": "Agricole",
       "industriel": "Industriel",
       "public": "Public / B2G"
-    }
+    },
+    "date": "Date"
   },
   "about": {
     "title": "À propos de Growing Technologies",

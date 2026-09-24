@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
+import { buildMetadata } from "@/lib/metadata";
 import { services, getService, serviceSlugs } from "@/content/services";
 import { getProjectsByActivity } from "@/content/projects";
 import { t as tr } from "@/content/types";
@@ -29,10 +30,12 @@ export async function generateMetadata({
   const { locale, slug } = await params;
   const service = getService(slug);
   if (!service) return {};
-  return {
+  return buildMetadata({
+    locale,
+    path: `/services/${slug}`,
     title: tr(service.title, locale),
     description: tr(service.shortDescription, locale),
-  };
+  });
 }
 
 export default async function ServiceDetailPage({

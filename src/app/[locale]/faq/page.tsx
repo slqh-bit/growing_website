@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
+import { buildMetadata } from "@/lib/metadata";
 import { faqItems } from "@/content/faq";
 import { t as tr } from "@/content/types";
 import { Container } from "@/components/ui/container";
@@ -15,7 +16,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const tn = await getTranslations({ locale, namespace: "nav" });
-  return { title: tn("faq") };
+  const tc = await getTranslations({ locale, namespace: "common" });
+  return buildMetadata({ locale, path: "/faq", title: tn("faq"), description: tc("companyTagline") });
 }
 
 export default async function FaqPage({

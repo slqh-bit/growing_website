@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Phone, Mail, Send, ArrowRight, ListChecks, SlidersHorizontal, MapPinned, CheckCircle2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { buildMetadata } from "@/lib/metadata";
 import { siteSettings } from "@/content/site";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "devis" });
-  return { title: t("title"), description: t("subtitle") };
+  return buildMetadata({ locale, path: "/devis", title: t("title"), description: t("subtitle") });
 }
 
 export default async function DevisPage({

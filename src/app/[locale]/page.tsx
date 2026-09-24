@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ShieldCheck, MapPin, Wrench, Headphones, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { buildMetadata } from "@/lib/metadata";
+import { siteSettings } from "@/content/site";
 import { services } from "@/content/services";
 import { getFeaturedProjects } from "@/content/projects";
 import { Container } from "@/components/ui/container";
@@ -13,6 +16,23 @@ import { StatsBand } from "@/components/sections/stats-band";
 import { ServiceCard } from "@/components/sections/service-card";
 import { ProjectCard } from "@/components/sections/project-card";
 import { CtaBand } from "@/components/sections/cta-band";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const tc = await getTranslations({ locale, namespace: "common" });
+  const t = await getTranslations({ locale, namespace: "home" });
+  // No `title`: the layout's default "<company> — <tagline>" applies.
+  return buildMetadata({
+    locale,
+    path: "",
+    description: t("heroSubtitle"),
+    ogTitle: `${siteSettings.companyName} — ${tc("companyTagline")}`,
+  });
+}
 
 export default async function HomePage({
   params,

@@ -20,7 +20,7 @@ export function PageHeader({
     <section className={cn("relative overflow-hidden border-b border-border", className)}>
       <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-primary-50/70 to-transparent dark:from-primary-950/30" />
       <Container className="py-14 sm:py-20">
-        <Reveal className="flex max-w-3xl flex-col gap-4">
+        <Reveal immediate className="flex max-w-3xl flex-col gap-4">
           {eyebrow && (
             <span className="text-sm font-semibold uppercase tracking-wider text-primary-600">
               {eyebrow}

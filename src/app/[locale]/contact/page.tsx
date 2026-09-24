@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Phone, Mail, MapPin, Clock, Send, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { buildMetadata } from "@/lib/metadata";
 import { siteSettings } from "@/content/site";
 import { t as tr } from "@/content/types";
 import { Container } from "@/components/ui/container";
@@ -17,7 +18,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "contact" });
-  return { title: t("title"), description: t("subtitle") };
+  return buildMetadata({ locale, path: "/contact", title: t("title"), description: t("subtitle") });
 }
 
 export default async function ContactPage({

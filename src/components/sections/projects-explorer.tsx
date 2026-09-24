@@ -2,24 +2,8 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { MapPin, Zap, ArrowRight } from "lucide-react";
-import { Link } from "@/i18n/navigation";
-import { Badge } from "@/components/ui/badge";
-import { ServiceIcon } from "@/components/ui/service-icon";
+import { ProjectCardView, type ProjectView } from "@/components/sections/project-card-view";
 import { cn } from "@/lib/utils";
-
-export interface ProjectView {
-  slug: string;
-  title: string;
-  summary: string;
-  region: string;
-  clientType: string;
-  clientTypeLabel: string;
-  activityKey: string;
-  activityLabel: string;
-  icon: string;
-  powerKwc: number | null;
-}
 
 interface Labels {
   all: string;
@@ -93,38 +77,7 @@ export function ProjectsExplorer({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
             >
-              <Link
-                href={`/projects/${p.slug}`}
-                className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary-300 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <div className="bg-solar relative flex aspect-[16/10] items-center justify-center">
-                  <ServiceIcon
-                    name={p.icon}
-                    className="size-16 bg-white/15 text-white backdrop-blur-sm"
-                    iconClassName="size-8"
-                  />
-                  <Badge variant="accent" className="absolute end-3 top-3">
-                    {p.clientTypeLabel}
-                  </Badge>
-                </div>
-                <div className="flex flex-1 flex-col gap-3 p-5">
-                  <h3 className="text-lg font-semibold leading-tight text-foreground">{p.title}</h3>
-                  <p className="text-sm text-muted-foreground">{p.summary}</p>
-                  <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5">
-                      <MapPin className="size-3.5 text-primary-600" aria-hidden />
-                      {p.region}
-                    </span>
-                    {p.powerKwc != null && (
-                      <span className="inline-flex items-center gap-1.5">
-                        <Zap className="size-3.5 text-primary-600" aria-hidden />
-                        {p.powerKwc} kWc
-                      </span>
-                    )}
-                    <ArrowRight className="ms-auto size-4 text-primary-600 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
-                  </div>
-                </div>
-              </Link>
+              <ProjectCardView project={p} className="h-full" />
             </motion.div>
           ))}
         </motion.div>

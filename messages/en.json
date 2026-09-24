@@ -10,7 +10,8 @@
     "comingSoon": "Coming soon",
     "comingSoonBody": "This section is being prepared. Check back soon!",
     "loading": "Loading…",
-    "phase": "Step"
+    "phase": "Step",
+    "skipToContent": "Skip to content"
   },
   "nav": {
     "home": "Home",
@@ -26,7 +27,8 @@
     "privacy": "Privacy policy",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "switchLanguage": "Switch language"
+    "switchLanguage": "Switch language",
+    "toggleTheme": "Toggle light/dark theme"
   },
   "home": {
     "heroBadge": "ANME-certified solar installer",
@@ -76,7 +78,8 @@
       "agricole": "Agricultural",
       "industriel": "Industrial",
       "public": "Public / B2G"
-    }
+    },
+    "date": "Date"
   },
   "about": {
     "title": "About Growing Technologies",

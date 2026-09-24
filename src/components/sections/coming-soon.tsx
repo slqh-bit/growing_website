@@ -21,7 +21,7 @@ export async function ComingSoon({
 
   return (
     <Container className="flex min-h-[50vh] flex-col items-center justify-center py-24 text-center">
-      <Reveal className="flex flex-col items-center gap-5">
+      <Reveal immediate className="flex flex-col items-center gap-5">
         <Badge variant="accent" className="gap-1.5">
           <Clock className="size-3.5" aria-hidden />
           {tc("comingSoon")}
