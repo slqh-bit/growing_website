@@ -1,27 +1,27 @@
 import { getTranslations } from "next-intl/server";
-import { t as tr } from "@/content/types";
-import type { Project } from "@/content/types";
 import type { Locale } from "@/i18n/routing";
-import { getServiceByKey } from "@/content/services";
+import type { Project, Service } from "@/payload-types";
+import { imageSource, populated } from "@/lib/cms/media";
 import { ProjectCardView, type ProjectView } from "@/components/sections/project-card-view";
 
 /** Translator scoped to the `projects` namespace. */
 type ProjectsTranslator = (key: string) => string;
 
-/** Resolve a project's localized strings into a `ProjectView`. */
-export function toProjectView(project: Project, locale: Locale, t: ProjectsTranslator): ProjectView {
-  const service = getServiceByKey(project.activityKey);
+/** Map a CMS project (depth ≥ 1) to the serializable card view model. */
+export function toProjectView(project: Project, t: ProjectsTranslator): ProjectView {
+  const service = populated<Service>(project.activity);
   return {
     slug: project.slug,
-    title: tr(project.title, locale),
-    summary: tr(project.summary, locale),
-    region: tr(project.region, locale),
+    title: project.title,
+    summary: project.summary,
+    region: project.region,
     clientType: project.clientType,
     clientTypeLabel: t(`clientType.${project.clientType}`),
-    activityKey: project.activityKey,
-    activityLabel: service ? tr(service.title, locale) : project.activityKey,
+    activityKey: service?.activityKey ?? "",
+    activityLabel: service?.title ?? "",
     icon: service?.icon ?? "Sun",
-    powerKwc: project.powerKwc,
+    powerKwc: project.powerKwc ?? null,
+    cover: imageSource(project.coverImage, "card"),
   };
 }
 
@@ -35,5 +35,5 @@ export async function ProjectCard({
   className?: string;
 }) {
   const t = await getTranslations({ locale, namespace: "projects" });
-  return <ProjectCardView project={toProjectView(project, locale, t)} className={className} />;
+  return <ProjectCardView project={toProjectView(project, t)} className={className} />;
 }

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
+import { getServices } from "@/lib/cms/queries";
 import { buildMetadata } from "@/lib/metadata";
-import { services } from "@/content/services";
 import { Container } from "@/components/ui/container";
 import { PageHeader } from "@/components/sections/page-header";
 import { ServiceCard } from "@/components/sections/service-card";
@@ -19,14 +19,13 @@ export async function generateMetadata({
   return buildMetadata({ locale, path: "/services", title: t("title"), description: t("subtitle") });
 }
 
-export default async function ServicesPage({
-  params,
-}: {
-  params: Promise<{ locale: Locale }>;
-}) {
+export default async function ServicesPage({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations({ locale, namespace: "services" });
+  const [t, services] = await Promise.all([
+    getTranslations({ locale, namespace: "services" }),
+    getServices(locale),
+  ]);
 
   return (
     <>

@@ -1,4 +1,4 @@
-import type { Locale } from "@/i18n/routing";
+import type { Locale } from "../../src/i18n/config";
 
 /**
  * A value localized across the three supported locales.

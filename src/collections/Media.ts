@@ -2,6 +2,7 @@ import path from "path";
 import type { CollectionConfig } from "payload";
 import { anyone, authenticated } from "../cms/access";
 import { groups, t3 } from "../cms/labels";
+import { revalidateCollection } from "../cms/revalidate";
 
 /**
  * Uploads (devplan §4.7). Stored on local disk in v1 (`/media`, a Docker volume
@@ -35,6 +36,7 @@ export const Media: CollectionConfig = {
       { name: "hero", width: 1920, withoutEnlargement: true },
     ],
   },
+  hooks: revalidateCollection("media"),
   fields: [
     {
       name: "alt",

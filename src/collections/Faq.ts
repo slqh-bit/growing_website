@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload";
 import { admins, anyone, authenticated } from "../cms/access";
 import { groups, t3 } from "../cms/labels";
+import { revalidateCollection } from "../cms/revalidate";
 
 /** FAQ entries (devplan §4.4), grouped by category on the FAQ page. */
 export const Faq: CollectionConfig = {
@@ -21,6 +22,7 @@ export const Faq: CollectionConfig = {
     update: authenticated,
     delete: admins,
   },
+  hooks: revalidateCollection("faq"),
   fields: [
     {
       name: "question",

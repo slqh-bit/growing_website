@@ -127,5 +127,14 @@
   "notFound": {
     "title": "Page introuvable",
     "subtitle": "La page que vous cherchez n'existe pas ou a été déplacée."
+  },
+  "team": {
+    "title": "Notre équipe",
+    "subtitle": "Des techniciens et ingénieurs qualifiés, à votre service dans toute la région."
+  },
+  "error": {
+    "title": "Une erreur est survenue",
+    "subtitle": "Le contenu n'a pas pu être chargé. Réessayez dans un instant.",
+    "retry": "Réessayer"
   }
 }

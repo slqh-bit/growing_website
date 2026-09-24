@@ -6,8 +6,9 @@
  * Idempotent: documents are matched by a stable key (slug, activity, question,
  * email) and updated in place, so re-running never duplicates anything.
  *
- * Content source: the typed modules in src/content/ and the UI message catalogs
- * in messages/*.json — i.e. exactly what the site shows today.
+ * Content source: the typed modules in scripts/seed-data/ and the UI message
+ * catalogs in messages/*.json. After seeding, the CMS is the source of truth:
+ * the public site reads only from Payload.
  *
  * Admin user: created from SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD (never a
  * hard-coded password). An existing user's password is never changed.
@@ -19,11 +20,11 @@ import { getPayload, type CollectionSlug, type Payload, type Where } from "paylo
 
 import config from "../src/payload.config";
 import { lexicalFromText } from "../src/cms/lexical";
-import { faqItems } from "../src/content/faq";
-import { footerNav, legalNav, mainNav } from "../src/content/navigation";
-import { projects } from "../src/content/projects";
-import { services } from "../src/content/services";
-import { siteSettings } from "../src/content/site";
+import { faqItems } from "./seed-data/faq";
+import { footerNav, legalNav, mainNav } from "./seed-data/navigation";
+import { projects } from "./seed-data/projects";
+import { services } from "./seed-data/services";
+import { siteSettings } from "./seed-data/site";
 import { defaultLocale, locales, rtlLocales, type Locale } from "../src/i18n/config";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -85,6 +86,9 @@ function withRowIds<T>(data: T, existing: unknown): T {
   return data;
 }
 
+/** Seed writes skip cache revalidation: the CLI process has no page cache. */
+const context = { disableRevalidate: true };
+
 /* The Local API's per-collection generics don't narrow inside a generic helper,
    so these helpers take plain objects. Payload still validates every field at
    runtime (required, select options, custom validators) and throws on bad data. */
@@ -108,20 +112,20 @@ async function upsert(
 
   let doc =
     existingId !== undefined
-      ? await api.update({ collection, id: existingId, data: build(defaultLocale), locale: defaultLocale, depth: 0 })
-      : await api.create({ collection, data: build(defaultLocale), locale: defaultLocale, depth: 0 });
+      ? await api.update({ collection, id: existingId, data: build(defaultLocale), locale: defaultLocale, depth: 0, context })
+      : await api.create({ collection, data: build(defaultLocale), locale: defaultLocale, depth: 0, context });
 
   for (const locale of otherLocales) {
-    doc = await api.update({ collection, id: doc.id, data: withRowIds(build(locale), doc), locale, depth: 0 });
+    doc = await api.update({ collection, id: doc.id, data: withRowIds(build(locale), doc), locale, depth: 0, context });
   }
   return doc.id;
 }
 
 async function upsertGlobal(payload: Payload, slug: string, build: (locale: Locale) => AnyData) {
   const api = payload as unknown as LooseApi;
-  let doc = await api.updateGlobal({ slug, data: build(defaultLocale), locale: defaultLocale, depth: 0 });
+  let doc = await api.updateGlobal({ slug, data: build(defaultLocale), locale: defaultLocale, depth: 0, context });
   for (const locale of otherLocales) {
-    doc = await api.updateGlobal({ slug, data: withRowIds(build(locale), doc), locale, depth: 0 });
+    doc = await api.updateGlobal({ slug, data: withRowIds(build(locale), doc), locale, depth: 0, context });
   }
 }
 
@@ -217,6 +221,7 @@ function homeLayout(l: Locale) {
   return [
     {
       blockType: "hero",
+      style: "full",
       badge: msg(l, "home.heroBadge"),
       title: msg(l, "home.heroTitle"),
       subtitle: msg(l, "home.heroSubtitle"),
@@ -263,6 +268,7 @@ function aboutLayout(l: Locale) {
   return [
     {
       blockType: "hero",
+      style: "compact",
       badge: siteSettings.certification,
       title: msg(l, "about.title"),
       subtitle: msg(l, "about.subtitle"),

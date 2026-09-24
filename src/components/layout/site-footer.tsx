@@ -1,17 +1,22 @@
 import { getTranslations } from "next-intl/server";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { footerNav, legalNav } from "@/content/navigation";
-import { services } from "@/content/services";
-import { siteSettings } from "@/content/site";
-import { t as tr } from "@/content/types";
 import type { Locale } from "@/i18n/routing";
+import { getFooter, getServices, getSiteSettings } from "@/lib/cms/queries";
 import { Logo } from "@/components/brand/logo";
+import { SmartLink } from "@/components/cms/smart-link";
 
+/** Footer: links from the Footer global, activities from Services, contacts from Site settings. */
 export async function SiteFooter({ locale }: { locale: Locale }) {
-  const t = await getTranslations({ locale, namespace: "footer" });
-  const tn = await getTranslations({ locale, namespace: "nav" });
+  const [t, footer, services, settings] = await Promise.all([
+    getTranslations({ locale, namespace: "footer" }),
+    getFooter(locale),
+    getServices(locale),
+    getSiteSettings(locale),
+  ]);
   const year = new Date().getFullYear();
+  const quickLinks = footer.quickLinks ?? [];
+  const legalLinks = footer.legalLinks ?? [];
 
   return (
     <footer className="mt-24 border-t border-border bg-surface-muted/60">
@@ -19,29 +24,31 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Logo />
-            <p className="mt-4 max-w-xs text-sm text-muted-foreground">{t("tagline")}</p>
+            <Logo name={settings.companyName} />
+            {footer.tagline && <p className="mt-4 max-w-xs text-sm text-muted-foreground">{footer.tagline}</p>}
             <p className="mt-4 text-xs text-muted-foreground">
-              {t("matricule")}: {siteSettings.matriculeFiscal}
+              {t("matricule")}: <span dir="ltr">{settings.matriculeFiscal}</span>
             </p>
           </div>
 
           {/* Quick links */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">{t("quickLinks")}</h3>
-            <ul className="mt-4 space-y-2.5">
-              {footerNav.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-primary-600"
-                  >
-                    {tn(item.labelKey)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {quickLinks.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">{t("quickLinks")}</h3>
+              <ul className="mt-4 space-y-2.5">
+                {quickLinks.map((item) => (
+                  <li key={item.id ?? item.href}>
+                    <SmartLink
+                      href={item.href}
+                      className="text-sm text-muted-foreground transition-colors hover:text-primary-600"
+                    >
+                      {item.label}
+                    </SmartLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Activities */}
           <div>
@@ -53,7 +60,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
                     href={`/services/${s.slug}`}
                     className="text-sm text-muted-foreground transition-colors hover:text-primary-600"
                   >
-                    {tr(s.title, locale)}
+                    {s.title}
                   </Link>
                 </li>
               ))}
@@ -66,41 +73,45 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
             <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
               <li className="flex items-start gap-2.5">
                 <MapPin className="mt-0.5 size-4 shrink-0 text-primary-600" aria-hidden />
-                <span>{tr(siteSettings.address, locale)}</span>
+                <span className="whitespace-pre-line">{settings.address}</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="size-4 shrink-0 text-primary-600" aria-hidden />
-                <a href={`tel:${siteSettings.phone.replace(/\s/g, "")}`} className="hover:text-primary-600" dir="ltr">
-                  {siteSettings.phone}
+                <a href={`tel:${settings.phone.replace(/\s/g, "")}`} className="hover:text-primary-600" dir="ltr">
+                  {settings.phone}
                 </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="size-4 shrink-0 text-primary-600" aria-hidden />
-                <a href={`mailto:${siteSettings.email}`} className="hover:text-primary-600">
-                  {siteSettings.email}
+                <a href={`mailto:${settings.email}`} className="hover:text-primary-600">
+                  {settings.email}
                 </a>
               </li>
-              <li className="flex items-center gap-2.5">
-                <Send className="size-4 shrink-0 text-primary-600" aria-hidden />
-                <span dir="ltr">{siteSettings.telegram}</span>
-              </li>
+              {settings.telegram && (
+                <li className="flex items-center gap-2.5">
+                  <Send className="size-4 shrink-0 text-primary-600" aria-hidden />
+                  <span dir="ltr">{settings.telegram}</span>
+                </li>
+              )}
             </ul>
           </div>
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
           <p>
-            © {year} {siteSettings.companyName}. {t("rights")}
+            © {year} {settings.companyName}. {t("rights")}
           </p>
-          <ul className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            {legalNav.map((item) => (
-              <li key={item.href}>
-                <Link href={item.href} className="transition-colors hover:text-primary-600">
-                  {tn(item.labelKey)}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {legalLinks.length > 0 && (
+            <ul className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              {legalLinks.map((item) => (
+                <li key={item.id ?? item.href}>
+                  <SmartLink href={item.href} className="transition-colors hover:text-primary-600">
+                    {item.label}
+                  </SmartLink>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </footer>

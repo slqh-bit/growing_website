@@ -1,7 +1,7 @@
 import type { Block, Field } from "payload";
 import { linkFields } from "../cms/fields";
 import { t3 } from "../cms/labels";
-import { serviceIconOptions } from "../cms/options";
+import { featureIconOptions } from "../cms/options";
 
 /**
  * Page-builder blocks for the Pages collection (devplan §4.3). All editor text
@@ -28,6 +28,17 @@ export const HeroBlock: Block = {
   interfaceName: "HeroBlock",
   labels: { singular: t3("Bannière", "Hero", "البانر"), plural: t3("Bannières", "Heroes", "البانرات") },
   fields: [
+    {
+      name: "style",
+      type: "select",
+      required: true,
+      defaultValue: "compact",
+      label: t3("Style", "Style", "النمط"),
+      options: [
+        { value: "full", label: t3("Grande bannière (accueil)", "Large banner (home)", "بانر كبير (الرئيسية)") },
+        { value: "compact", label: t3("En-tête de page", "Page header", "رأس الصفحة") },
+      ],
+    },
     {
       name: "badge",
       type: "text",
@@ -123,16 +134,7 @@ export const FeaturesBlock: Block = {
           name: "icon",
           type: "select",
           defaultValue: "Sun",
-          options: [
-            ...serviceIconOptions,
-            { value: "ShieldCheck", label: "ShieldCheck" },
-            { value: "MapPin", label: "MapPin" },
-            { value: "Wrench", label: "Wrench" },
-            { value: "Headphones", label: "Headphones" },
-            { value: "Award", label: "Award" },
-            { value: "Heart", label: "Heart" },
-            { value: "Eye", label: "Eye" },
-          ],
+          options: featureIconOptions,
           label: t3("Icône", "Icon", "الأيقونة"),
         },
         { name: "title", type: "text", localized: true, required: true, label: t3("Titre", "Title", "العنوان") },

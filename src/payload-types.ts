@@ -177,6 +177,7 @@ export interface Page {
  * via the `definition` "HeroBlock".
  */
 export interface HeroBlock {
+  style: 'full' | 'compact';
   badge?: string | null;
   title: string;
   subtitle?: string | null;
@@ -777,6 +778,7 @@ export interface PagesSelect<T extends boolean = true> {
  * via the `definition` "HeroBlock_select".
  */
 export interface HeroBlockSelect<T extends boolean = true> {
+  style?: T;
   badge?: T;
   title?: T;
   subtitle?: T;

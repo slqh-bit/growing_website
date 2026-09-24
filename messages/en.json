@@ -127,5 +127,14 @@
   "notFound": {
     "title": "Page not found",
     "subtitle": "The page you are looking for does not exist or has moved."
+  },
+  "team": {
+    "title": "Our team",
+    "subtitle": "Qualified technicians and engineers, serving you across the region."
+  },
+  "error": {
+    "title": "Something went wrong",
+    "subtitle": "The content could not be loaded. Please try again in a moment.",
+    "retry": "Try again"
   }
 }

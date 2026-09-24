@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { buildMetadata } from "@/lib/metadata";
-import { faqItems } from "@/content/faq";
-import { t as tr } from "@/content/types";
+import { getFaq } from "@/lib/cms/queries";
 import { Container } from "@/components/ui/container";
 import { Accordion, type AccordionItemData } from "@/components/ui/accordion";
 import { PageHeader } from "@/components/sections/page-header";
@@ -30,19 +29,16 @@ export default async function FaqPage({
   const tn = await getTranslations({ locale, namespace: "nav" });
   const tc = await getTranslations({ locale, namespace: "common" });
 
-  const sorted = [...faqItems].sort((a, b) => a.order - b.order);
-
-  // Group by category for a categorised accordion.
+  // Already sorted by `order`; group by (localized) category, keeping first-seen order.
   const groups = new Map<string, AccordionItemData[]>();
-  for (const item of sorted) {
-    const category = tr(item.category, locale);
+  for (const item of await getFaq(locale)) {
     const entry: AccordionItemData = {
-      id: `${category}-${item.order}`,
-      question: tr(item.question, locale),
-      answer: tr(item.answer, locale),
-      category,
+      id: String(item.id),
+      question: item.question,
+      answer: item.answer,
+      category: item.category,
     };
-    groups.set(category, [...(groups.get(category) ?? []), entry]);
+    groups.set(item.category, [...(groups.get(item.category) ?? []), entry]);
   }
 
   return (

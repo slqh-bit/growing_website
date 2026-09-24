@@ -2,6 +2,7 @@ import type { GlobalConfig } from "payload";
 import { admins, anyone } from "../cms/access";
 import { linkFields } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
+import { revalidateGlobal } from "../cms/revalidate";
 
 /** Footer content (devplan §4.8). Activities and contacts come from Services / SiteSettings. */
 export const Footer: GlobalConfig = {
@@ -12,6 +13,7 @@ export const Footer: GlobalConfig = {
     read: anyone,
     update: admins,
   },
+  hooks: { afterChange: revalidateGlobal("footer") },
   fields: [
     {
       name: "tagline",

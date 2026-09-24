@@ -2,6 +2,7 @@ import type { CollectionConfig } from "payload";
 import { admins, anyone, authenticated } from "../cms/access";
 import { seoField, slugField } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
+import { revalidateCollection } from "../cms/revalidate";
 import { activityOptions, serviceIconOptions } from "../cms/options";
 
 /** The five activities (devplan §4.1). */
@@ -23,6 +24,7 @@ export const Services: CollectionConfig = {
     update: authenticated,
     delete: admins,
   },
+  hooks: revalidateCollection("services"),
   fields: [
     {
       name: "title",

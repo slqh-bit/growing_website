@@ -54,6 +54,35 @@ back to French.
 documents, manage users, and edit site settings, navigation and footer.
 Anonymous visitors can read published content but never leads or users.
 
+**Everything on the public site comes from the CMS** (UI chrome such as button
+labels and form text stays in `messages/*.json`):
+
+| Where it's edited            | What it controls                                              |
+| ---------------------------- | ------------------------------------------------------------- |
+| Pages → `home`, `about`      | Home / About sections (hero, stats, features, projects, CTA…) |
+| Pages → any other slug       | A new page at `/{locale}/{slug}`, no code needed               |
+| Services / Projects / FAQ / Team | Their listing and detail pages, footer activities, related projects |
+| Site settings                | Company name, contacts, address, map, hours, key figures, matricule |
+| Navigation / Footer          | Header menu, footer links and tagline                         |
+
+The `home` page cannot be deleted (it is the site root).
+
+### Rendering & caching
+
+Public pages use **incremental static regeneration without build-time database
+access**: `next build` never queries Postgres (so the Docker image builds without
+a DB); each page is rendered on its first visit, then served from cache.
+
+Every CMS query (`src/lib/cms/queries.ts`) is cached and tagged with the
+collections/globals it reads. When an editor saves, a Payload hook
+(`src/cms/revalidate.ts`) invalidates that tag **after the transaction commits**,
+so the change is live on the next request — only for the pages that use it, and
+only in the edited language. Public reads go through `overrideAccess: false`, so
+the site can never show what an anonymous visitor isn't allowed to read.
+
+> The seed skips revalidation (it runs outside the web server). If you re-seed a
+> **running** site, restart it with a clean `.next/cache` or re-save a document.
+
 **Schema changes** (adding/changing fields):
 
 ```bash
@@ -84,9 +113,9 @@ existing user's password.
       header, language switcher, footer).
 - [x] **Phase 3** — Core marketing pages (Home, Services ×5, Projects, About,
       Contact, FAQ, legal, devis preview).
-- [ ] **Next: wire pages to the CMS** — public pages still read the typed
-      modules in `src/content/` (which the seed imports); switch them to the
-      Payload Local API with on-publish revalidation.
+- [x] **CMS wiring** — every public page reads from Payload (cached, tag-based
+      revalidation on save), block renderers for Pages, editor-created pages at
+      `/{slug}`, CMS images via `next/image`, localized error state, `/team`.
 - [ ] **Phase 5** — Devis (multi-step quote) engine → writes to *Demandes de devis*.
 - [ ] **Phase 7** — SEO, performance, Docker deploy (app + Postgres + media).
 
@@ -99,17 +128,17 @@ src/
 │  └─ (payload)/            Payload admin + REST/GraphQL API (generated)
 ├─ collections/             Payload collections
 ├─ globals/                 Payload globals (SiteSettings, Navigation, Footer)
-├─ blocks/                  Page-builder block configs (renderers: next phase)
-├─ cms/                     Access control, shared fields, options, labels
+├─ blocks/                  Page-builder block configs + renderers
+├─ cms/                     Access control, fields, options, labels, revalidation hooks
 ├─ migrations/              Database migrations (generated)
 ├─ payload.config.ts        CMS config (localization, admin i18n, Postgres)
 ├─ payload-types.ts         Generated types
-├─ components/              UI primitives, layout, sections, motion
-├─ content/                 Typed seed content (mirrors the collections)
+├─ lib/cms/                 Cached CMS queries, media helpers, page helpers
+├─ components/              UI primitives, layout, sections, motion, cms (RichText, images)
 ├─ i18n/                    Locale config (shared with the CMS), routing
 └─ middleware.ts            Locale detection (skips /admin and /api)
 messages/                   UI-chrome catalogs: ar.json, fr.json, en.json
-scripts/seed.ts             Idempotent CMS seed
+scripts/seed.ts             Idempotent CMS seed (content in scripts/seed-data/)
 docker-compose.yml          Local Postgres
 ```
 

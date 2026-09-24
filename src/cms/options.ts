@@ -1,5 +1,5 @@
 import type { Option } from "payload";
-import { serviceIconNames } from "../lib/service-icons";
+import { featureIconNames, serviceIconNames } from "../lib/icons";
 import { t3 } from "./labels";
 
 /** The five activities (devplan §1) — Services.activityKey, DevisRequests.activity. */
@@ -20,6 +20,7 @@ export const clientTypeOptions = [
 ] satisfies Option[];
 
 export const serviceIconOptions = serviceIconNames.map((name) => ({ value: name, label: name }));
+export const featureIconOptions = featureIconNames.map((name) => ({ value: name, label: name }));
 
 /** Lead workflow (devplan §6): nouveau → contacté → devis envoyé → gagné/perdu. */
 export const devisStatusOptions = [

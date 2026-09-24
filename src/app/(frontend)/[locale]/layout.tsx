@@ -2,17 +2,23 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { setRequestLocale, getMessages, getTranslations } from "next-intl/server";
-import { routing, getDir, isValidLocale, type Locale } from "@/i18n/routing";
+import { getDir, isValidLocale, type Locale } from "@/i18n/routing";
 import { latin, arabic } from "@/app/fonts";
 import { ThemeProvider, initScript } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { siteSettings } from "@/content/site";
+import { getNavigation, getSiteSettings } from "@/lib/cms/queries";
 import { siteUrl } from "@/lib/metadata";
 import "@/styles/globals.css";
 
+/**
+ * Incremental static regeneration without build-time database access:
+ * no page is prerendered at build; each is rendered on its first request,
+ * cached, and re-rendered only when CMS content it uses changes (cache tags
+ * revalidated by the Payload hooks in src/cms/revalidate.ts).
+ */
 export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
+  return [];
 }
 
 export async function generateMetadata({
@@ -21,15 +27,18 @@ export async function generateMetadata({
   params: Promise<{ locale: Locale }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "common" });
+  const [t, settings] = await Promise.all([
+    getTranslations({ locale, namespace: "common" }),
+    getSiteSettings(locale),
+  ]);
 
   // No `alternates` here on purpose: canonical/hreflang are set per page via
   // buildMetadata(), so 404s and future pages never inherit the home canonical.
   return {
     metadataBase: new URL(siteUrl),
     title: {
-      default: `${siteSettings.companyName} — ${t("companyTagline")}`,
-      template: `%s — ${siteSettings.companyName}`,
+      default: `${settings.companyName} — ${t("companyTagline")}`,
+      template: `%s — ${settings.companyName}`,
     },
     description: t("companyTagline"),
   };
@@ -49,8 +58,12 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
   const dir = getDir(locale);
-  const messages = await getMessages();
-  const t = await getTranslations({ locale, namespace: "common" });
+  const [messages, t, navigation, settings] = await Promise.all([
+    getMessages(),
+    getTranslations({ locale, namespace: "common" }),
+    getNavigation(locale),
+    getSiteSettings(locale),
+  ]);
 
   return (
     <html
@@ -72,11 +85,11 @@ export default async function LocaleLayout({
               {t("skipToContent")}
             </a>
             <div className="flex min-h-dvh flex-col">
-              <SiteHeader />
+              <SiteHeader items={navigation.items ?? []} companyName={settings.companyName} />
               <main id="main" className="flex-1">
                 {children}
               </main>
-              <SiteFooter locale={locale as Locale} />
+              <SiteFooter locale={locale} />
             </div>
           </NextIntlClientProvider>
         </ThemeProvider>

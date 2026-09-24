@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload";
 import { admins, anyone, authenticated } from "../cms/access";
 import { groups, t3 } from "../cms/labels";
+import { revalidateCollection } from "../cms/revalidate";
 
 /** Team members (devplan §4.5). The /team page stays "Coming soon" while empty. */
 export const Team: CollectionConfig = {
@@ -21,6 +22,7 @@ export const Team: CollectionConfig = {
     update: authenticated,
     delete: admins,
   },
+  hooks: revalidateCollection("team"),
   fields: [
     {
       name: "name",

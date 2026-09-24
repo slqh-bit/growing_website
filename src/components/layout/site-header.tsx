@@ -4,7 +4,6 @@ import * as React from "react";
 import { useTranslations } from "next-intl";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
-import { mainNav } from "@/content/navigation";
 import { Logo } from "@/components/brand/logo";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -12,7 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export function SiteHeader() {
+export interface HeaderNavItem {
+  label: string;
+  href: string;
+  comingSoon?: boolean | null;
+}
+
+/** Sticky header. Menu items come from the CMS Navigation global. */
+export function SiteHeader({ items, companyName }: { items: HeaderNavItem[]; companyName: string }) {
   const t = useTranslations("nav");
   const tc = useTranslations("common");
   const pathname = usePathname();
@@ -43,24 +49,24 @@ export function SiteHeader() {
     >
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" aria-label={t("home")} className="shrink-0">
-          <Logo />
+          <Logo name={companyName} />
         </Link>
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
-          {mainNav.map((item) => (
+          {items.map((item) => (
             <Link
-              key={item.href}
+              key={`${item.href}-${item.label}`}
               href={item.href}
               className={cn(
-                "relative rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "relative whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 isActive(item.href)
                   ? "text-primary-600"
                   : "text-foreground/80 hover:text-foreground",
               )}
             >
               <span className="inline-flex items-center gap-1.5">
-                {t(item.labelKey)}
+                {item.label}
                 {item.comingSoon && (
                   <Badge variant="outline" className="px-1.5 py-0 text-[9px]">
                     {tc("comingSoon")}
@@ -107,9 +113,9 @@ export function SiteHeader() {
         )}
       >
         <nav className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-4 py-4 sm:px-6" aria-label="Mobile">
-          {mainNav.map((item) => (
+          {items.map((item) => (
             <Link
-              key={item.href}
+              key={`${item.href}-${item.label}`}
               href={item.href}
               className={cn(
                 "flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
@@ -118,7 +124,7 @@ export function SiteHeader() {
                   : "text-foreground hover:bg-surface-muted",
               )}
             >
-              {t(item.labelKey)}
+              {item.label}
               {item.comingSoon && (
                 <Badge variant="outline" className="text-[9px]">
                   {tc("comingSoon")}

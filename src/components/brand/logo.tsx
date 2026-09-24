@@ -1,12 +1,13 @@
 import { Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { siteSettings } from "@/content/site";
 
-/** Wordmark + sun glyph. Replace the glyph with the brand SVG when available. */
+/** Wordmark + sun glyph. `name` comes from Site settings (companyName). */
 export function Logo({
+  name,
   className,
   showText = true,
 }: {
+  name: string;
   className?: string;
   showText?: boolean;
 }) {
@@ -17,10 +18,8 @@ export function Logo({
       </span>
       {showText && (
         <span className="flex flex-col leading-none">
-          <span className="text-base font-bold tracking-tight text-foreground">
-            {siteSettings.companyName}
-          </span>
-          <span className="text-[10px] font-medium uppercase tracking-wider text-primary-600">
+          <span className="text-base font-bold tracking-tight text-foreground">{name}</span>
+          <span className="text-[10px] font-medium uppercase tracking-wider text-primary-600" dir="ltr">
             Solar &amp; Electrical
           </span>
         </span>

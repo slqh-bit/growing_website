@@ -2,6 +2,7 @@ import type { CollectionConfig } from "payload";
 import { admins, anyone, authenticated } from "../cms/access";
 import { seoField, slugField } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
+import { revalidateCollection } from "../cms/revalidate";
 import { clientTypeOptions } from "../cms/options";
 
 /** Realized projects / case studies (devplan §4.2). */
@@ -23,6 +24,7 @@ export const Projects: CollectionConfig = {
     update: authenticated,
     delete: admins,
   },
+  hooks: revalidateCollection("projects"),
   fields: [
     {
       name: "title",

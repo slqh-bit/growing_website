@@ -3,51 +3,50 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { MapPin, Zap, Calendar, Users, ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { routing, type Locale } from "@/i18n/routing";
+import type { Locale } from "@/i18n/routing";
+import type { Service } from "@/payload-types";
+import { getProjectBySlug } from "@/lib/cms/queries";
+import { populated } from "@/lib/cms/media";
 import { buildMetadata } from "@/lib/metadata";
-import { getProject, projectSlugs } from "@/content/projects";
-import { getServiceByKey } from "@/content/services";
-import { t as tr } from "@/content/types";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ServiceIcon } from "@/components/ui/service-icon";
+import { CmsImage } from "@/components/cms/cms-image";
+import { RichText } from "@/components/cms/rich-text";
 import { CtaBand } from "@/components/sections/cta-band";
-import { Reveal } from "@/components/motion/reveal";
+import { Reveal, RevealGroup } from "@/components/motion/reveal";
+
+type Params = Promise<{ locale: Locale; slug: string }>;
 
 export function generateStaticParams() {
-  return routing.locales.flatMap((locale) => projectSlugs.map((slug) => ({ locale, slug })));
+  return [];
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: Locale; slug: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { locale, slug } = await params;
-  const project = getProject(slug);
+  const project = await getProjectBySlug(slug, locale);
   if (!project) return {};
   return buildMetadata({
     locale,
-    path: `/projects/${slug}`,
-    title: tr(project.title, locale),
-    description: tr(project.summary, locale),
+    path: `/projects/${project.slug}`,
+    title: project.title,
+    description: project.summary,
+    image: project.coverImage,
+    seo: project.seo,
   });
 }
 
-export default async function ProjectDetailPage({
-  params,
-}: {
-  params: Promise<{ locale: Locale; slug: string }>;
-}) {
+export default async function ProjectDetailPage({ params }: { params: Params }) {
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
-  const project = getProject(slug);
+  const project = await getProjectBySlug(slug, locale);
   if (!project) notFound();
 
   const t = await getTranslations({ locale, namespace: "projects" });
-  const service = getServiceByKey(project.activityKey);
+  const service = populated<Service>(project.activity);
+  const gallery = (project.gallery ?? []).filter((m) => typeof m === "object");
   const dateFmt = new Intl.DateTimeFormat(locale === "ar" ? "ar-TN" : locale, {
     year: "numeric",
     month: "long",
@@ -55,21 +54,31 @@ export default async function ProjectDetailPage({
 
   const specs = [
     { icon: Users, label: t("client"), value: t(`clientType.${project.clientType}`) },
-    { icon: MapPin, label: t("region"), value: tr(project.region, locale) },
-    ...(project.powerKwc != null
-      ? [{ icon: Zap, label: t("power"), value: `${project.powerKwc} kWc` }]
-      : []),
+    { icon: MapPin, label: t("region"), value: project.region },
+    ...(project.powerKwc != null ? [{ icon: Zap, label: t("power"), value: `${project.powerKwc} kWc` }] : []),
     { icon: Calendar, label: t("date"), value: dateFmt },
   ];
 
   return (
     <>
-      {/* Hero */}
+      {/* Hero: cover image with a solar overlay, or the branded gradient */}
       <section className="bg-solar relative overflow-hidden">
-        <div className="absolute inset-0 opacity-15 [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:24px_24px]" />
+        {project.coverImage ? (
+          <>
+            <CmsImage media={project.coverImage} size="hero" fill priority sizes="100vw" />
+            <div className="absolute inset-0 bg-gradient-to-t from-primary-950/90 via-primary-900/60 to-primary-900/30" />
+          </>
+        ) : (
+          <div className="absolute inset-0 opacity-15 [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:24px_24px]" />
+        )}
         <Container className="relative py-16 sm:py-20">
           <Reveal immediate className="flex flex-col gap-5 text-white">
-            <Button asChild variant="outline" size="sm" className="w-fit border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white">
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="w-fit border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+            >
               <Link href="/projects">
                 <ArrowLeft className="size-4 rtl:rotate-180" />
                 {t("title")}
@@ -77,18 +86,12 @@ export default async function ProjectDetailPage({
             </Button>
             <div className="flex items-center gap-3">
               {service && (
-                <ServiceIcon
-                  name={service.icon}
-                  className="size-12 bg-white/15 text-white"
-                  iconClassName="size-6"
-                />
+                <ServiceIcon name={service.icon} className="size-12 bg-white/15 text-white" iconClassName="size-6" />
               )}
               <Badge variant="accent">{t(`clientType.${project.clientType}`)}</Badge>
             </div>
-            <h1 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-              {tr(project.title, locale)}
-            </h1>
-            <p className="max-w-2xl text-lg text-white/90">{tr(project.summary, locale)}</p>
+            <h1 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">{project.title}</h1>
+            <p className="max-w-2xl text-lg text-white/90">{project.summary}</p>
           </Reveal>
         </Container>
       </section>
@@ -97,7 +100,7 @@ export default async function ProjectDetailPage({
         <Container className="grid gap-12 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <Reveal>
-              <p className="text-lg leading-relaxed text-foreground/90">{tr(project.body, locale)}</p>
+              <RichText data={project.body} locale={locale} />
             </Reveal>
             {service && (
               <Reveal className="mt-8">
@@ -106,9 +109,25 @@ export default async function ProjectDetailPage({
                   className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:border-primary-300 hover:text-primary-600"
                 >
                   <ServiceIcon name={service.icon} className="size-6 rounded-md" iconClassName="size-3.5" />
-                  {tr(service.title, locale)}
+                  {service.title}
                 </Link>
               </Reveal>
+            )}
+
+            {gallery.length > 0 && (
+              <RevealGroup className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                {gallery.map((media, i) => (
+                  <Reveal key={i} className="relative aspect-[4/3] overflow-hidden rounded-2xl">
+                    <CmsImage
+                      media={media}
+                      size="card"
+                      fill
+                      sizes="(min-width: 1024px) 22vw, (min-width: 640px) 33vw, 50vw"
+                      className="transition-transform duration-500 hover:scale-105"
+                    />
+                  </Reveal>
+                ))}
+              </RevealGroup>
             )}
           </div>
 
@@ -123,10 +142,10 @@ export default async function ProjectDetailPage({
                         <Icon className="size-4" aria-hidden />
                       </span>
                       <div>
-                        <dt className="text-xs uppercase tracking-wider text-muted-foreground">
-                          {spec.label}
-                        </dt>
-                        <dd className="font-semibold text-foreground">{spec.value}</dd>
+                        <dt className="text-xs uppercase tracking-wider text-muted-foreground">{spec.label}</dt>
+                        <dd className="font-semibold text-foreground">
+                          <bdi>{spec.value}</bdi>
+                        </dd>
                       </div>
                     </div>
                   );

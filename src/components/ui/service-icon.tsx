@@ -1,28 +1,16 @@
-import { PlugZap, Droplets, BatteryCharging, Cable, Zap, Sun, type LucideIcon } from "lucide-react";
-import { isServiceIconName, type ServiceIconName } from "@/lib/service-icons";
+import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { cn } from "@/lib/utils";
 
-/** Must cover every name the CMS offers (see src/lib/service-icons.ts). */
-const iconMap: Record<ServiceIconName, LucideIcon> = {
-  PlugZap,
-  Droplets,
-  BatteryCharging,
-  Cable,
-  Zap,
-  Sun,
-};
-
-/** Renders a service's lucide icon by name inside a branded tile. */
+/** A CMS icon inside the branded tile used on service and project cards. */
 export function ServiceIcon({
   name,
   className,
   iconClassName,
 }: {
-  name: string;
+  name: string | null | undefined;
   className?: string;
   iconClassName?: string;
 }) {
-  const Icon = isServiceIconName(name) ? iconMap[name] : Sun;
   return (
     <span
       className={cn(
@@ -30,7 +18,7 @@ export function ServiceIcon({
         className,
       )}
     >
-      <Icon className={cn("size-6", iconClassName)} aria-hidden />
+      <DynamicIcon name={name} className={cn("size-6", iconClassName)} />
     </span>
   );
 }

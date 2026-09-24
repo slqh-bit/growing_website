@@ -1,18 +1,19 @@
 import { ArrowRight } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { t as tr } from "@/content/types";
-import type { Service } from "@/content/types";
 import type { Locale } from "@/i18n/routing";
+import type { Service } from "@/payload-types";
 import { ServiceIcon } from "@/components/ui/service-icon";
 import { cn } from "@/lib/utils";
+
+export type ServiceSummary = Pick<Service, "slug" | "icon" | "title" | "shortDescription">;
 
 export async function ServiceCard({
   service,
   locale,
   className,
 }: {
-  service: Service;
+  service: ServiceSummary;
   locale: Locale;
   className?: string;
 }) {
@@ -26,15 +27,10 @@ export async function ServiceCard({
         className,
       )}
     >
-      <ServiceIcon
-        name={service.icon}
-        className="transition-transform duration-300 group-hover:scale-105"
-      />
+      <ServiceIcon name={service.icon} className="transition-transform duration-300 group-hover:scale-105" />
       <div className="flex flex-col gap-2">
-        <h3 className="text-lg font-semibold tracking-tight text-foreground">
-          {tr(service.title, locale)}
-        </h3>
-        <p className="text-sm text-muted-foreground">{tr(service.shortDescription, locale)}</p>
+        <h3 className="text-lg font-semibold tracking-tight text-foreground">{service.title}</h3>
+        <p className="text-sm text-muted-foreground">{service.shortDescription}</p>
       </div>
       <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-medium text-primary-600">
         {t("learnMore")}

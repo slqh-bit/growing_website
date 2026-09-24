@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { buildMetadata } from "@/lib/metadata";
-import { siteSettings } from "@/content/site";
+import { getSiteSettings } from "@/lib/cms/queries";
 import { LegalLayout } from "@/components/sections/legal-layout";
 
 // Legal text is authored in French for every locale (project language rule).
@@ -27,6 +27,8 @@ export default async function PrivacyPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  // Legal text is French in every locale, so it uses the French settings.
+  const siteSettings = await getSiteSettings("fr");
 
   return (
     <LegalLayout title="Politique de confidentialité" updated="21/09/2026">

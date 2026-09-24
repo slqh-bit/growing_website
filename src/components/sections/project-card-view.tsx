@@ -1,7 +1,9 @@
+import Image from "next/image";
 import { MapPin, Zap, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ServiceIcon } from "@/components/ui/service-icon";
+import type { ImageSource } from "@/lib/cms/media";
 import { cn } from "@/lib/utils";
 
 /** A project with every string already resolved for the active locale. */
@@ -16,6 +18,8 @@ export interface ProjectView {
   activityLabel: string;
   icon: string;
   powerKwc: number | null;
+  /** Cover image (card size), or null for the branded placeholder. */
+  cover: ImageSource | null;
 }
 
 /**
@@ -37,13 +41,22 @@ export function ProjectCardView({
         className,
       )}
     >
-      {/* Cover placeholder (media wired in a later phase) */}
-      <div className="bg-solar relative flex aspect-[16/10] items-center justify-center">
-        <ServiceIcon
-          name={project.icon}
-          className="size-16 bg-white/15 text-white backdrop-blur-sm"
-          iconClassName="size-8"
-        />
+      <div className="bg-solar relative flex aspect-[16/10] items-center justify-center overflow-hidden">
+        {project.cover ? (
+          <Image
+            src={project.cover.src}
+            alt={project.cover.alt}
+            fill
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <ServiceIcon
+            name={project.icon}
+            className="size-16 bg-white/15 text-white backdrop-blur-sm"
+            iconClassName="size-8"
+          />
+        )}
         <Badge variant="accent" className="absolute end-3 top-3">
           {project.clientTypeLabel}
         </Badge>
@@ -63,7 +76,7 @@ export function ProjectCardView({
           {project.powerKwc != null && (
             <span className="inline-flex items-center gap-1.5">
               <Zap className="size-3.5 text-primary-600" aria-hidden />
-              {project.powerKwc} kWc
+              <bdi dir="ltr">{project.powerKwc} kWc</bdi>
             </span>
           )}
           <ArrowRight className="ms-auto size-4 text-primary-600 transition-transform duration-300 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />

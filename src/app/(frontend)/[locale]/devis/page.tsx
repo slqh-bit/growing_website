@@ -4,7 +4,7 @@ import { Phone, Mail, Send, ArrowRight, ListChecks, SlidersHorizontal, MapPinned
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { buildMetadata } from "@/lib/metadata";
-import { siteSettings } from "@/content/site";
+import { getSiteSettings } from "@/lib/cms/queries";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,10 @@ export default async function DevisPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "devis" });
-  const tc = await getTranslations({ locale, namespace: "common" });
+  const [tc, settings] = await Promise.all([
+    getTranslations({ locale, namespace: "common" }),
+    getSiteSettings(locale),
+  ]);
 
   const steps = [
     { icon: ListChecks, titles: { fr: "Activité", ar: "النشاط", en: "Activity" } },
@@ -38,7 +41,7 @@ export default async function DevisPage({
     { icon: CheckCircle2, titles: { fr: "Récapitulatif", ar: "الملخّص", en: "Review" } },
   ] as const;
 
-  const phoneClean = siteSettings.phone.replace(/\s/g, "");
+  const phoneClean = settings.phone.replace(/\s/g, "");
 
   return (
     <>
@@ -79,13 +82,13 @@ export default async function DevisPage({
               <Button asChild variant="solar">
                 <a href={`tel:${phoneClean}`}>
                   <Phone className="size-4" />
-                  {siteSettings.phone}
+                  {settings.phone}
                 </a>
               </Button>
               <Button asChild variant="outline">
-                <a href={`mailto:${siteSettings.email}`}>
+                <a href={`mailto:${settings.email}`}>
                   <Mail className="size-4" />
-                  {siteSettings.email}
+                  {settings.email}
                 </a>
               </Button>
               <Button asChild variant="ghost">

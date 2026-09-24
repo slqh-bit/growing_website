@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { projects } from "@/content/projects";
+import { getProjects } from "@/lib/cms/queries";
 import { buildMetadata } from "@/lib/metadata";
 import { Container } from "@/components/ui/container";
 import { PageHeader } from "@/components/sections/page-header";
@@ -26,9 +26,11 @@ export default async function ProjectsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations({ locale, namespace: "projects" });
-
-  const views = projects.map((p) => toProjectView(p, locale, t));
+  const [t, projects] = await Promise.all([
+    getTranslations({ locale, namespace: "projects" }),
+    getProjects(locale),
+  ]);
+  const views = projects.map((p) => toProjectView(p, t));
 
   return (
     <>

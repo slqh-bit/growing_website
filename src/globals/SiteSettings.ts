@@ -1,6 +1,7 @@
 import type { GlobalConfig } from "payload";
 import { admins, anyone } from "../cms/access";
 import { groups, t3 } from "../cms/labels";
+import { revalidateGlobal } from "../cms/revalidate";
 
 const httpsUrl = (value: string | null | undefined) =>
   !value || /^https:\/\/[^\s]+$/.test(value) || "Use an https:// URL.";
@@ -15,6 +16,7 @@ export const SiteSettings: GlobalConfig = {
     // Legal identifiers and contact details: admins only.
     update: admins,
   },
+  hooks: { afterChange: revalidateGlobal("site-settings") },
   fields: [
     {
       type: "tabs",
