@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 22
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  checks:
+    name: Lint · types · unit tests · build
+    runs-on: ubuntu-latest
+    env:
+      # The build never queries the database (ISR); placeholders satisfy the config.
+      NEXT_PUBLIC_SITE_URL: https://example.com
+      DATABASE_URI: postgres://build:build@127.0.0.1:1/build
+      PAYLOAD_SECRET: build-time-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  e2e:
+    name: End-to-end (Playwright)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: growingtech
+          POSTGRES_PASSWORD: ci-password
+          POSTGRES_DB: growingtech
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U growingtech"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      NEXT_PUBLIC_SITE_URL: http://localhost:3100
+      DATABASE_URI: postgres://growingtech:ci-password@localhost:5432/growingtech
+      PAYLOAD_SECRET: ci-only-secret-0123456789abcdef
+      SEED_ADMIN_EMAIL: ci-admin@example.com
+      SEED_ADMIN_PASSWORD: ci-admin-password-123
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # Production mode: applies the migrations (never a schema push), then seeds.
+      - run: npm run seed
+        env:
+          NODE_ENV: production
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  docker:
+    name: Docker image smoke test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: growingtech
+          POSTGRES_PASSWORD: ci-password
+          POSTGRES_DB: growingtech
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U growingtech"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      RUN_ENV: >-
+        -e DATABASE_URI=postgres://growingtech:ci-password@localhost:5432/growingtech
+        -e PAYLOAD_SECRET=ci-only-secret-0123456789abcdef
+        -e SERVER_URL=http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build runtime and tools images
+        run: |
+          docker build --build-arg NEXT_PUBLIC_SITE_URL=https://example.com --target runner -t growingtech-web:ci .
+          docker build --build-arg NEXT_PUBLIC_SITE_URL=https://example.com --target builder -t growingtech-tools:ci .
+      - name: Start the app on an empty database (first boot runs migrations)
+        run: |
+          docker run -d --name app --network host $RUN_ENV growingtech-web:ci
+          for i in $(seq 1 60); do curl -fsS http://localhost:3000/api/health && exit 0; sleep 2; done
+          docker logs app; exit 1
+      - name: Seed with the tools image (as in DEPLOY.md)
+        run: >-
+          docker run --rm --network host $RUN_ENV -e NODE_ENV=production
+          -e SEED_ADMIN_EMAIL=ci-admin@example.com -e SEED_ADMIN_PASSWORD=ci-admin-password-123
+          growingtech-tools:ci npm run seed
+      - name: Pages render from the container
+        run: |
+          for path in /fr /ar /en/services /fr/devis /sitemap.xml /robots.txt /admin; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:3000$path")
+            echo "$path → $code"; [ "$code" = 200 ] || { docker logs app; exit 1; }
+          done
+          curl -s http://localhost:3000/sitemap.xml | grep -q "https://example.com/ar/services" || { echo "sitemap host not baked in"; exit 1; }
+          test "$(docker inspect -f '{{.Config.User}}' app)" = nextjs

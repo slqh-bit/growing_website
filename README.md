@@ -16,6 +16,9 @@ Tunisia. Built per [`growing-technologies-website-devplan.md`](./growing-technol
 | Animations   | CSS reveal-on-scroll; Framer Motion for interactive widgets     |
 | Forms        | Zod + React Hook Form (shared client/server validation)          |
 | Email        | Nodemailer over SMTP (Payload email adapter)                    |
+| Hosting      | Docker Compose on one VPS: Caddy (HTTPS) + app + Postgres + backups |
+| Analytics    | Plausible (optional, cookie-free)                               |
+| Tests        | node:test (unit) + Playwright (e2e), GitHub Actions CI          |
 
 > **Version pin:** Payload 3.90 supports Next `15.4.11–15.4.x` or `≥16.3.3`, so
 > `next` is pinned to the patched `15.4.11` and all `payload`/`@payloadcms/*`
@@ -144,16 +147,53 @@ notifications are sent right after the response, each channel independently
 
 **Anti-spam:** hidden honeypot field and a minimum fill time (bots get a fake
 success and nothing is stored), plus a per-IP limit of 5 requests / 15 min.
-The client IP comes from `X-Forwarded-For`, so the app must only be reachable
-through the reverse proxy (Phase 7); the limiter is in-memory (single instance).
+The client IP comes from `X-Real-IP` (overwritten by Caddy, see `deploy/`), so
+the app must only be reachable through the reverse proxy; the limiter is
+in-memory (single instance).
 
 Phone numbers accept spaces, `+216`/`00216` and Arabic-Indic digits, and are
 stored as `+216XXXXXXXX`.
 
+## SEO, performance & analytics
+
+- **Metadata:** per-page title/description/Open Graph, canonical and `hreflang`
+  alternates (incl. `x-default`) for every locale; CMS `seo` fields override.
+- **`/sitemap.xml`** (all locales, CMS services/projects/pages, alternates) and
+  **`/robots.txt`** (admin and API disallowed). Both use `NEXT_PUBLIC_SITE_URL`.
+- **JSON-LD:** `Electrician` LocalBusiness on every page (address, geo, tax ID,
+  contact), `Service` + breadcrumbs on service pages, breadcrumbs on projects.
+- **Fonts:** Inter and IBM Plex Sans Arabic are self-hosted (no build-time
+  network). The Arabic font only downloads on pages with Arabic text, and
+  size-adjusted system fallbacks prevent layout shift when it swaps in.
+- **Lighthouse (mobile, simulated 4G):** performance ≥ 90 and 100 for
+  accessibility, best practices and SEO on the 18 audited fr/ar/en pages.
+- **Analytics:** set `PLAUSIBLE_DOMAIN` to load Plausible (no cookies, no
+  consent banner). A `Devis` goal fires on each successful quote request (props:
+  activity, locale) — add it under *Goals* in Plausible.
+
+## Tests & CI
+
+```bash
+npm test                                   # unit: devis schema, phone, rate limit
+npm run build && NODE_ENV=production npm run seed
+npm run test:e2e                           # Playwright, desktop + mobile, on :3100
+```
+
+`.github/workflows/ci.yml` runs lint, typecheck, unit tests and a build without a
+database; the Playwright suite against a seeded Postgres; and a Docker job that
+builds the production image, boots it on an empty database (migrations), seeds
+it with the tools image and checks the pages.
+
+## Deployment
+
+Production runs with Docker Compose on a single VPS — see
+**[DEPLOY.md](./DEPLOY.md)** (first deploy, updates, backups, restore drill).
+
 ## Scripts
 
-`dev` · `build` · `start` · `lint` · `typecheck` · `format` · `db:up` / `db:down` ·
-`migrate` · `migrate:create` · `seed` · `generate:types` · `generate:importmap`
+`dev` · `build` · `start` · `lint` · `typecheck` · `test` · `test:e2e` · `format` ·
+`db:up` / `db:down` · `migrate` · `migrate:create` · `seed` · `generate:types` ·
+`generate:importmap`
 
 ## Project status (phased roadmap)
 
@@ -169,7 +209,9 @@ stored as `+216XXXXXXXX`.
       `/{slug}`, CMS images via `next/image`, localized error state, `/team`.
 - [x] **Phase 5** — Devis engine: 4-step trilingual form, shared Zod validation,
       server action, anti-spam, team/client emails, Telegram, admin workflow.
-- [ ] **Phase 7** — SEO, performance, Docker deploy (app + Postgres + media).
+- [x] **Phase 7** — SEO (metadata, hreflang, sitemap, robots, JSON-LD),
+      mobile Lighthouse ≥ 90, Plausible, Docker/Caddy/backup deployment kit,
+      unit + e2e tests and CI.
 
 ## Structure
 
@@ -191,7 +233,10 @@ src/
 └─ middleware.ts            Locale detection (skips /admin and /api)
 messages/                   UI-chrome catalogs: ar.json, fr.json, en.json
 scripts/seed.ts             Idempotent CMS seed (content in scripts/seed-data/)
-docker-compose.yml          Local Postgres
+tests/                      unit/ (node:test) and e2e/ (Playwright)
+docker-compose.yml          Local Postgres (development)
+Dockerfile                  Production image (Next.js standalone)
+deploy/                     Production compose, Caddyfile, backup/restore scripts
 ```
 
 ## Language rule
