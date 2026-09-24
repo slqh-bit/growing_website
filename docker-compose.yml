@@ -1,0 +1,26 @@
+# Local development database (Phase 1).
+#   npm run db:up      → start Postgres on 127.0.0.1:5432
+#   npm run db:down    → stop it (data persists in the `pgdata` volume)
+#
+# Phase 7 extends this file with the app container, media volume and backups.
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-growingtech}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpass}
+      POSTGRES_DB: ${POSTGRES_DB:-growingtech}
+    ports:
+      # Bound to localhost only — never expose the database publicly.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

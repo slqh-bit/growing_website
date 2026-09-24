@@ -4,14 +4,8 @@ import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Globe, Check, ChevronDown } from "lucide-react";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { locales, type Locale } from "@/i18n/routing";
+import { locales, localeNames, type Locale } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
-
-const localeNames: Record<Locale, string> = {
-  fr: "Français",
-  ar: "العربية",
-  en: "English",
-};
 
 const localeShort: Record<Locale, string> = {
   fr: "FR",

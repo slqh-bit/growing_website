@@ -1,7 +1,9 @@
 import { PlugZap, Droplets, BatteryCharging, Cable, Zap, Sun, type LucideIcon } from "lucide-react";
+import { isServiceIconName, type ServiceIconName } from "@/lib/service-icons";
 import { cn } from "@/lib/utils";
 
-const iconMap: Record<string, LucideIcon> = {
+/** Must cover every name the CMS offers (see src/lib/service-icons.ts). */
+const iconMap: Record<ServiceIconName, LucideIcon> = {
   PlugZap,
   Droplets,
   BatteryCharging,
@@ -20,7 +22,7 @@ export function ServiceIcon({
   className?: string;
   iconClassName?: string;
 }) {
-  const Icon = iconMap[name] ?? Sun;
+  const Icon = isServiceIconName(name) ? iconMap[name] : Sun;
   return (
     <span
       className={cn(

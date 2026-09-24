@@ -1,16 +1,7 @@
 import { defineRouting } from "next-intl/routing";
+import { locales, defaultLocale, rtlLocales, type Locale } from "./config";
 
-/**
- * Supported locales. `fr` is the default landing locale (see devplan §5).
- * `ar` is right-to-left; everything else is left-to-right.
- */
-export const locales = ["fr", "ar", "en"] as const;
-export type Locale = (typeof locales)[number];
-
-export const defaultLocale: Locale = "fr";
-
-/** Locales that render right-to-left. */
-export const rtlLocales: Locale[] = ["ar"];
+export { locales, defaultLocale, rtlLocales, localeNames, type Locale } from "./config";
 
 export function isValidLocale(locale: string): locale is Locale {
   return (locales as readonly string[]).includes(locale);
