@@ -16,7 +16,7 @@ export function StatsBand({ title, items }: { title?: string | null; items: Stat
         <div className="rounded-3xl border border-border bg-surface px-6 py-10 shadow-sm sm:px-10">
           {title && (
             <Reveal className="mb-8 text-center">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-primary-600">{title}</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-brand">{title}</h2>
             </Reveal>
           )}
           <RevealGroup className="grid grid-cols-2 gap-6 sm:grid-cols-4">

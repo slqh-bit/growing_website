@@ -8,6 +8,7 @@ import type { Service } from "@/payload-types";
 import { getProjectBySlug } from "@/lib/cms/queries";
 import { populated } from "@/lib/cms/media";
 import { buildMetadata } from "@/lib/metadata";
+import { breadcrumbLd, JsonLd } from "@/lib/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +45,10 @@ export default async function ProjectDetailPage({ params }: { params: Params }) 
   const project = await getProjectBySlug(slug, locale);
   if (!project) notFound();
 
-  const t = await getTranslations({ locale, namespace: "projects" });
+  const [t, tn] = await Promise.all([
+    getTranslations({ locale, namespace: "projects" }),
+    getTranslations({ locale, namespace: "nav" }),
+  ]);
   const service = populated<Service>(project.activity);
   const gallery = (project.gallery ?? []).filter((m) => typeof m === "object");
   const dateFmt = new Intl.DateTimeFormat(locale === "ar" ? "ar-TN" : locale, {
@@ -61,6 +65,16 @@ export default async function ProjectDetailPage({ params }: { params: Params }) 
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbLd(
+          [
+            { name: tn("home"), path: "" },
+            { name: t("title"), path: "/projects" },
+            { name: project.title, path: `/projects/${project.slug}` },
+          ],
+          locale,
+        )}
+      />
       {/* Hero: cover image with a solar overlay, or the branded gradient */}
       <section className="bg-solar relative overflow-hidden">
         {project.coverImage ? (
@@ -106,7 +120,7 @@ export default async function ProjectDetailPage({ params }: { params: Params }) 
               <Reveal className="mt-8">
                 <Link
                   href={`/services/${service.slug}`}
-                  className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:border-primary-300 hover:text-primary-600"
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:border-primary-300 hover:text-brand"
                 >
                   <ServiceIcon name={service.icon} className="size-6 rounded-md" iconClassName="size-3.5" />
                   {service.title}
@@ -137,16 +151,17 @@ export default async function ProjectDetailPage({ params }: { params: Params }) 
                 {specs.map((spec) => {
                   const Icon = spec.icon;
                   return (
-                    <div key={spec.label} className="flex items-center gap-3">
-                      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-200">
-                        <Icon className="size-4" aria-hidden />
-                      </span>
-                      <div>
-                        <dt className="text-xs uppercase tracking-wider text-muted-foreground">{spec.label}</dt>
-                        <dd className="font-semibold text-foreground">
-                          <bdi>{spec.value}</bdi>
-                        </dd>
-                      </div>
+                    // dl > div may only hold dt/dd, so the icon lives inside the dt.
+                    <div key={spec.label} className="relative flex min-h-9 flex-col justify-center ps-12">
+                      <dt className="text-xs uppercase tracking-wider text-muted-foreground">
+                        <span className="absolute start-0 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-lg bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-200">
+                          <Icon className="size-4" aria-hidden />
+                        </span>
+                        {spec.label}
+                      </dt>
+                      <dd className="font-semibold text-foreground">
+                        <bdi>{spec.value}</bdi>
+                      </dd>
                     </div>
                   );
                 })}

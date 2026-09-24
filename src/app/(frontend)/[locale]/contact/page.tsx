@@ -8,7 +8,7 @@ import { getSiteSettings } from "@/lib/cms/queries";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/sections/page-header";
-import { Reveal, RevealGroup } from "@/components/motion/reveal";
+import { Reveal } from "@/components/motion/reveal";
 
 export async function generateMetadata({
   params,
@@ -68,8 +68,9 @@ export default async function ContactPage({
         <Container className="grid gap-10 lg:grid-cols-2">
           {/* Contact details */}
           <div>
-            <RevealGroup className="space-y-4">
-              {items.map((item) => {
+            {/* Above the fold on mobile: CSS-only entrance so paint never waits for hydration. */}
+            <div className="space-y-4">
+              {items.map((item, i) => {
                 const Icon = item.icon;
                 const content = (
                   <div className="flex items-start gap-4 rounded-2xl border border-border bg-surface p-5 shadow-sm transition-colors hover:border-primary-300">
@@ -87,7 +88,7 @@ export default async function ContactPage({
                   </div>
                 );
                 return (
-                  <Reveal key={item.label}>
+                  <Reveal key={item.label} immediate delay={i * 0.06}>
                     {item.href ? (
                       <a
                         href={item.href}
@@ -102,7 +103,7 @@ export default async function ContactPage({
                   </Reveal>
                 );
               })}
-            </RevealGroup>
+            </div>
 
             <Reveal className="mt-6 rounded-2xl border border-primary-200 bg-primary-50 p-5 dark:border-primary-900 dark:bg-primary-950/40">
               <p className="text-sm text-foreground">{t("preferDevis")}</p>
@@ -131,7 +132,7 @@ export default async function ContactPage({
               href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=14/${lat}/${lng}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:underline"
+              className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline"
             >
               <MapPin className="size-4" aria-hidden />
               {settings.city}

@@ -12,12 +12,16 @@ export async function ServiceCard({
   service,
   locale,
   className,
+  headingLevel = 3,
 }: {
   service: ServiceSummary;
   locale: Locale;
   className?: string;
+  /** 2 when the card list sits directly under the page's h1 (keeps heading order valid). */
+  headingLevel?: 2 | 3;
 }) {
   const t = await getTranslations({ locale, namespace: "common" });
+  const Heading = headingLevel === 2 ? "h2" : "h3";
 
   return (
     <Link
@@ -29,10 +33,10 @@ export async function ServiceCard({
     >
       <ServiceIcon name={service.icon} className="transition-transform duration-300 group-hover:scale-105" />
       <div className="flex flex-col gap-2">
-        <h3 className="text-lg font-semibold tracking-tight text-foreground">{service.title}</h3>
+        <Heading className="text-lg font-semibold tracking-tight text-foreground">{service.title}</Heading>
         <p className="text-sm text-muted-foreground">{service.shortDescription}</p>
       </div>
-      <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-medium text-primary-600">
+      <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-medium text-brand">
         {t("learnMore")}
         <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
       </span>

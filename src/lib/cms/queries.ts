@@ -165,3 +165,20 @@ export const getPageBySlug = cached(
     return docs[0] ?? null;
   },
 );
+
+/** Slugs + last update of all CMS pages (sitemap). Slugs are locale-independent. */
+export const getPageSummaries = cached(
+  "page-summaries",
+  ["pages"],
+  async (): Promise<Pick<Page, "slug" | "updatedAt">[]> => {
+    const { docs } = await (await payload()).find({
+      collection: "pages",
+      depth: 0,
+      limit: 500,
+      pagination: false,
+      select: { slug: true, updatedAt: true },
+      ...publicRead,
+    });
+    return docs.map(({ slug, updatedAt }) => ({ slug, updatedAt }));
+  },
+);

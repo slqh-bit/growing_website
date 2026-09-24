@@ -19,7 +19,7 @@ export function Logo({
       {showText && (
         <span className="flex flex-col leading-none">
           <span className="text-base font-bold tracking-tight text-foreground">{name}</span>
-          <span className="text-[10px] font-medium uppercase tracking-wider text-primary-600" dir="ltr">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300" dir="ltr">
             Solar &amp; Electrical
           </span>
         </span>

@@ -21,6 +21,13 @@ const TECHNICAL_GROUPS = ["raccorde", "pompage", "isole", "electrical"];
 
 type Banner = "rateLimited" | "server" | "network" | "fixErrors";
 
+declare global {
+  interface Window {
+    /** Plausible Analytics (loaded only when PLAUSIBLE_DOMAIN is set). */
+    plausible?: (event: string, options?: { props?: Record<string, string> }) => void;
+  }
+}
+
 /** Which step owns a form path (to jump back to a server-side error). */
 function stepOfPath(path: string): number {
   const root = path.split(".")[0] ?? "";
@@ -140,6 +147,8 @@ export function DevisForm({
         startedAt: startedAt.current,
       });
       if (result.ok) {
+        // Conversion goal (no personal data: activity and language only).
+        window.plausible?.("Devis", { props: { activity: values.activity, locale } });
         setSuccess({ reference: result.reference, name: values.fullName.trim(), email: values.email.trim() || undefined });
         return;
       }

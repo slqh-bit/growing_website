@@ -74,7 +74,7 @@ export function ActivityStep({ form, field, errorOf, activities }: StepProps & {
               <CheckCircle2
                 aria-hidden
                 className={cn(
-                  "absolute end-3 top-3 size-5 text-primary-600 transition-all duration-200",
+                  "absolute end-3 top-3 size-5 text-brand transition-all duration-200",
                   isSelected ? "scale-100 opacity-100" : "scale-50 opacity-0",
                 )}
               />

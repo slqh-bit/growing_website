@@ -40,7 +40,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
                   <li key={item.id ?? item.href}>
                     <SmartLink
                       href={item.href}
-                      className="text-sm text-muted-foreground transition-colors hover:text-primary-600"
+                      className="text-sm text-muted-foreground transition-colors hover:text-brand"
                     >
                       {item.label}
                     </SmartLink>
@@ -58,7 +58,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
                 <li key={s.slug}>
                   <Link
                     href={`/services/${s.slug}`}
-                    className="text-sm text-muted-foreground transition-colors hover:text-primary-600"
+                    className="text-sm text-muted-foreground transition-colors hover:text-brand"
                   >
                     {s.title}
                   </Link>
@@ -72,24 +72,24 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
             <h3 className="text-sm font-semibold text-foreground">{t("contact")}</h3>
             <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
               <li className="flex items-start gap-2.5">
-                <MapPin className="mt-0.5 size-4 shrink-0 text-primary-600" aria-hidden />
+                <MapPin className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden />
                 <span className="whitespace-pre-line">{settings.address}</span>
               </li>
               <li className="flex items-center gap-2.5">
-                <Phone className="size-4 shrink-0 text-primary-600" aria-hidden />
-                <a href={`tel:${settings.phone.replace(/\s/g, "")}`} className="hover:text-primary-600" dir="ltr">
+                <Phone className="size-4 shrink-0 text-brand" aria-hidden />
+                <a href={`tel:${settings.phone.replace(/\s/g, "")}`} className="hover:text-brand" dir="ltr">
                   {settings.phone}
                 </a>
               </li>
               <li className="flex items-center gap-2.5">
-                <Mail className="size-4 shrink-0 text-primary-600" aria-hidden />
-                <a href={`mailto:${settings.email}`} className="hover:text-primary-600">
+                <Mail className="size-4 shrink-0 text-brand" aria-hidden />
+                <a href={`mailto:${settings.email}`} className="hover:text-brand">
                   {settings.email}
                 </a>
               </li>
               {settings.telegram && (
                 <li className="flex items-center gap-2.5">
-                  <Send className="size-4 shrink-0 text-primary-600" aria-hidden />
+                  <Send className="size-4 shrink-0 text-brand" aria-hidden />
                   <span dir="ltr">{settings.telegram}</span>
                 </li>
               )}
@@ -105,7 +105,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
             <ul className="flex flex-wrap items-center gap-x-5 gap-y-2">
               {legalLinks.map((item) => (
                 <li key={item.id ?? item.href}>
-                  <SmartLink href={item.href} className="transition-colors hover:text-primary-600">
+                  <SmartLink href={item.href} className="transition-colors hover:text-brand">
                     {item.label}
                   </SmartLink>
                 </li>

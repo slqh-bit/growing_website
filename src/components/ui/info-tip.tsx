@@ -27,7 +27,7 @@ export function InfoTip({ content, label, className }: { content: string; label:
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
-        className="inline-flex size-5 items-center justify-center rounded-full text-primary-600 transition-colors hover:bg-primary-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-primary-900/50"
+        className="inline-flex size-5 items-center justify-center rounded-full text-brand transition-colors hover:bg-primary-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-primary-900/50"
       >
         <Info className="size-4" aria-hidden />
       </button>

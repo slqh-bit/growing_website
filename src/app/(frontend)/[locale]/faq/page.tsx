@@ -49,7 +49,7 @@ export default async function FaqPage({
           <div className="space-y-10">
             {Array.from(groups.entries()).map(([category, items]) => (
               <div key={category}>
-                <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-primary-600">
+                <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-brand">
                   {category}
                 </h2>
                 <Accordion items={items} />

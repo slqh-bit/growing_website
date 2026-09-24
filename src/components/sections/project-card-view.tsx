@@ -29,10 +29,14 @@ export interface ProjectView {
 export function ProjectCardView({
   project,
   className,
+  headingLevel = 3,
 }: {
   project: ProjectView;
   className?: string;
+  /** h3 under a section heading (default); h2 when cards sit directly under the page h1. */
+  headingLevel?: 2 | 3;
 }) {
+  const Heading = headingLevel === 2 ? "h2" : "h3";
   return (
     <Link
       href={`/projects/${project.slug}`}
@@ -63,23 +67,23 @@ export function ProjectCardView({
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-5">
-        <h3 className="text-lg font-semibold leading-tight tracking-tight text-foreground">
+        <Heading className="text-lg font-semibold leading-tight tracking-tight text-foreground">
           {project.title}
-        </h3>
+        </Heading>
         <p className="text-sm text-muted-foreground">{project.summary}</p>
 
         <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
-            <MapPin className="size-3.5 text-primary-600" aria-hidden />
+            <MapPin className="size-3.5 text-brand" aria-hidden />
             {project.region}
           </span>
           {project.powerKwc != null && (
             <span className="inline-flex items-center gap-1.5">
-              <Zap className="size-3.5 text-primary-600" aria-hidden />
+              <Zap className="size-3.5 text-brand" aria-hidden />
               <bdi dir="ltr">{project.powerKwc} kWc</bdi>
             </span>
           )}
-          <ArrowRight className="ms-auto size-4 text-primary-600 transition-transform duration-300 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
+          <ArrowRight className="ms-auto size-4 text-brand transition-transform duration-300 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
         </div>
       </div>
     </Link>

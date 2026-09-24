@@ -41,7 +41,7 @@ export function Accordion({ items }: { items: AccordionItemData[] }) {
                 <span className="font-semibold text-foreground">{item.question}</span>
                 <ChevronDown
                   className={cn(
-                    "size-5 shrink-0 text-primary-600 transition-transform duration-300",
+                    "size-5 shrink-0 text-brand transition-transform duration-300",
                     isOpen && "rotate-180",
                   )}
                   aria-hidden

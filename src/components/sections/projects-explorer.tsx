@@ -77,7 +77,7 @@ export function ProjectsExplorer({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
             >
-              <ProjectCardView project={p} className="h-full" />
+              <ProjectCardView project={p} className="h-full" headingLevel={2} />
             </motion.div>
           ))}
         </motion.div>

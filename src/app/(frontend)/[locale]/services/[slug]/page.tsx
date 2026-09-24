@@ -8,6 +8,7 @@ import type { Faq } from "@/payload-types";
 import { getProjectsByService, getServiceBySlug, getServices } from "@/lib/cms/queries";
 import { populated } from "@/lib/cms/media";
 import { buildMetadata } from "@/lib/metadata";
+import { breadcrumbLd, JsonLd, serviceLd } from "@/lib/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { Accordion } from "@/components/ui/accordion";
@@ -46,9 +47,10 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
   const service = await getServiceBySlug(slug, locale);
   if (!service) notFound();
 
-  const [t, tc, relatedProjects, allServices] = await Promise.all([
+  const [t, tc, tn, relatedProjects, allServices] = await Promise.all([
     getTranslations({ locale, namespace: "services" }),
     getTranslations({ locale, namespace: "common" }),
+    getTranslations({ locale, namespace: "nav" }),
     getProjectsByService(service.id, locale),
     getServices(locale),
   ]);
@@ -59,6 +61,17 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
 
   return (
     <>
+      <JsonLd data={serviceLd(service, locale)} />
+      <JsonLd
+        data={breadcrumbLd(
+          [
+            { name: tn("home"), path: "" },
+            { name: t("title"), path: "/services" },
+            { name: service.title, path: `/services/${service.slug}` },
+          ],
+          locale,
+        )}
+      />
       <PageHeader eyebrow={t("title")} title={service.title} subtitle={service.shortDescription}>
         <div className="mt-2 flex flex-wrap gap-3">
           <Button asChild variant="solar">
@@ -80,11 +93,12 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
         <Container className="grid gap-12 lg:grid-cols-3">
           <div className="lg:col-span-2">
             {service.heroImage && (
-              <Reveal className="relative mb-10 aspect-[16/9] overflow-hidden rounded-3xl shadow-lg">
+              <Reveal immediate className="relative mb-10 aspect-[16/9] overflow-hidden rounded-3xl shadow-lg">
                 <CmsImage media={service.heroImage} size="hero" fill priority sizes="(min-width: 1024px) 66vw, 100vw" />
               </Reveal>
             )}
-            <Reveal className="flex items-start gap-4">
+            {/* Above the fold (LCP on mobile): CSS-only entrance, no hydration wait. */}
+            <Reveal immediate delay={0.05} className="flex items-start gap-4">
               <ServiceIcon name={service.icon} className="shrink-0" />
               <RichText data={service.body} locale={locale} />
             </Reveal>
@@ -92,9 +106,10 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
             {steps.length > 0 && (
               <div className="mt-14">
                 <h2 className="text-2xl font-bold tracking-tight text-foreground">{t("processTitle")}</h2>
-                <RevealGroup className="mt-8 space-y-4">
+                {/* Often above the fold on mobile when the intro is short — see above. */}
+                <div className="mt-8 space-y-4">
                   {steps.map((step, i) => (
-                    <Reveal key={step.id ?? i}>
+                    <Reveal key={step.id ?? i} immediate delay={0.1 + Math.min(i, 5) * 0.06}>
                       <div className="flex gap-4 rounded-2xl border border-border bg-surface p-5 shadow-sm">
                         <span className="bg-solar inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white">
                           {i + 1}
@@ -108,7 +123,7 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
                       </div>
                     </Reveal>
                   ))}
-                </RevealGroup>
+                </div>
               </div>
             )}
 
@@ -128,7 +143,7 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
                   <ul className="mt-4 space-y-3">
                     {benefits.map((benefit, i) => (
                       <li key={benefit.id ?? i} className="flex items-start gap-2.5 text-sm text-foreground/90">
-                        <Check className="mt-0.5 size-4 shrink-0 text-primary-600" aria-hidden />
+                        <Check className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden />
                         {benefit.text}
                       </li>
                     ))}
@@ -167,7 +182,7 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
                 <Reveal key={s.slug}>
                   <Link
                     href={`/services/${s.slug}`}
-                    className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:border-primary-300 hover:text-primary-600"
+                    className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:border-primary-300 hover:text-brand"
                   >
                     <ServiceIcon name={s.icon} className="size-6 rounded-md" iconClassName="size-3.5" />
                     {s.title}

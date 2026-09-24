@@ -22,7 +22,7 @@ export function PageHeader({
       <Container className="py-14 sm:py-20">
         <Reveal immediate className="flex max-w-3xl flex-col gap-4">
           {eyebrow && (
-            <span className="text-sm font-semibold uppercase tracking-wider text-primary-600">
+            <span className="text-sm font-semibold uppercase tracking-wider text-brand">
               {eyebrow}
             </span>
           )}

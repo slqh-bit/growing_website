@@ -100,7 +100,7 @@ export function Hero({
           </div>
           {secondStat && (
             <div className="absolute -bottom-5 start-4 rounded-2xl border border-border bg-surface px-5 py-4 shadow-lg sm:start-8">
-              <p className="text-2xl font-bold text-primary-600">
+              <p className="text-2xl font-bold text-brand">
                 <bdi dir="ltr">{secondStat.value}</bdi>
               </p>
               <p className="text-xs text-muted-foreground">{secondStat.label}</p>

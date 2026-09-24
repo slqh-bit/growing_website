@@ -48,10 +48,10 @@ export function LanguageSwitcher({ className }: { className?: string }) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={t("switchLanguage")}
         className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <Globe className="size-4" aria-hidden />
+        <span className="sr-only">{t("switchLanguage")}:</span>
         <span className="min-w-5 text-center">{localeShort[active]}</span>
         <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} aria-hidden />
       </button>
@@ -70,7 +70,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
                 onClick={() => switchTo(loc)}
                 className={cn(
                   "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors hover:bg-surface-muted",
-                  loc === active ? "font-semibold text-primary-600" : "text-foreground",
+                  loc === active ? "font-semibold text-brand" : "text-foreground",
                 )}
               >
                 <span dir={loc === "ar" ? "rtl" : "ltr"}>{localeNames[loc]}</span>

@@ -48,7 +48,7 @@ export function SiteHeader({ items, companyName }: { items: HeaderNavItem[]; com
       )}
     >
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <Link href="/" aria-label={t("home")} className="shrink-0">
+        <Link href="/" className="shrink-0">
           <Logo name={companyName} />
         </Link>
 
@@ -61,7 +61,7 @@ export function SiteHeader({ items, companyName }: { items: HeaderNavItem[]; com
               className={cn(
                 "relative whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 isActive(item.href)
-                  ? "text-primary-600"
+                  ? "text-brand"
                   : "text-foreground/80 hover:text-foreground",
               )}
             >

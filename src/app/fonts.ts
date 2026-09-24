@@ -1,4 +1,4 @@
-import { Inter, IBM_Plex_Sans_Arabic } from "next/font/google";
+import { Inter } from "next/font/google";
 
 /** Latin UI font. */
 export const latin = Inter({
@@ -7,10 +7,5 @@ export const latin = Inter({
   display: "swap",
 });
 
-/** Arabic-capable font, loaded for the RTL locale. */
-export const arabic = IBM_Plex_Sans_Arabic({
-  subsets: ["arabic"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-plex-arabic",
-  display: "swap",
-});
+/* The Arabic font is self-hosted (public/fonts + @font-face in globals.css) with a
+   unicode-range, so only pages containing Arabic text download it. */

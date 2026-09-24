@@ -96,7 +96,7 @@ export async function ActivityGridBlockView({ block, locale }: BlockProps<Activi
               <span className="text-lg font-semibold text-primary-700 dark:text-primary-200">
                 {tc("discoverServices")}
               </span>
-              <ArrowRight className="size-5 text-primary-600 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
+              <ArrowRight className="size-5 text-brand transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
             </Link>
           </Reveal>
         </RevealGroup>

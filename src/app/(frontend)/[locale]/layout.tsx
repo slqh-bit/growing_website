@@ -3,12 +3,13 @@ import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { setRequestLocale, getMessages, getTranslations } from "next-intl/server";
 import { getDir, isValidLocale, type Locale } from "@/i18n/routing";
-import { latin, arabic } from "@/app/fonts";
+import { latin } from "@/app/fonts";
 import { ThemeProvider, initScript } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { getNavigation, getSiteSettings } from "@/lib/cms/queries";
 import { siteUrl } from "@/lib/metadata";
+import { JsonLd, localBusinessLd } from "@/lib/seo/json-ld";
 import "@/styles/globals.css";
 
 /**
@@ -58,6 +59,7 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
   const dir = getDir(locale);
+  const plausibleDomain = process.env.PLAUSIBLE_DOMAIN;
   const [messages, t, navigation, settings] = await Promise.all([
     getMessages(),
     getTranslations({ locale, namespace: "common" }),
@@ -69,11 +71,19 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       dir={dir}
-      className={`${latin.variable} ${arabic.variable}`}
+      className={latin.variable}
       suppressHydrationWarning
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: initScript }} />
+        {plausibleDomain && (
+          // Cookie-free audience measurement (see politique-confidentialite).
+          <script
+            defer
+            data-domain={plausibleDomain}
+            src={process.env.PLAUSIBLE_SRC || "https://plausible.io/js/script.js"}
+          />
+        )}
       </head>
       <body className="min-h-dvh antialiased">
         <ThemeProvider>
@@ -90,6 +100,7 @@ export default async function LocaleLayout({
                 {children}
               </main>
               <SiteFooter locale={locale} />
+              <JsonLd data={localBusinessLd(settings, locale, t("companyTagline"))} />
             </div>
           </NextIntlClientProvider>
         </ThemeProvider>
