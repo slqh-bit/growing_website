@@ -9,6 +9,7 @@ import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/sections/page-header";
 import { Reveal } from "@/components/motion/reveal";
+import { telHref, whatsappHref } from "@/lib/contact-links";
 
 export async function generateMetadata({
   params,
@@ -33,19 +34,18 @@ export default async function ContactPage({
     getSiteSettings(locale),
   ]);
 
-  const digits = (value: string) => value.replace(/[^\d+]/g, "");
   const { lat, lng } = settings.coords;
   // OpenStreetMap embed (no API key required).
   const bbox = `${lng - 0.03}%2C${lat - 0.02}%2C${lng + 0.03}%2C${lat + 0.02}`;
   const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat}%2C${lng}`;
 
   const items = [
-    { icon: Phone, label: t("phone"), value: settings.phone, href: `tel:${digits(settings.phone)}`, ltr: true },
+    { icon: Phone, label: t("phone"), value: settings.phone, href: telHref(settings.phone), ltr: true },
     {
       icon: MessageCircle,
       label: "WhatsApp",
       value: settings.whatsapp,
-      href: settings.whatsapp ? `https://wa.me/${digits(settings.whatsapp).replace(/^\+/, "")}` : undefined,
+      href: settings.whatsapp ? whatsappHref(settings.whatsapp) : undefined,
       ltr: true,
     },
     { icon: Mail, label: t("email"), value: settings.email, href: `mailto:${settings.email}`, ltr: true },

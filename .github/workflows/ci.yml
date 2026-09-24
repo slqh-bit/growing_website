@@ -64,13 +64,30 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci
+      # Same order as a real deployment (DEPLOY.md): build without a database,
+      # first boot applies the migrations, then seed.
       - run: npm run build
-      # Production mode: applies the migrations (never a schema push), then seeds.
-      - run: npm run seed
+        env:
+          DATABASE_URI: postgres://build:build@127.0.0.1:1/build
+      - name: Start the app (first boot applies the migrations)
+        run: |
+          nohup npm run start -- -p 3100 > server.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://localhost:3100/api/health && exit 0; sleep 2; done
+          cat server.log; exit 1
+      - name: Seed
         env:
           NODE_ENV: production
+        run: |
+          set -o pipefail
+          npm run seed 2>&1 | tee seed.log
+          grep -q "Seed complete" seed.log || { echo "::error::The seed exited without completing"; exit 1; }
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+        env:
+          E2E_BASE_URL: http://localhost:3100
+      - name: Server log
+        if: failure()
+        run: cat server.log || true
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -111,10 +128,12 @@ jobs:
           for i in $(seq 1 60); do curl -fsS http://localhost:3000/api/health && exit 0; sleep 2; done
           docker logs app; exit 1
       - name: Seed with the tools image (as in DEPLOY.md)
-        run: >-
-          docker run --rm --network host $RUN_ENV -e NODE_ENV=production
-          -e SEED_ADMIN_EMAIL=ci-admin@example.com -e SEED_ADMIN_PASSWORD=ci-admin-password-123
-          growingtech-tools:ci npm run seed
+        run: |
+          set -o pipefail
+          docker run --rm --network host $RUN_ENV -e NODE_ENV=production \
+            -e SEED_ADMIN_EMAIL=ci-admin@example.com -e SEED_ADMIN_PASSWORD=ci-admin-password-123 \
+            growingtech-tools:ci npm run seed 2>&1 | tee seed.log
+          grep -q "Seed complete" seed.log || { echo "::error::The seed exited without completing"; exit 1; }
       - name: Pages render from the container
         run: |
           for path in /fr /ar /en/services /fr/devis /sitemap.xml /robots.txt /admin; do

@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/sections/page-header";
 import { Reveal } from "@/components/motion/reveal";
 import { DevisForm } from "@/components/devis/devis-form";
 import type { ActivityChoice } from "@/components/devis/steps";
+import { telHref, whatsappHref } from "@/lib/contact-links";
 
 export async function generateMetadata({
   params,
@@ -43,7 +44,6 @@ export default async function DevisPage({ params }: { params: Promise<{ locale: 
     };
   });
 
-  const digits = (value: string) => value.replace(/[^\d+]/g, "");
   const reasons = [
     { icon: FileCheck2, text: t("aside.free") },
     { icon: Clock, text: t("aside.fast") },
@@ -80,7 +80,7 @@ export default async function DevisPage({ params }: { params: Promise<{ locale: 
               <p className="font-semibold">{t("aside.preferCall")}</p>
               <div className="mt-4 flex flex-col gap-2">
                 <a
-                  href={`tel:${digits(settings.phone)}`}
+                  href={telHref(settings.phone)}
                   className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 font-semibold backdrop-blur-sm transition-colors hover:bg-white/25"
                   dir="ltr"
                 >
@@ -89,7 +89,7 @@ export default async function DevisPage({ params }: { params: Promise<{ locale: 
                 </a>
                 {settings.whatsapp && (
                   <a
-                    href={`https://wa.me/${digits(settings.whatsapp).replace(/^\+/, "")}`}
+                    href={whatsappHref(settings.whatsapp)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 font-semibold backdrop-blur-sm transition-colors hover:bg-white/25"

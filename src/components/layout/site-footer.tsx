@@ -5,6 +5,7 @@ import type { Locale } from "@/i18n/routing";
 import { getFooter, getServices, getSiteSettings } from "@/lib/cms/queries";
 import { Logo } from "@/components/brand/logo";
 import { SmartLink } from "@/components/cms/smart-link";
+import { telHref } from "@/lib/contact-links";
 
 /** Footer: links from the Footer global, activities from Services, contacts from Site settings. */
 export async function SiteFooter({ locale }: { locale: Locale }) {
@@ -77,7 +78,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="size-4 shrink-0 text-brand" aria-hidden />
-                <a href={`tel:${settings.phone.replace(/\s/g, "")}`} className="hover:text-brand" dir="ltr">
+                <a href={telHref(settings.phone)} className="hover:text-brand" dir="ltr">
                   {settings.phone}
                 </a>
               </li>

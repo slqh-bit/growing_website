@@ -6,6 +6,7 @@ import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/motion/reveal";
 import { SmartLink, type CtaLink } from "@/components/cms/smart-link";
+import { telHref } from "@/lib/contact-links";
 
 /**
  * Closing call-to-action band. The CTA block passes its own copy; inner pages
@@ -54,7 +55,7 @@ export async function CtaBand({
                 variant="outline"
                 className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white"
               >
-                <a href={`tel:${settings.phone.replace(/\s/g, "")}`} dir="ltr">
+                <a href={telHref(settings.phone)} dir="ltr">
                   <Phone className="size-5" />
                   {settings.phone}
                 </a>
