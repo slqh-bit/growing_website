@@ -13,7 +13,10 @@
 # request), so no database has to be reachable while building.
 # ---------------------------------------------------------------------------
 
-ARG NODE_IMAGE=node:22-alpine
+# Node ≥ 24.15: earlier releases (and all of 22.x) have a web-streams race that
+# logs "controller[kState].transformAlgorithm is not a function" when a client
+# disconnects mid-response (nodejs/node#62036).
+ARG NODE_IMAGE=node:24-alpine
 
 FROM ${NODE_IMAGE} AS base
 # No extra OS packages: sharp and Next's SWC ship musl (Alpine) binaries.

@@ -1,0 +1,6 @@
+# Keep LF everywhere (matches .editorconfig); shell scripts run in Linux containers.
+* text=auto eol=lf
+*.woff2 binary
+*.png binary
+*.ico binary
+OFL-*.txt -text
