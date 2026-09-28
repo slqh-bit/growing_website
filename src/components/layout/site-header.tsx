@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import { Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowRight, ListChecks } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { Logo } from "@/components/brand/logo";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
@@ -85,6 +85,13 @@ export function SiteHeader({ items, companyName }: { items: HeaderNavItem[]; com
             <ThemeToggle />
           </div>
           <LanguageSwitcher />
+          {/* Icon-only until xl, where the full label fits next to the menu. */}
+          <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
+            <Link href="/suivi" aria-label={tc("trackRequest")} title={tc("trackRequest")}>
+              <ListChecks className="size-4" aria-hidden />
+              <span className="hidden xl:inline">{tc("trackRequest")}</span>
+            </Link>
+          </Button>
           <Button asChild variant="solar" size="sm" className="hidden md:inline-flex">
             <Link href="/devis">
               {tc("requestQuote")}
@@ -132,7 +139,13 @@ export function SiteHeader({ items, companyName }: { items: HeaderNavItem[]; com
               )}
             </Link>
           ))}
-          <div className="mt-2 flex items-center gap-2">
+          <Button asChild variant="outline" className="mt-2">
+            <Link href="/suivi">
+              <ListChecks className="size-4" aria-hidden />
+              {tc("trackRequest")}
+            </Link>
+          </Button>
+          <div className="flex items-center gap-2">
             <Button asChild variant="solar" className="flex-1">
               <Link href="/devis">{tc("requestQuote")}</Link>
             </Button>
