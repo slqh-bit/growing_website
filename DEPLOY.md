@@ -8,14 +8,14 @@ Internet ──► caddy ──► app (Next.js + Payload, :3000) ──► db (
              │  automatic Let's Encrypt, www → apex,        │  internal network only
              │  HSTS, X-Real-IP                             │
              └─ volume caddy_data (certificates)            ├─ volume pgdata
-                                     app ── volume media ───┤
-                                  backup ── nightly pg_dump + media archive → deploy/backups/
+                            app ── volumes media, quotes ───┤
+                         backup ── nightly pg_dump + media + quotes archives → deploy/backups/
 ```
 
 | Service  | Image                         | Exposed         | Persistent data         |
 | -------- | ----------------------------- | --------------- | ----------------------- |
 | `caddy`  | `caddy:2-alpine`              | 80, 443 tcp/udp | `caddy_data` (certs)    |
-| `app`    | built from `Dockerfile`       | internal :3000  | `media` (uploads)       |
+| `app`    | built from `Dockerfile`       | internal :3000  | `media` (public uploads), `quotes` (private quote PDFs) |
 | `db`     | `postgres:16-alpine`          | none            | `pgdata`                |
 | `backup` | `postgres:16-alpine`          | none            | `deploy/backups/` (host) |
 | `tools`  | `Dockerfile` builder stage    | on demand       | —                       |
@@ -59,7 +59,7 @@ docker compose up -d --force-recreate app     # serve pages from the fresh conte
 ```
 
 > Run the seed **after** `up -d`: the app container must be the first to use the
-> `media` volume so the upload folder belongs to the app user.
+> `media` and `quotes` volumes so the upload folders belong to the app user.
 
 Then:
 
@@ -96,7 +96,9 @@ The `backup` service runs every night at `BACKUP_HOUR` (Africa/Tunis) and writes
 to `deploy/backups/`:
 
 - `db-YYYYMMDD-HHMMSS.dump` — `pg_dump` custom format (verified after writing)
-- `media-YYYYMMDD-HHMMSS.tar.gz` — every uploaded file
+- `media-YYYYMMDD-HHMMSS.tar.gz` — every uploaded image
+- `quotes-YYYYMMDD-HHMMSS.tar.gz` — the quote PDFs sent to clients (private:
+  treat these archives, like the database dumps, as confidential)
 
 Files older than `BACKUP_RETENTION_DAYS` (default 14) are deleted.
 
@@ -120,11 +122,13 @@ or push to object storage with `rclone copy deploy/backups remote:growingtech`.
 From `deploy/`, with the stack running:
 
 ```bash
-./backup/restore.sh backups/db-20260924-030000.dump backups/media-20260924-030000.tar.gz
+./backup/restore.sh backups/db-20260924-030000.dump backups/media-20260924-030000.tar.gz \
+  backups/quotes-20260924-030000.tar.gz
 ```
 
 It asks for confirmation, stops the app, restores the database in a single
-transaction (and the media folder if an archive is given), then recreates the
+transaction (and the media / quote PDF folders if archives are given — both
+optional, in that order), then recreates the
 app container so no page cached from the old data survives. To restore on a
 **new server**: deploy as in §2 (skip the seed), copy the backup files into
 `deploy/backups/`, then run the script.
@@ -164,6 +168,7 @@ Caddy issues certificates from its own local CA; browse `https://localhost`
 | Every save in the admin fails with **403** | The admin was opened on another origin than `SERVER_URL` (e.g. `www.`). Use `https://<SITE_DOMAIN>/admin`; `www` redirects there. |
 | **No certificate** / browser TLS error | DNS doesn't point to the VPS yet, or port 80/443 is closed. Check `docker compose logs caddy`; Caddy retries automatically. |
 | `app` stays **unhealthy** after a start | `docker compose logs app`. If it waits on a migration prompt, the database was once used by `npm run dev` (schema push): `docker compose exec db psql -U growingtech -c "DELETE FROM payload_migrations WHERE batch = -1"` then `docker compose restart app`. |
-| **Uploads fail** (permission denied) | The media volume was created by another container first: `docker compose run --rm --no-deps --user root --entrypoint chown app -R 1001:1001 /app/media`. |
+| **Uploads fail** (permission denied) | The volume was created by another container first: `docker compose run --rm --no-deps --user root --entrypoint chown app -R 1001:1001 /app/media /app/quotes`. |
+| **"Devis envoyé" email fails** (quote PDF) | `docker compose logs app \| grep -i "status email"`. The PDF must be attached on the request; if the log says the file is missing, the `quotes` volume was lost — restore it from a `quotes-*.tar.gz` backup. |
 | Quote emails not received | `SMTP_*` wrong or missing (emails are then only logged): `docker compose logs app \| grep -i mail`. Leads are always stored in the admin regardless. |
 | Old content after a restore or SQL change | Refresh the cached pages (see §6). |

@@ -238,6 +238,25 @@ export const DevisRequests: CollectionConfig = {
       },
     },
     {
+      name: "quote",
+      type: "upload",
+      relationTo: "quote-documents",
+      label: t3("Devis (PDF)", "Quote (PDF)", "التسعيرة (PDF)"),
+      admin: {
+        position: "sidebar",
+        description: t3(
+          "Obligatoire pour « Devis envoyé » : il est joint à l'e-mail du client. Sans e-mail client, envoyez-le par WhatsApp.",
+          "Required for “Quote sent”: it is attached to the client's email. If the client gave no email, send it on WhatsApp.",
+          "إلزامي لـ« أُرسلت التسعيرة »: يُرفق برسالة العميل. إن لم يترك العميل بريداً، أرسلها عبر واتساب.",
+        ),
+      },
+      // The status email promises a quote: never let "devis-envoye" be saved without one.
+      validate: (value: unknown, { siblingData }: { siblingData: Partial<{ status: string }> }) =>
+        siblingData?.status !== "devis-envoye" ||
+        Boolean(value) ||
+        "Joignez le devis PDF avant de passer au statut « Devis envoyé ».",
+    },
+    {
       name: "locale",
       type: "select",
       defaultValue: "fr",

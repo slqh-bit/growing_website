@@ -4,8 +4,11 @@
  * server-only, so the DevisRequests collection hook can use it even when the
  * Payload CLI (not a Next.js server) changes a status.
  */
+import { access } from "fs/promises";
+import path from "path";
 import type { Payload } from "payload";
 import type { DevisRequest } from "@/payload-types";
+import { quotesDir } from "./quote-files";
 import type { DevisStatus } from "./tracking";
 
 export function escapeHtml(value: string): string {
@@ -66,7 +69,7 @@ const statusCopy: Record<
     title: { "devis-envoye": "Votre devis est prêt", gagne: "Votre projet est confirmé" },
     body: {
       "devis-envoye":
-        "Notre devis pour votre projet vous a été transmis. N'hésitez pas à nous contacter pour toute question ou pour en discuter.",
+        "Veuillez trouver ci-joint notre devis pour votre projet (PDF). N'hésitez pas à nous contacter pour toute question ou pour en discuter.",
       gagne:
         "Merci pour votre confiance ! Votre projet est confirmé ; notre équipe vous contacte pour planifier la suite.",
     },
@@ -84,7 +87,7 @@ const statusCopy: Record<
     title: { "devis-envoye": "Your quote is ready", gagne: "Your project is confirmed" },
     body: {
       "devis-envoye":
-        "Our quote for your project has been sent to you. Feel free to contact us with any question or to discuss it.",
+        "Please find attached our quote for your project (PDF). Feel free to contact us with any question or to discuss it.",
       gagne:
         "Thank you for your trust! Your project is confirmed; our team will contact you to plan the next steps.",
     },
@@ -102,7 +105,7 @@ const statusCopy: Record<
     title: { "devis-envoye": "تسعيرتك جاهزة", gagne: "تمّ تأكيد مشروعك" },
     body: {
       "devis-envoye":
-        "لقد أرسلنا إليك تسعيرة مشروعك. لا تتردّد في التواصل معنا لأيّ استفسار أو لمناقشتها.",
+        "تجد مرفقاً تسعيرة مشروعك (PDF). لا تتردّد في التواصل معنا لأيّ استفسار أو لمناقشتها.",
       gagne: "شكراً على ثقتك! تمّ تأكيد مشروعك، وسيتواصل معك فريقنا لتخطيط المراحل القادمة.",
     },
     reference: "مرجعك",
@@ -142,6 +145,22 @@ ${copy.track} : ${url}
 
 ${copy.questions} : ${settings.phone} · ${settings.email}`;
 
-  await payload.sendEmail({ to: lead.email, subject: subject(ref), html, text });
-  payload.logger.info(`Devis ${ref}: status email (${status}) sent to client.`);
+  // "Devis envoyé" carries the quote itself (the field is required for that status).
+  const attachments = status === "devis-envoye" ? [await quoteAttachment(payload, lead, ref)] : [];
+
+  await payload.sendEmail({ to: lead.email, subject: subject(ref), html, text, attachments });
+  payload.logger.info(
+    `Devis ${ref}: status email (${status}${attachments.length ? ", quote attached" : ""}) sent to client.`,
+  );
+}
+
+/** The lead's quote PDF as a nodemailer attachment. Throws if it is missing. */
+async function quoteAttachment(payload: Payload, lead: DevisRequest, ref: string) {
+  const id = typeof lead.quote === "object" ? lead.quote?.id : lead.quote;
+  if (!id) throw new Error("no quote PDF attached to the lead");
+  const doc = await payload.findByID({ collection: "quote-documents", id, depth: 0, overrideAccess: true });
+  if (!doc.filename) throw new Error(`quote document ${id} has no file`);
+  const filePath = path.resolve(quotesDir, doc.filename);
+  await access(filePath); // a clear error if the file is missing on disk
+  return { filename: `Devis-${ref}.pdf`, path: filePath, contentType: "application/pdf" };
 }

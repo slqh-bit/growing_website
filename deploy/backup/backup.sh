@@ -1,5 +1,5 @@
 #!/bin/sh
-# One backup run: PostgreSQL dump (custom format) + media archive, then
+# One backup run: PostgreSQL dump (custom format) + media and quotes archives, then
 # retention. Runs inside the `backup` service (postgres:16-alpine), which has
 # pg_dump and reads PG* env vars. Manual run:
 #   docker compose exec backup sh /scripts/backup.sh
@@ -17,10 +17,14 @@ mv "$DEST/db-$STAMP.dump.partial" "$DEST/db-$STAMP.dump"
 tar -czf "$DEST/media-$STAMP.tar.gz.partial" -C /data/media .
 mv "$DEST/media-$STAMP.tar.gz.partial" "$DEST/media-$STAMP.tar.gz"
 
+# Quote PDFs sent to clients (private volume, separate from public media).
+tar -czf "$DEST/quotes-$STAMP.tar.gz.partial" -C /data/quotes .
+mv "$DEST/quotes-$STAMP.tar.gz.partial" "$DEST/quotes-$STAMP.tar.gz"
+
 # Sanity check: the dump's table of contents must be readable.
 pg_restore --list "$DEST/db-$STAMP.dump" >/dev/null
 
-find "$DEST" -maxdepth 1 -type f \( -name 'db-*.dump' -o -name 'media-*.tar.gz' \) -mtime +"$RETENTION_DAYS" -delete
+find "$DEST" -maxdepth 1 -type f \( -name 'db-*.dump' -o -name 'media-*.tar.gz' -o -name 'quotes-*.tar.gz' \) -mtime +"$RETENTION_DAYS" -delete
 find "$DEST" -maxdepth 1 -type f -name '*.partial' -mmin +360 -delete
 
-echo "[backup] $(date '+%F %T') ok: db-$STAMP.dump ($(du -h "$DEST/db-$STAMP.dump" | cut -f1)), media-$STAMP.tar.gz ($(du -h "$DEST/media-$STAMP.tar.gz" | cut -f1)); kept ${RETENTION_DAYS}d"
+echo "[backup] $(date '+%F %T') ok: db-$STAMP.dump ($(du -h "$DEST/db-$STAMP.dump" | cut -f1)), media-$STAMP.tar.gz ($(du -h "$DEST/media-$STAMP.tar.gz" | cut -f1)), quotes-$STAMP.tar.gz ($(du -h "$DEST/quotes-$STAMP.tar.gz" | cut -f1)); kept ${RETENTION_DAYS}d"

@@ -14,6 +14,7 @@ import { Faq } from "./collections/Faq";
 import { Media } from "./collections/Media";
 import { Pages } from "./collections/Pages";
 import { Projects } from "./collections/Projects";
+import { QuoteDocuments } from "./collections/QuoteDocuments";
 import { Services } from "./collections/Services";
 import { Team } from "./collections/Team";
 import { Users } from "./collections/Users";
@@ -72,7 +73,7 @@ export default buildConfig({
     // Built-in avatar instead of Gravatar: no admin email hash sent to a third party.
     avatar: "default",
   },
-  collections: [Pages, Services, Projects, Faq, Team, DevisRequests, Media, Users],
+  collections: [Pages, Services, Projects, Faq, Team, DevisRequests, QuoteDocuments, Media, Users],
   globals: [SiteSettings, Navigation, Footer],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",

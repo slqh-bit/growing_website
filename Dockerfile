@@ -54,8 +54,8 @@ ENV NODE_ENV=production \
 
 RUN addgroup -S -g 1001 nodejs \
  && adduser -S -u 1001 -G nodejs nextjs \
- && mkdir -p /app/media \
- && chown nextjs:nodejs /app/media
+ && mkdir -p /app/media /app/quotes \
+ && chown nextjs:nodejs /app/media /app/quotes
 
 COPY --from=builder /app/public ./public
 # Standalone output: server.js + only the node_modules files it traces.
@@ -66,8 +66,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 EXPOSE 3000
 
-# Uploaded media lives here — mount a volume (see deploy/docker-compose.yml).
-VOLUME ["/app/media"]
+# Uploads live here — mount volumes (see deploy/docker-compose.yml). Quote PDFs
+# are private and kept apart from the publicly served media.
+VOLUME ["/app/media", "/app/quotes"]
 
 # /api/health also checks the database; generous start period for the first
 # boot, which applies pending Payload migrations.

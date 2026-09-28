@@ -73,6 +73,7 @@ export interface Config {
     faq: Faq;
     team: Team;
     'devis-requests': DevisRequest;
+    'quote-documents': QuoteDocument;
     media: Media;
     users: User;
     'payload-kv': PayloadKv;
@@ -88,6 +89,7 @@ export interface Config {
     faq: FaqSelect<false> | FaqSelect<true>;
     team: TeamSelect<false> | TeamSelect<true>;
     'devis-requests': DevisRequestsSelect<false> | DevisRequestsSelect<true>;
+    'quote-documents': QuoteDocumentsSelect<false> | QuoteDocumentsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -553,6 +555,10 @@ export interface DevisRequest {
    * The client (if they gave an email) is notified at “Quote sent” and “Won”.
    */
   status: 'nouveau' | 'contacte' | 'devis-envoye' | 'gagne' | 'perdu';
+  /**
+   * Required for “Quote sent”: it is attached to the client's email. If the client gave no email, send it on WhatsApp.
+   */
+  quote?: (number | null) | QuoteDocument;
   locale?: ('fr' | 'ar' | 'en') | null;
   /**
    * Never shown to the client.
@@ -631,6 +637,26 @@ export interface DevisRequest {
   createdAt: string;
 }
 /**
+ * Quotes sent to clients. Visible to the team only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quote-documents".
+ */
+export interface QuoteDocument {
+  id: number;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -705,6 +731,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'devis-requests';
         value: number | DevisRequest;
+      } | null)
+    | ({
+        relationTo: 'quote-documents';
+        value: number | QuoteDocument;
       } | null)
     | ({
         relationTo: 'media';
@@ -1015,6 +1045,7 @@ export interface TeamSelect<T extends boolean = true> {
 export interface DevisRequestsSelect<T extends boolean = true> {
   reference?: T;
   status?: T;
+  quote?: T;
   locale?: T;
   notes?: T;
   statusHistory?:
@@ -1069,6 +1100,23 @@ export interface DevisRequestsSelect<T extends boolean = true> {
   consent?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quote-documents_select".
+ */
+export interface QuoteDocumentsSelect<T extends boolean = true> {
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
