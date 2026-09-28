@@ -58,6 +58,16 @@ test("FR: a complete pompage request reaches the success screen", async ({ page 
   await expect(page.locator("span.font-mono")).toHaveText(/^GT-\d{6}-[0-9A-F]{4}$/);
 });
 
+test("honeypot is not rendered, so autofill can't fill it", async ({ page }) => {
+  // A sr-only field named "website" was autofilled for real visitors, whose
+  // leads were then silently dropped as spam.
+  await page.goto("/fr/devis");
+  const honeypot = page.locator('form input[tabindex="-1"][type="text"]');
+  await expect(honeypot).toHaveCount(1);
+  await expect(honeypot).toBeHidden();
+  await expect(honeypot).not.toHaveAttribute("name", /web|url|site|mail|name|phone/i);
+});
+
 test("AR: the form is right-to-left and translated", async ({ page }) => {
   await page.goto("/ar/devis");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");

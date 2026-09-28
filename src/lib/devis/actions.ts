@@ -47,7 +47,8 @@ export async function submitDevis(raw: unknown, meta: SubmitDevisMeta): Promise<
 
   const tooFast = typeof meta.startedAt !== "number" || Date.now() - meta.startedAt < MIN_FILL_MS;
   if (meta.website || tooFast) {
-    payload.logger.info(`Devis spam trap triggered (${meta.website ? "honeypot" : "too fast"}); not stored.`);
+    // warn, not info: a real visitor caught here loses their lead, so it must stand out.
+    payload.logger.warn(`Devis spam trap triggered (${meta.website ? "honeypot" : "too fast"}); not stored.`);
     return { ok: true, reference: fakeReference() };
   }
 

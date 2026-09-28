@@ -202,11 +202,24 @@ export function DevisForm({
         }}
         className="px-5 py-6 sm:px-8 sm:py-8"
       >
-        {/* Honeypot: invisible to people and assistive tech; bots fill every field. */}
-        <div aria-hidden="true" className="sr-only">
+        {/* Honeypot: bots fill every input in the markup. Not rendered (display:none) and
+            given a meaningless name/label, so browser autofill and password managers —
+            which filled the old sr-only "website" field for real visitors — skip it. */}
+        <div aria-hidden="true" className="hidden">
           <label>
-            Website
-            <input ref={honeypot} type="text" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
+            gt-hp
+            <input
+              ref={honeypot}
+              type="text"
+              name="gt_hp_ref"
+              tabIndex={-1}
+              autoComplete="off"
+              data-1p-ignore=""
+              data-lpignore="true"
+              data-bwignore=""
+              data-form-type="other"
+              defaultValue=""
+            />
           </label>
         </div>
 
