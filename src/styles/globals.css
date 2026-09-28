@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* `dark:` utilities follow the .dark class set by the theme toggle, not the OS
+   setting (Tailwind v4's default), so an explicit light/dark choice applies. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ------------------------------------------------------------------ */
 /* IBM Plex Sans Arabic (SIL OFL 1.1, see public/fonts/), Arabic subset */
 /* only, so French/English pages never download it; Latin text falls   */
