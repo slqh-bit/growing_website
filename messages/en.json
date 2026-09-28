@@ -187,7 +187,8 @@
       "keepRef": "Keep this reference to follow up on your request.",
       "emailSent": "A confirmation email was sent to {email}.",
       "backHome": "Back to home",
-      "newRequest": "New request"
+      "newRequest": "New request",
+      "track": "Track my request"
     },
     "aside": {
       "title": "Why choose us for your project?",
@@ -210,5 +211,47 @@
     "title": "Something went wrong",
     "subtitle": "The content could not be loaded. Please try again in a moment.",
     "retry": "Try again"
+  },
+  "track": {
+    "title": "Track my request",
+    "subtitle": "Check the progress of your quote request with your reference and phone number.",
+    "reference": "Reference",
+    "referencePlaceholder": "GT-260928-A1B2",
+    "referenceHint": "Shown after sending the form and in the confirmation email.",
+    "phone": "Phone",
+    "phoneHint": "The number given in your request.",
+    "submit": "See progress",
+    "submitting": "Searching…",
+    "errors": {
+      "invalidReference": "Invalid reference. Expected format: GT-YYMMDD-XXXX.",
+      "invalidPhone": "Invalid number: 8 digits, e.g. 98 123 456.",
+      "notFound": "No request matches this reference and number. Please check both fields.",
+      "rateLimited": "Too many searches. Please try again in a few minutes.",
+      "server": "Something went wrong. Please try again or contact us."
+    },
+    "result": {
+      "heading": "Request",
+      "activity": "Activity:",
+      "steps": {
+        "received": "Request received",
+        "review": "Under review",
+        "quote": "Quote sent",
+        "done": "File completed",
+        "confirmed": "Project confirmed",
+        "closed": "File closed"
+      },
+      "stepHelp": {
+        "received": "Your request is registered.",
+        "review": "Our team is studying your project and will contact you.",
+        "quote": "Your quote has been sent to you.",
+        "done": "Last step of the file.",
+        "confirmed": "Thank you for your trust, we are planning the next steps.",
+        "closed": "This file is closed. Contact us for a new project."
+      },
+      "current": "Current step",
+      "pending": "Upcoming",
+      "questions": "A question about your file?",
+      "another": "Look up another request"
+    }
   }
 }

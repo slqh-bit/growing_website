@@ -1,5 +1,6 @@
 import { randomBytes } from "crypto";
-import type { CollectionConfig, Field } from "payload";
+import { after } from "next/server";
+import type { CollectionAfterChangeHook, CollectionConfig, Field } from "payload";
 import { admins, authenticated } from "../cms/access";
 import { groups, t3 } from "../cms/labels";
 import { devisStatusOptions } from "../cms/options";
@@ -14,6 +15,8 @@ import {
   waterSourceOptions,
 } from "../lib/devis/options";
 import { isValidTnPhone, normalizeTnPhone } from "../lib/devis/phone";
+import { notifyStatusChange } from "../lib/devis/email";
+import { clientNotifiedStatuses, type DevisStatus } from "../lib/devis/tracking";
 import { locales } from "../i18n/config";
 
 /** Human-friendly lead reference, e.g. GT-260924-7K2Q. */
@@ -139,6 +142,31 @@ const technicalFields: Field[] = [
 ];
 
 /**
+ * Emails the client when their lead reaches a notified status. Scheduled with
+ * `after` (once the admin save is committed and answered); outside a Next.js
+ * request (Payload CLI scripts) it is sent right away instead.
+ */
+const emailClientOnStatusChange: CollectionAfterChangeHook = ({ doc, previousDoc, operation, req, context }) => {
+  const status = doc.status as DevisStatus;
+  if (operation !== "update" || context.skipStatusEmail) return doc;
+  if (status === previousDoc?.status || !clientNotifiedStatuses.includes(status) || !doc.email) return doc;
+
+  const send = async () => {
+    try {
+      await notifyStatusChange(req.payload, doc);
+    } catch (err) {
+      req.payload.logger.error({ err, msg: `Devis ${doc.reference}: status email failed` });
+    }
+  };
+  try {
+    after(send);
+  } catch {
+    void send(); // no Next.js request scope
+  }
+  return doc;
+};
+
+/**
  * Captured quote requests (devplan §6). Public visitors never write here via the
  * REST API — the Phase 5 server action validates with Zod and uses the Local API.
  */
@@ -164,12 +192,23 @@ export const DevisRequests: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      ({ data, operation }) => {
+      ({ data, operation, originalDoc }) => {
         if (operation === "create" && !data.reference) data.reference = generateReference();
         if (typeof data.phone === "string") data.phone = normalizeTnPhone(data.phone);
+
+        // Date each status is reached, for the client tracking page (/suivi).
+        const status = data.status ?? originalDoc?.status ?? "nouveau";
+        const history = (originalDoc?.statusHistory ?? []) as { status: string; changedAt: string }[];
+        if (operation === "create" || status !== originalDoc?.status) {
+          data.statusHistory = [
+            ...history.map(({ status, changedAt }) => ({ status, changedAt })),
+            { status, changedAt: new Date().toISOString() },
+          ];
+        }
         return data;
       },
     ],
+    afterChange: [emailClientOnStatusChange],
   },
   fields: [
     // --- Sidebar: workflow ---
@@ -189,7 +228,14 @@ export const DevisRequests: CollectionConfig = {
       options: devisStatusOptions,
       index: true,
       label: t3("Statut", "Status", "الحالة"),
-      admin: { position: "sidebar" },
+      admin: {
+        position: "sidebar",
+        description: t3(
+          "Le client (s'il a donné un e-mail) est prévenu aux étapes « Devis envoyé » et « Gagné ».",
+          "The client (if they gave an email) is notified at “Quote sent” and “Won”.",
+          "يُعلَم العميل (إن ترك بريداً إلكترونياً) عند « أُرسلت التسعيرة » و« ناجح ».",
+        ),
+      },
     },
     {
       name: "locale",
@@ -207,6 +253,35 @@ export const DevisRequests: CollectionConfig = {
         position: "sidebar",
         description: t3("Jamais visibles par le client.", "Never shown to the client.", "لا تظهر للعميل أبداً."),
       },
+    },
+    {
+      name: "statusHistory",
+      type: "array",
+      label: t3("Historique du statut", "Status history", "سجلّ الحالة"),
+      admin: {
+        readOnly: true,
+        initCollapsed: true,
+        description: t3(
+          "Rempli automatiquement ; les dates apparaissent sur la page de suivi du client.",
+          "Filled automatically; the dates appear on the client's tracking page.",
+          "يُملأ تلقائياً؛ تظهر التواريخ في صفحة المتابعة لدى العميل.",
+        ),
+      },
+      fields: [
+        {
+          type: "row",
+          fields: [
+            { name: "status", type: "select", required: true, options: devisStatusOptions, label: t3("Statut", "Status", "الحالة") },
+            {
+              name: "changedAt",
+              type: "date",
+              required: true,
+              label: t3("Date", "Date", "التاريخ"),
+              admin: { date: { pickerAppearance: "dayAndTime" } },
+            },
+          ],
+        },
+      ],
     },
 
     // --- Step 1: activity ---

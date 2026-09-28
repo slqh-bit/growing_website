@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Copy, Home, RotateCcw } from "lucide-react";
+import { Check, Copy, Home, ListChecks, RotateCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -79,6 +79,12 @@ export function DevisSuccess({
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <Button asChild variant="solar">
+          <Link href={{ pathname: "/suivi", query: { ref: reference } }}>
+            <ListChecks className="size-4" />
+            {t("track")}
+          </Link>
+        </Button>
+        <Button asChild variant="outline">
           <Link href="/">
             <Home className="size-4" />
             {t("backHome")}

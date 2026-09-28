@@ -55,7 +55,22 @@ test("FR: a complete pompage request reaches the success screen", async ({ page 
   await expect(page.getByRole("heading", { name: "Demande envoyée !" })).toBeVisible({
     timeout: 15_000,
   });
-  await expect(page.locator("span.font-mono")).toHaveText(/^GT-\d{6}-[0-9A-F]{4}$/);
+  const reference = (await page.locator("span.font-mono").textContent())!.trim();
+  expect(reference).toMatch(/^GT-\d{6}-[0-9A-F]{4}$/);
+
+  // Tracking: the success link pre-fills the reference; the phone must match.
+  await page.getByRole("link", { name: "Suivre ma demande" }).click();
+  await expect(page).toHaveURL(new RegExp(`/fr/suivi\\?ref=${reference}$`));
+  await expect(page.locator("#track-reference")).toHaveValue(reference);
+  await page.fill("#track-phone", "22 333 444");
+  await page.getByRole("button", { name: "Voir l'avancement" }).click();
+  await expect(page.locator("form").getByRole("alert")).toContainText(
+    "Aucune demande ne correspond",
+  );
+  await page.fill("#track-phone", "98123456");
+  await page.getByRole("button", { name: "Voir l'avancement" }).click();
+  await expect(page.getByRole("heading", { level: 2 })).toContainText(reference);
+  await expect(page.locator('li[aria-current="step"]')).toContainText("Demande reçue");
 });
 
 test("honeypot is not rendered, so autofill can't fill it", async ({ page }) => {

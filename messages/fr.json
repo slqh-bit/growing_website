@@ -187,7 +187,8 @@
       "keepRef": "Conservez cette référence pour le suivi de votre dossier.",
       "emailSent": "Un e-mail de confirmation a été envoyé à {email}.",
       "backHome": "Retour à l'accueil",
-      "newRequest": "Nouvelle demande"
+      "newRequest": "Nouvelle demande",
+      "track": "Suivre ma demande"
     },
     "aside": {
       "title": "Pourquoi nous confier votre projet ?",
@@ -210,5 +211,47 @@
     "title": "Une erreur est survenue",
     "subtitle": "Le contenu n'a pas pu être chargé. Réessayez dans un instant.",
     "retry": "Réessayer"
+  },
+  "track": {
+    "title": "Suivre ma demande",
+    "subtitle": "Consultez l'avancement de votre demande de devis avec votre référence et votre numéro de téléphone.",
+    "reference": "Référence",
+    "referencePlaceholder": "GT-260928-A1B2",
+    "referenceHint": "Indiquée après l'envoi du formulaire et dans l'e-mail de confirmation.",
+    "phone": "Téléphone",
+    "phoneHint": "Le numéro indiqué dans votre demande.",
+    "submit": "Voir l'avancement",
+    "submitting": "Recherche…",
+    "errors": {
+      "invalidReference": "Référence invalide. Format attendu : GT-AAMMJJ-XXXX.",
+      "invalidPhone": "Numéro invalide : 8 chiffres, ex. 98 123 456.",
+      "notFound": "Aucune demande ne correspond à cette référence et ce numéro. Vérifiez les deux champs.",
+      "rateLimited": "Trop de recherches. Réessayez dans quelques minutes.",
+      "server": "Une erreur est survenue. Réessayez ou contactez-nous."
+    },
+    "result": {
+      "heading": "Demande",
+      "activity": "Activité :",
+      "steps": {
+        "received": "Demande reçue",
+        "review": "En cours d'étude",
+        "quote": "Devis envoyé",
+        "done": "Dossier finalisé",
+        "confirmed": "Projet confirmé",
+        "closed": "Dossier clôturé"
+      },
+      "stepHelp": {
+        "received": "Votre demande est enregistrée.",
+        "review": "Notre équipe étudie votre projet et vous contacte.",
+        "quote": "Votre devis vous a été transmis.",
+        "done": "Dernière étape du dossier.",
+        "confirmed": "Merci pour votre confiance, nous planifions la suite.",
+        "closed": "Ce dossier est clôturé. Contactez-nous pour un nouveau projet."
+      },
+      "current": "Étape actuelle",
+      "pending": "À venir",
+      "questions": "Une question sur votre dossier ?",
+      "another": "Rechercher une autre demande"
+    }
   }
 }

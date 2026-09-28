@@ -28,6 +28,7 @@ const SHADOWED_SLUGS = new Set([
   ...STATIC_ROUTES.map((r) => r.path.slice(1)),
   "team",
   "blog",
+  "suivi", // client tracking page: noindex, not in the sitemap
 ]);
 
 type Entry = MetadataRoute.Sitemap[number];

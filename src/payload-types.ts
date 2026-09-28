@@ -549,12 +549,25 @@ export interface Team {
 export interface DevisRequest {
   id: number;
   reference?: string | null;
+  /**
+   * The client (if they gave an email) is notified at “Quote sent” and “Won”.
+   */
   status: 'nouveau' | 'contacte' | 'devis-envoye' | 'gagne' | 'perdu';
   locale?: ('fr' | 'ar' | 'en') | null;
   /**
    * Never shown to the client.
    */
   notes?: string | null;
+  /**
+   * Filled automatically; the dates appear on the client's tracking page.
+   */
+  statusHistory?:
+    | {
+        status: 'nouveau' | 'contacte' | 'devis-envoye' | 'gagne' | 'perdu';
+        changedAt: string;
+        id?: string | null;
+      }[]
+    | null;
   activity: 'raccorde' | 'pompage' | 'isole' | 'bt' | 'mt';
   raccorde?: {
     monthlyBillTnd?: number | null;
@@ -1004,6 +1017,13 @@ export interface DevisRequestsSelect<T extends boolean = true> {
   status?: T;
   locale?: T;
   notes?: T;
+  statusHistory?:
+    | T
+    | {
+        status?: T;
+        changedAt?: T;
+        id?: T;
+      };
   activity?: T;
   raccorde?:
     | T

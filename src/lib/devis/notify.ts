@@ -3,6 +3,7 @@ import type { Payload } from "payload";
 import type { DevisRequest, SiteSetting } from "@/payload-types";
 import { activityLabel, contactSummary, technicalSummary, type SummaryRow } from "./fields";
 import { contactChannelOptions, labelOf } from "./options";
+import { buttonHtml, escapeHtml, layout, siteUrl, trackingUrl } from "./email";
 
 /**
  * New-lead notifications (devplan §6.3–6.4): team email (French summary),
@@ -26,16 +27,6 @@ export async function notifyNewLead(payload: Payload, lead: DevisRequest): Promi
 
 // --- Helpers ---------------------------------------------------------------------
 
-export function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 const adminUrl = (lead: DevisRequest) => `${siteUrl()}/admin/collections/devis-requests/${lead.id}`;
 const channelLabel = (lead: DevisRequest) => labelOf(contactChannelOptions, lead.preferredChannel, "fr");
 
@@ -57,16 +48,6 @@ function rowsHtml(rows: SummaryRow[]): string {
     .join("");
 }
 
-/** Minimal branded layout with inline styles (email clients ignore <style>). */
-function layout(title: string, body: string, footer: string): string {
-  return `<!doctype html><html lang="fr"><body style="margin:0;background:#f3f7f4;font-family:Arial,Helvetica,sans-serif">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #dfe8e2">
-<tr><td style="background:#16a34a;background-image:linear-gradient(135deg,#15803d,#16a34a 55%,#eab308);padding:22px 28px;color:#ffffff;font-size:20px;font-weight:bold">${title}</td></tr>
-<tr><td style="padding:24px 28px;color:#14231c;font-size:15px;line-height:1.6">${body}</td></tr>
-<tr><td style="padding:16px 28px;background:#f7faf8;color:#6b7b73;font-size:12px;line-height:1.5">${footer}</td></tr>
-</table></td></tr></table></body></html>`;
-}
 
 function textRows(rows: SummaryRow[]): string {
   return rows.map((r) => `- ${r.label} : ${r.value}`).join("\n");
@@ -123,6 +104,7 @@ async function sendClientEmail(payload: Payload, lead: DevisRequest, settings: S
     `<p style="margin:0 0 12px">Bonjour ${escapeHtml(lead.fullName)},</p>
 <p style="margin:0 0 12px">Merci pour votre demande de devis <strong>${escapeHtml(activity)}</strong>. Notre équipe l'étudie et vous recontacte sous <strong>48 h ouvrées</strong> — canal souhaité : ${escapeHtml(channel)}.</p>
 <p style="margin:0 0 12px">Votre référence : <strong style="font-family:monospace;font-size:16px">${escapeHtml(ref)}</strong></p>
+<p style="margin:0 0 16px">${buttonHtml(trackingUrl(lead), "Suivre ma demande")}</p>
 <p style="margin:0">Pour toute question : ${escapeHtml(settings.phone)} · ${escapeHtml(settings.email)}</p>`,
     `${escapeHtml(settings.legalName)} — ${escapeHtml(settings.address)}<br>Matricule fiscal : ${escapeHtml(settings.matriculeFiscal)}<br>Ce message est envoyé automatiquement suite à votre demande sur notre site.`,
   );
@@ -131,6 +113,7 @@ async function sendClientEmail(payload: Payload, lead: DevisRequest, settings: S
 Merci pour votre demande de devis (${activity}). Notre équipe l'étudie et vous recontacte sous 48 h ouvrées — canal souhaité : ${channel}.
 
 Votre référence : ${ref}
+Suivre votre demande : ${trackingUrl(lead)}
 
 Pour toute question : ${settings.phone} · ${settings.email}
 
