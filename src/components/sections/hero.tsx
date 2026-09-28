@@ -1,8 +1,9 @@
-import { ArrowRight, Sun, ShieldCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 import type { Media } from "@/payload-types";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { LogoMark } from "@/components/brand/logo";
 import { Reveal } from "@/components/motion/reveal";
 import { CmsImage } from "@/components/cms/cms-image";
 import { SmartLink, type CtaLink } from "@/components/cms/smart-link";
@@ -91,7 +92,7 @@ export function Hero({
               <>
                 <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(0deg,transparent_24%,rgba(255,255,255,.3)_25%,rgba(255,255,255,.3)_26%,transparent_27%,transparent_74%,rgba(255,255,255,.3)_75%,rgba(255,255,255,.3)_76%,transparent_77%),linear-gradient(90deg,transparent_24%,rgba(255,255,255,.3)_25%,rgba(255,255,255,.3)_26%,transparent_27%,transparent_74%,rgba(255,255,255,.3)_75%,rgba(255,255,255,.3)_76%,transparent_77%)] [background-size:36px_36px]" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8 text-center text-white">
-                  <Sun className="size-20 animate-pulse" aria-hidden />
+                  <LogoMark className="size-20 rounded-2xl shadow-lg ring-1 ring-white/30" />
                   <p className="text-2xl font-bold">{companyName}</p>
                   <p className="max-w-xs text-sm text-white/85">{tagline}</p>
                 </div>
