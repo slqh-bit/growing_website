@@ -85,8 +85,8 @@ export async function ServiceDetail({ site, locale, service }: { site: SiteKey; 
     locale,
   );
 
-  // Services without a quote form yet (plan Phase 5a) lead to the contact page.
-  const quoteHref = service.activityKey ? `/devis?activite=${service.activityKey}` : "/contact";
+  // Services without a quote form (Services → Formulaire de devis) lead to the contact page.
+  const quoteHref = service.devisForm ? `/devis?service=${service.slug}` : "/contact";
   const sections = service.sections ?? [];
   const benefits = service.benefits ?? [];
   const steps = service.process ?? [];

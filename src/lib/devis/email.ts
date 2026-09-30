@@ -7,8 +7,9 @@
 import { access } from "fs/promises";
 import path from "path";
 import type { Payload } from "payload";
-import type { DevisRequest } from "@/payload-types";
-import { findSite } from "../../cms/sites";
+import type { DevisRequest, Site } from "@/payload-types";
+import { findLeadSite } from "../../cms/sites";
+import { HEX_COLOR } from "../theme";
 import { quotesDir } from "./quote-files";
 import type { DevisStatus } from "./tracking";
 
@@ -21,26 +22,53 @@ export function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
+/** Where the admin is opened (links in team notifications). */
 export const siteUrl = () =>
-  (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  (process.env.SERVER_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+/** Public origin of the lead's site (Sites → Adresse publique), else NEXT_PUBLIC_SITE_URL. */
+export const publicUrl = (site: Pick<Site, "url">) =>
+  (site.url || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
 export type Lang = "fr" | "ar" | "en";
 export const leadLang = (lead: DevisRequest): Lang =>
   lead.locale === "ar" || lead.locale === "en" ? lead.locale : "fr";
-/** Client tracking page, reference pre-filled (the phone is still required there). */
-export const trackingUrl = (lead: DevisRequest) =>
-  `${siteUrl()}/${leadLang(lead)}/suivi?ref=${encodeURIComponent(lead.reference ?? "")}`;
+/** Client tracking page on the lead's site, reference pre-filled (the phone is still required there). */
+export const trackingUrl = (lead: DevisRequest, site: Pick<Site, "url">) =>
+  `${publicUrl(site)}/${leadLang(lead)}/suivi?ref=${encodeURIComponent(lead.reference ?? "")}`;
 
-export function buttonHtml(href: string, label: string): string {
-  return `<a href="${escapeHtml(href)}" style="display:inline-block;background:#15803d;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:bold">${escapeHtml(label)}</a>`;
+/** Email colours: the site's brand colours (hex, Sites → Marque), else Growing's green and gold. */
+export interface EmailBrand {
+  primary: string;
+  accent: string;
+}
+export function emailBrand(site: Pick<Site, "theme">): EmailBrand {
+  const hex = (v: string | null | undefined, fallback: string) => (v && HEX_COLOR.test(v) ? v : fallback);
+  return { primary: hex(site.theme?.primary, "#15803d"), accent: hex(site.theme?.accent, "#eab308") };
+}
+const DEFAULT_BRAND: EmailBrand = { primary: "#15803d", accent: "#eab308" };
+
+/** Sender: the site's name with the configured address (MAIL_FROM). */
+export function fromOf(site: Pick<Site, "companyName">): string | undefined {
+  const address = process.env.MAIL_FROM;
+  return address ? `"${site.companyName.replace(/"/g, "")}" <${address}>` : undefined;
+}
+
+export function buttonHtml(href: string, label: string, brand: EmailBrand = DEFAULT_BRAND): string {
+  return `<a href="${escapeHtml(href)}" style="display:inline-block;background:${brand.primary};color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:bold">${escapeHtml(label)}</a>`;
 }
 
 /** Minimal branded layout with inline styles (email clients ignore <style>). */
-export function layout(title: string, body: string, footer: string, lang: Lang = "fr"): string {
+export function layout(
+  title: string,
+  body: string,
+  footer: string,
+  lang: Lang = "fr",
+  brand: EmailBrand = DEFAULT_BRAND,
+): string {
   const dir = lang === "ar" ? "rtl" : "ltr";
   return `<!doctype html><html lang="${lang}" dir="${dir}"><body dir="${dir}" style="margin:0;background:#f3f7f4;font-family:Arial,Helvetica,sans-serif;text-align:${dir === "rtl" ? "right" : "left"}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #dfe8e2">
-<tr><td style="background:#16a34a;background-image:linear-gradient(135deg,#15803d,#16a34a 55%,#eab308);padding:22px 28px;color:#ffffff;font-size:20px;font-weight:bold">${title}</td></tr>
+<tr><td style="background:${brand.primary};background-image:linear-gradient(135deg,${brand.primary} 55%,${brand.accent});padding:22px 28px;color:#ffffff;font-size:20px;font-weight:bold">${title}</td></tr>
 <tr><td style="padding:24px 28px;color:#14231c;font-size:15px;line-height:1.6">${body}</td></tr>
 <tr><td style="padding:16px 28px;background:#f7faf8;color:#6b7b73;font-size:12px;line-height:1.5">${footer}</td></tr>
 </table></td></tr></table></body></html>`;
@@ -124,19 +152,20 @@ export async function notifyStatusChange(payload: Payload, lead: DevisRequest): 
   const subject = copy.subject[status];
   if (!lead.email || !subject) return;
 
-  // Leads belong to the default site until the devis gets a site (plan Phase 5a).
-  const settings = await findSite(payload, lang);
+  const settings = await findLeadSite(payload, lang, lead);
+  const brand = emailBrand(settings);
   const ref = lead.reference ?? String(lead.id);
-  const url = trackingUrl(lead);
+  const url = trackingUrl(lead, settings);
   const html = layout(
     escapeHtml(copy.title[status]!),
     `<p style="margin:0 0 12px">${escapeHtml(copy.hello(lead.fullName))}</p>
 <p style="margin:0 0 12px">${escapeHtml(copy.body[status]!)}</p>
 <p style="margin:0 0 16px">${escapeHtml(copy.reference)} : <strong style="font-family:monospace;font-size:16px" dir="ltr">${escapeHtml(ref)}</strong></p>
-<p style="margin:0 0 16px">${buttonHtml(url, copy.track)}</p>
+<p style="margin:0 0 16px">${buttonHtml(url, copy.track, brand)}</p>
 <p style="margin:0">${escapeHtml(copy.questions)} : <span dir="ltr">${escapeHtml(settings.phone)}</span> · ${escapeHtml(settings.email)}</p>`,
     `${escapeHtml(settings.legalName)} — ${escapeHtml(settings.address)}<br>${escapeHtml(copy.auto)}`,
     lang,
+    brand,
   );
   const text = `${copy.hello(lead.fullName)}
 
@@ -150,7 +179,7 @@ ${copy.questions} : ${settings.phone} · ${settings.email}`;
   // "Devis envoyé" carries the quote itself (the field is required for that status).
   const attachments = status === "devis-envoye" ? [await quoteAttachment(payload, lead, ref)] : [];
 
-  await payload.sendEmail({ to: lead.email, subject: subject(ref), html, text, attachments });
+  await payload.sendEmail({ from: fromOf(settings), to: lead.email, subject: subject(ref), html, text, attachments });
   payload.logger.info(
     `Devis ${ref}: status email (${status}${attachments.length ? ", quote attached" : ""}) sent to client.`,
   );

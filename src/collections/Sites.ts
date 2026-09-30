@@ -404,6 +404,47 @@ export const Sites: CollectionConfig = {
           ],
         },
         {
+          label: t3("Demandes de devis", "Quote requests", "طلبات التسعيرة"),
+          fields: [
+            {
+              name: "notify",
+              type: "group",
+              label: t3("Qui reçoit les demandes", "Who receives the requests", "من يتلقّى الطلبات"),
+              // Private: never exposed through the public API.
+              access: { read: ({ req: { user } }) => Boolean(user) },
+              admin: {
+                description: t3(
+                  "Chaque nouvelle demande de ce site est envoyée à ces adresses et à ce groupe Telegram. Vide = e-mail du site (et, pour le site par défaut, DEVIS_NOTIFY_EMAIL / TELEGRAM_CHAT_ID).",
+                  "Each new request on this site is sent to these addresses and this Telegram group. Empty = the site's email (and, for the default site, DEVIS_NOTIFY_EMAIL / TELEGRAM_CHAT_ID).",
+                  "يُرسل كل طلب جديد لهذا الموقع إلى هذه العناوين ومجموعة تيليغرام هذه.",
+                ),
+              },
+              fields: [
+                {
+                  name: "emails",
+                  type: "array",
+                  label: t3("E-mails de l'équipe", "Team emails", "بريد الفريق"),
+                  fields: [{ name: "email", type: "email", required: true, label: t3("E-mail", "Email", "البريد الإلكتروني") }],
+                },
+                {
+                  name: "telegramChatId",
+                  type: "text",
+                  label: t3("Identifiant du groupe Telegram", "Telegram group chat id", "معرّف مجموعة تيليغرام"),
+                  validate: (value: string | null | undefined) =>
+                    !value || /^-?\d+$/.test(value) || "A numeric chat id, e.g. -5544656539.",
+                  admin: {
+                    description: t3(
+                      "Ex. -5544656539 (le bot TELEGRAM_BOT_TOKEN doit être membre du groupe).",
+                      "E.g. -5544656539 (the TELEGRAM_BOT_TOKEN bot must be a member of the group).",
+                      "مثال ‎-5544656539 (يجب أن يكون البوت عضواً في المجموعة).",
+                    ),
+                  },
+                },
+              ],
+            },
+          ],
+        },
+        {
           label: t3("Réseaux sociaux", "Social", "الشبكات الاجتماعية"),
           fields: [
             {

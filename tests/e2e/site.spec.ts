@@ -199,10 +199,10 @@ test.describe("Growing catalogue (4 activities)", () => {
     await expect(page.locator("#industriel")).toBeInViewport();
   });
 
-  test("a service without a quote form sends visitors to the contact page", async ({ page }) => {
+  test("the PV plant page has its sections and its own quote form", async ({ page }) => {
     await page.goto("/fr/services/centrale-photovoltaique");
     await expect(page.locator("#autoproduction")).toBeAttached();
-    await expect(page.locator('main a[href="/fr/contact"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/fr/devis?service=centrale-photovoltaique"]').first()).toBeVisible();
   });
 });
 

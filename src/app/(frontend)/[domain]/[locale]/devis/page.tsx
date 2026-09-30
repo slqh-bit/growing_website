@@ -3,8 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { BadgeCheck, Clock, FileCheck2, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
 import { routeContext } from "@/lib/site";
-import { getServices, getSite } from "@/lib/cms/queries";
-import { activityOptions } from "@/lib/devis/options";
+import { getSite } from "@/lib/cms/queries";
 import { buildMetadata } from "@/lib/metadata";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import { Container } from "@/components/ui/container";
 import { PageHeader } from "@/components/sections/page-header";
 import { Reveal } from "@/components/motion/reveal";
 import { DevisForm } from "@/components/devis/devis-form";
-import type { ActivityChoice } from "@/components/devis/steps";
+import { getDevisChoices } from "@/lib/devis/choices";
 import { telHref, whatsappHref } from "@/lib/contact-links";
 
 export async function generateMetadata({
@@ -29,22 +28,12 @@ export async function generateMetadata({
 export default async function DevisPage({ params }: { params: Promise<{ domain: string; locale: Locale }> }) {
   const { site, locale } = await routeContext(params);
   setRequestLocale(locale);
-  const [t, services, settings] = await Promise.all([
+  const [t, activities, settings] = await Promise.all([
     getTranslations({ locale, namespace: "devis" }),
-    getServices(site, locale),
+    // The site's services linked to a quote form (Services → Formulaire de devis).
+    getDevisChoices(site, locale),
     getSite(site, locale),
   ]);
-
-  // The activities offered are those of this site's services that are linked
-  // to the form (Services → Activité), in the services' order; the service
-  // supplies the editable title, description and icon. Legacy values (BT/MT,
-  // merged into "Installations raccordées") stay valid for older requests only.
-  const activities: ActivityChoice[] = services.flatMap((service) => {
-    const option = activityOptions.find((o) => o.value === service.activityKey);
-    return option
-      ? [{ value: option.value, title: service.title, description: service.shortDescription, icon: service.icon }]
-      : [];
-  });
 
   // The certification lines only apply to a certified site (Sites → Certification).
   const reasons = [

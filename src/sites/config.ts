@@ -8,6 +8,9 @@
 export const siteKeys = ["growing", "hikview", "group"] as const;
 export type SiteKey = (typeof siteKeys)[number];
 
+/** Development only: `?site=<key>` previews a site on plain localhost; remembered in this cookie. */
+export const SITE_PREVIEW_COOKIE = "site-preview";
+
 export function isSiteKey(value: string): value is SiteKey {
   return (siteKeys as readonly string[]).includes(value);
 }

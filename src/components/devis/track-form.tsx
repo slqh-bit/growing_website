@@ -7,6 +7,7 @@ import type { Locale } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { FieldError, inputClass } from "@/components/devis/field-shell";
 import { activityOptions, labelOf } from "@/lib/devis/options";
+import { pick } from "@/lib/devis/form-def";
 import { trackDevis, type TrackDevisResult } from "@/lib/devis/track-action";
 import type { TrackingView } from "@/lib/devis/tracking";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,8 @@ import { cn } from "@/lib/utils";
 type ErrorKey = Extract<TrackDevisResult, { ok: false }>["error"];
 
 /** Tracking lookup (reference + phone) and the progress timeline. */
-export function TrackForm({ locale }: { locale: Locale }) {
+/** `prefix`: the site's reference initials (GT, HE…), for the hints. */
+export function TrackForm({ locale, prefix }: { locale: Locale; prefix: string }) {
   const t = useTranslations("track");
   const [reference, setReference] = React.useState("");
   const [phone, setPhone] = React.useState("");
@@ -66,10 +68,10 @@ export function TrackForm({ locale }: { locale: Locale }) {
     );
   }
 
-  const fieldError = (key: ErrorKey) => (error === key ? t(`errors.${key}`) : undefined);
+  const fieldError = (key: ErrorKey) => (error === key ? t(`errors.${key}`, { prefix }) : undefined);
   const refError = fieldError("invalidReference");
   const phoneError = fieldError("invalidPhone");
-  const formError = error && !refError && !phoneError ? t(`errors.${error}`) : undefined;
+  const formError = error && !refError && !phoneError ? t(`errors.${error}`, { prefix }) : undefined;
 
   return (
     <form
@@ -86,7 +88,7 @@ export function TrackForm({ locale }: { locale: Locale }) {
           name="reference"
           value={reference}
           onChange={(e) => setReference(e.target.value)}
-          placeholder={t("referencePlaceholder")}
+          placeholder={t("referencePlaceholder", { prefix })}
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck={false}
@@ -182,7 +184,7 @@ function Timeline({
           </span>
         </h2>
         <p className="text-muted-foreground text-sm">
-          {t("activity")} {labelOf(activityOptions, view.activity, locale)}
+          {t("activity")} {pick(view.service, locale) || labelOf(activityOptions, view.activity, locale)}
         </p>
       </div>
 

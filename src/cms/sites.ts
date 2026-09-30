@@ -15,3 +15,17 @@ export async function findSite(payload: Payload, locale: Locale, key?: SiteKey):
   if (!site) throw new Error(`No site "${key ?? "default"}" in the CMS (Paramètres → Sites).`);
   return site;
 }
+
+/** The site a quote request belongs to (older requests without one: the default site). */
+export async function findLeadSite(
+  payload: Payload,
+  locale: Locale,
+  lead: { site?: number | Site | null },
+): Promise<Site> {
+  if (lead.site && typeof lead.site === "object") return lead.site;
+  if (typeof lead.site === "number") {
+    const site = await payload.findByID({ collection: "sites", id: lead.site, locale, depth: 0 }).catch(() => null);
+    if (site) return site;
+  }
+  return findSite(payload, locale);
+}

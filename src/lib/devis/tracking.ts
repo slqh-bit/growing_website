@@ -26,7 +26,10 @@ export const clientNotifiedStatuses: readonly DevisStatus[] = ["devis-envoye", "
 
 export interface TrackingInput {
   reference?: string | null;
-  activity: string;
+  /** Legacy activity key (typed form), when the request has one. */
+  activity?: string | null;
+  /** The service's title in every language (form snapshot), for newer requests. */
+  service?: Partial<Record<"fr" | "ar" | "en", string | null>> | string | null;
   status: string;
   createdAt: string;
   statusHistory?: { status?: string | null; changedAt?: string | null }[] | null;
@@ -35,6 +38,7 @@ export interface TrackingInput {
 export interface TrackingView {
   reference: string;
   activity: string;
+  service: Partial<Record<"fr" | "ar" | "en", string | null>> | string | null;
   current: TrackingStep;
   /** Only set once the file is done: confirmed project or closed file. */
   outcome: "confirmed" | "closed" | null;
@@ -60,7 +64,8 @@ export function buildTrackingView(lead: TrackingInput): TrackingView {
 
   return {
     reference: lead.reference ?? "",
-    activity: lead.activity,
+    activity: lead.activity ?? "",
+    service: lead.service ?? null,
     current,
     outcome: status === "gagne" ? "confirmed" : status === "perdu" ? "closed" : null,
     // Steps after the current one are pending even if the history has them
@@ -72,14 +77,15 @@ export function buildTrackingView(lead: TrackingInput): TrackingView {
   };
 }
 
-const REFERENCE = /^GT-\d{6}-[0-9A-F]{4}$/;
+/** Site initials (GT, HE…), date, 4 hex digits. */
+const REFERENCE = /^[A-Z]{2,3}-\d{6}-[0-9A-F]{4}$/;
 
 /** " gt-260928-e88a " / "GT 260928 E88A" / Arabic-Indic digits → "GT-260928-E88A" (null if malformed). */
 export function normalizeReference(value: string): string | null {
   const compact = toAsciiDigits(value)
     .toUpperCase()
     .replace(/[\s_–—-]+/g, "");
-  const match = /^GT(\d{6})([0-9A-F]{4})$/.exec(compact);
-  const ref = match ? `GT-${match[1]}-${match[2]}` : null;
+  const match = /^([A-Z]{2,3})(\d{6})([0-9A-F]{4})$/.exec(compact);
+  const ref = match ? `${match[1]}-${match[2]}-${match[3]}` : null;
   return ref && REFERENCE.test(ref) ? ref : null;
 }

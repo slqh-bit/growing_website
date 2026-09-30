@@ -74,6 +74,7 @@ export interface Config {
     faq: Faq;
     team: Team;
     'devis-requests': DevisRequest;
+    'devis-forms': DevisForm;
     'quote-documents': QuoteDocument;
     media: Media;
     sites: Site;
@@ -93,6 +94,7 @@ export interface Config {
     faq: FaqSelect<false> | FaqSelect<true>;
     team: TeamSelect<false> | TeamSelect<true>;
     'devis-requests': DevisRequestsSelect<false> | DevisRequestsSelect<true>;
+    'devis-forms': DevisFormsSelect<false> | DevisFormsSelect<true>;
     'quote-documents': QuoteDocumentsSelect<false> | QuoteDocumentsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     sites: SitesSelect<false> | SitesSelect<true>;
@@ -300,6 +302,21 @@ export interface Site {
           id?: string | null;
         }[]
       | null;
+  };
+  /**
+   * Each new request on this site is sent to these addresses and this Telegram group. Empty = the site's email (and, for the default site, DEVIS_NOTIFY_EMAIL / TELEGRAM_CHAT_ID).
+   */
+  notify?: {
+    emails?:
+      | {
+          email: string;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * E.g. -5544656539 (the TELEGRAM_BOT_TOKEN bot must be a member of the group).
+     */
+    telegramChatId?: string | null;
   };
   socials?: {
     facebook?: string | null;
@@ -624,6 +641,10 @@ export interface Service {
    */
   parent?: (number | null) | Service;
   /**
+   * The service appears in the quote form with these questions. Empty = the quote button leads to the Contact page.
+   */
+  devisForm?: (number | null) | DevisForm;
+  /**
    * Lists every “Public / B2G” project of the site on this page (e.g. the B2G integrator page).
    */
   showPublicReferences?: boolean | null;
@@ -773,6 +794,60 @@ export interface Service {
   createdAt: string;
 }
 /**
+ * The technical questions asked for a service. Link a form to a service in Services → Quote form.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "devis-forms".
+ */
+export interface DevisForm {
+  id: number;
+  title: string;
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
+  /**
+   * In display order. Contact details (name, phone, governorate…) and consent are added automatically.
+   */
+  questions?:
+    | {
+        label: string;
+        type: 'text' | 'textarea' | 'number' | 'select' | 'radio' | 'multiselect' | 'checkbox' | 'date';
+        /**
+         * Technical id, e.g. flowM3PerDay. Don't change it once used.
+         */
+        name: string;
+        help?: string | null;
+        required?: boolean | null;
+        width?: ('half' | 'full') | null;
+        /**
+         * Same word on several questions = at least one of them must be filled (e.g. “usage” for bill OR consumption).
+         */
+        requiredGroup?: string | null;
+        unit?: string | null;
+        min?: number | null;
+        max?: number | null;
+        options?:
+          | {
+              label: string;
+              value: string;
+              id?: string | null;
+            }[]
+          | null;
+        /**
+         * Optional: the key of an earlier question and the expected value (e.g. subtype = eclairage-public).
+         */
+        showIf?: {
+          field?: string | null;
+          equals?: string | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "projects".
  */
@@ -901,7 +976,30 @@ export interface DevisRequest {
         id?: string | null;
       }[]
     | null;
-  activity: 'raccorde' | 'pompage' | 'isole' | 'bt' | 'mt';
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
+  service?: (number | null) | Service;
+  activity?: ('raccorde' | 'pompage' | 'isole' | 'bt' | 'mt') | null;
+  technicalDetails?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  formSnapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   raccorde?: {
     monthlyBillTnd?: number | null;
     monthlyConsumptionKwh?: number | null;
@@ -1091,6 +1189,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'devis-requests';
         value: number | DevisRequest;
+      } | null)
+    | ({
+        relationTo: 'devis-forms';
+        value: number | DevisForm;
       } | null)
     | ({
         relationTo: 'quote-documents';
@@ -1339,6 +1441,7 @@ export interface ServicesSelect<T extends boolean = true> {
   slug?: T;
   site?: T;
   parent?: T;
+  devisForm?: T;
   showPublicReferences?: T;
   activityKey?: T;
   icon?: T;
@@ -1471,7 +1574,11 @@ export interface DevisRequestsSelect<T extends boolean = true> {
         changedAt?: T;
         id?: T;
       };
+  site?: T;
+  service?: T;
   activity?: T;
+  technicalDetails?: T;
+  formSnapshot?: T;
   raccorde?:
     | T
     | {
@@ -1514,6 +1621,44 @@ export interface DevisRequestsSelect<T extends boolean = true> {
   preferredChannel?: T;
   address?: T;
   consent?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "devis-forms_select".
+ */
+export interface DevisFormsSelect<T extends boolean = true> {
+  title?: T;
+  site?: T;
+  questions?:
+    | T
+    | {
+        label?: T;
+        type?: T;
+        name?: T;
+        help?: T;
+        required?: T;
+        width?: T;
+        requiredGroup?: T;
+        unit?: T;
+        min?: T;
+        max?: T;
+        options?:
+          | T
+          | {
+              label?: T;
+              value?: T;
+              id?: T;
+            };
+        showIf?:
+          | T
+          | {
+              field?: T;
+              equals?: T;
+            };
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1656,6 +1801,17 @@ export interface SitesSelect<T extends boolean = true> {
               href?: T;
               id?: T;
             };
+      };
+  notify?:
+    | T
+    | {
+        emails?:
+          | T
+          | {
+              email?: T;
+              id?: T;
+            };
+        telegramChatId?: T;
       };
   socials?:
     | T

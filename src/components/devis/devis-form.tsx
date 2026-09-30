@@ -7,16 +7,16 @@ import { get, useForm, type Path, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { rtlLocales, type Locale } from "@/i18n/config";
 import { submitDevis } from "@/lib/devis/actions";
-import { emptyDevisValues, stepSchemas, type DevisErrorKey, type DevisFormValues } from "@/lib/devis/schema";
+import { emptyDevisValues, stepSchema, type DevisErrorKey, type DevisFormValues } from "@/lib/devis/schema";
+import type { DevisChoice } from "@/lib/devis/choices";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StepProgress } from "./step-progress";
-import { ActivityStep, ContactStep, ReviewStep, TechnicalStep, type ActivityChoice } from "./steps";
+import { ActivityStep, ContactStep, ReviewStep, TechnicalStep } from "./steps";
 import { DevisSuccess } from "./devis-success";
 
 const STEP_KEYS = ["activity", "technical", "contact", "review"] as const;
 const LAST_STEP = STEP_KEYS.length - 1;
-const TECHNICAL_GROUPS = ["raccorde", "pompage", "isole", "electrical"];
 
 type Banner = "rateLimited" | "server" | "network" | "fixErrors";
 
@@ -30,23 +30,25 @@ declare global {
 /** Which step owns a form path (to jump back to a server-side error). */
 function stepOfPath(path: string): number {
   const root = path.split(".")[0] ?? "";
-  if (root === "activity") return 0;
-  if (TECHNICAL_GROUPS.includes(root)) return 1;
+  if (root === "service") return 0;
+  if (root === "answers") return 1;
   if (root === "consent") return 3;
   return 2;
 }
 
 /**
- * Multi-step devis form (devplan §6): activity → technical needs → site &
- * contact → review. Each step is validated with its own Zod schema before
- * moving on; the server action re-validates everything.
+ * Multi-step devis form (plan §6): service → technical needs (the questions
+ * of the service's form, built in the admin) → site & contact → review. Each
+ * step is validated with its own Zod schema before moving on; the server
+ * action re-validates everything against the form read on the server.
  */
 export function DevisForm({
   activities,
   locale,
   privacyHref,
 }: {
-  activities: ActivityChoice[];
+  /** The site's services that have a quote form. */
+  activities: DevisChoice[];
   locale: Locale;
   privacyHref: string;
 }) {
@@ -59,12 +61,12 @@ export function DevisForm({
   const [banner, setBanner] = React.useState<Banner | null>(null);
   const [success, setSuccess] = React.useState<{ reference: string; name: string; email?: string } | null>(null);
 
-  // The resolver validates only the current step's schema.
+  // The resolver validates only the current step's schema (step 2: the chosen service's questions).
   const stepRef = React.useRef(0);
   const resolver = React.useMemo<Resolver<DevisFormValues>>(
     () => (values, context, options) =>
-      zodResolver(stepSchemas[stepRef.current] as (typeof stepSchemas)[number])(values, context, options),
-    [],
+      zodResolver(stepSchema(stepRef.current, activities, values.service))(values, context, options),
+    [activities],
   );
   const form = useForm<DevisFormValues>({ defaultValues: emptyDevisValues, resolver, mode: "onTouched" });
 
@@ -76,11 +78,12 @@ export function DevisForm({
 
   React.useEffect(() => {
     startedAt.current = Date.now();
-    // Service pages link here with ?activite=<key> to preselect the activity.
-    const preset = new URLSearchParams(window.location.search).get("activite");
-    if (preset && activities.some((a) => a.value === preset)) {
-      form.setValue("activity", preset as DevisFormValues["activity"]);
-    }
+    // Service pages link here with ?service=<slug> (older links: ?activite=<key>) to preselect it.
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get("service");
+    const key = params.get("activite");
+    const preset = activities.find((a) => (slug && a.slug === slug) || (key && a.activityKey === key));
+    if (preset) form.setValue("service", preset.id);
   }, [form, activities]);
 
   // Move focus to the new step's heading (screen readers announce it).
@@ -146,8 +149,9 @@ export function DevisForm({
         startedAt: startedAt.current,
       });
       if (result.ok) {
-        // Conversion goal (no personal data: activity and language only).
-        window.plausible?.("Devis", { props: { activity: values.activity, locale } });
+        // Conversion goal (no personal data: service and language only).
+        const service = activities.find((a) => a.id === values.service);
+        window.plausible?.("Devis", { props: { activity: service?.slug ?? "", locale } });
         setSuccess({ reference: result.reference, name: values.fullName.trim(), email: values.email.trim() || undefined });
         return;
       }
@@ -235,10 +239,20 @@ export function DevisForm({
             </div>
 
             {step === 0 && <ActivityStep form={form} field={field} locale={locale} errorOf={errorOf} activities={activities} />}
-            {step === 1 && <TechnicalStep form={form} field={field} locale={locale} errorOf={errorOf} />}
+            {step === 1 && (
+              <TechnicalStep form={form} field={field} locale={locale} errorOf={errorOf} activities={activities} />
+            )}
             {step === 2 && <ContactStep form={form} field={field} locale={locale} errorOf={errorOf} />}
             {step === 3 && (
-              <ReviewStep form={form} field={field} locale={locale} errorOf={errorOf} onEdit={(s) => goTo(s)} privacyHref={privacyHref} />
+              <ReviewStep
+                form={form}
+                field={field}
+                locale={locale}
+                errorOf={errorOf}
+                activities={activities}
+                onEdit={(s) => goTo(s)}
+                privacyHref={privacyHref}
+              />
             )}
         </div>
 

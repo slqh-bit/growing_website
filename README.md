@@ -54,7 +54,8 @@ back to French.
 | Projects           | Case studies (named or anonymous client), filterable by service / region / client type |
 | Partenaires & marques | Brands, manufacturers, own products: partners strip block + logos on linked service pages |
 | FAQ, Team          | FAQ entries (by category) and team members                   |
-| Demandes de devis  | Leads, with status workflow nouveau → contacté → devis envoyé → gagné/perdu |
+| Demandes de devis  | Leads per site, with status workflow nouveau → contacté → devis envoyé → gagné/perdu |
+| Formulaires de devis | Quote forms built in the admin (questions, choices, conditions), linked to services |
 | Media              | Images (jpeg/png/webp/avif) with localized alt text          |
 | Users              | `admin` (everything) / `editor` (content only, can't delete) |
 | Sites              | One per website: domains, company identity, contacts, map, key figures, logo, colours, menu, footer |
@@ -166,29 +167,52 @@ ship as data migrations instead (e.g. the Growing catalogue restructure).
 
 ## Devis (quote requests)
 
-`/{locale}/devis` is a 4-step form: **activity → technical needs (adapted to the
-activity, with tooltips) → site & contact → review + consent**. Service pages link
-to it with the activity preselected (`/devis?activite=pompage`).
+`/{locale}/devis` is a 4-step form: **service → technical needs → site &
+contact → review + consent**. Step 1 lists the site's services that have a
+quote form; step 2 asks that form's questions. Service pages link to it with the
+service preselected (`/devis?service=pompage-solaire`; older `?activite=` links
+still work).
+
+**Forms are built in the admin** (Demandes → **Formulaires de devis**), then
+linked to a service (Services → **Formulaire de devis**). Each question has a
+key, a type (short/long text, number with unit and min/max, drop-down, single
+or multiple choice, checkbox, date), a label and help text in fr/ar/en, a
+"required" flag, an "at least one of…" group (e.g. bill OR consumption) and an
+optional "only show if <question> = <value>" condition. A service without a
+form gets a "Contact" button instead.
 
 | Piece | Where |
 | --- | --- |
-| Field catalogue (labels, units, tooltips in fr/ar/en) | `src/lib/devis/fields.ts` |
-| Option lists (shared with the admin) | `src/lib/devis/options.ts` |
-| Validation (per step + full, message keys) | `src/lib/devis/schema.ts` |
-| Server action (anti-spam, rate limit, save) | `src/lib/devis/actions.ts` |
-| Team email, client auto-reply, Telegram | `src/lib/devis/notify.ts` |
+| Form definition → validation, visibility, summaries | `src/lib/devis/form-def.ts` |
+| Step schemas (service, answers, contact, consent) | `src/lib/devis/schema.ts` |
+| The site's services with their forms | `src/lib/devis/choices.ts` |
+| Server action (site from the host, anti-spam, rate limit, save) | `src/lib/devis/actions.ts` |
+| Team email, client auto-reply, Telegram (per site) | `src/lib/devis/notify.ts` |
+| Admin view of a request's answers | `src/components/admin/devis-answers.tsx` |
 | Form UI | `src/components/devis/` |
+| Legacy typed form (display of pre-builder requests) | `src/lib/devis/fields.ts` |
 
-On submit the server re-validates everything, stores the lead in **Demandes de
-devis** (status *nouveau*, reference `GT-YYMMDD-XXXX`) and answers immediately;
-notifications are sent right after the response, each channel independently
-(a mail outage never loses a lead):
+On submit the server finds the site from the request's host, re-reads the
+service's form (never trusting the browser), re-validates everything and
+stores the lead in **Demandes de devis**: status *nouveau*, site, service, the
+answers and a **snapshot of the form** (so it stays readable after the form is
+edited), reference with the site's initials (`GT-YYMMDD-XXXX`,
+`HE-YYMMDD-XXXX`…). It answers immediately; notifications are sent right after
+the response, each channel independently (a mail outage never loses a lead):
 
-- **Team email** (French, to `DEVIS_NOTIFY_EMAIL`) with the full summary, a
-  reply-to set to the client and a link to the lead in the admin.
-- **Client auto-reply** (French, only if an email was given) — reference and next
-  steps only; free-text fields are never echoed back (no spam relay).
-- **Telegram** message if `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` are set.
+- **Team email** (French) to the site's team — **Sites → Demandes de devis →
+  E-mails de l'équipe**; else, for the default site, `DEVIS_NOTIFY_EMAIL`;
+  else the site's email — with the full summary, a reply-to set to the client
+  and a link to the lead in the admin.
+- **Client auto-reply** (French, only if an email was given), in the site's
+  colours and name — reference and next steps only; free-text answers are
+  never echoed back (no spam relay).
+- **Telegram** message to the site's group (**Identifiant du groupe Telegram**;
+  the default site falls back to `TELEGRAM_CHAT_ID`) when `TELEGRAM_BOT_TOKEN`
+  is set.
+
+Editors only see the requests of the sites they manage. The tracking page
+(`/suivi`) only finds the current site's requests.
 
 **Anti-spam:** hidden honeypot field and a minimum fill time (bots get a fake
 success and nothing is stored), plus a per-IP limit of 5 requests / 15 min.
@@ -197,7 +221,8 @@ the app must only be reachable through the reverse proxy; the limiter is
 in-memory (single instance).
 
 Phone numbers accept spaces, `+216`/`00216` and Arabic-Indic digits, and are
-stored as `+216XXXXXXXX`.
+stored as `+216XXXXXXXX`; numbers in answers accept Arabic-Indic digits and
+decimal commas.
 
 ## SEO, performance & analytics
 
@@ -277,6 +302,12 @@ Group platform (multi-site):
       footer group band linking to the sister company, per-service
       cross-selling to the other site (absolute links), logos keep their own
       brand colours on any site.
+- [x] **Phase 5a** — Quote form builder: `DevisForms` (questions, choices,
+      "at least one of", "only show if"), dynamic form + Zod from the
+      definition, answers + form snapshot on each request, admin answers view,
+      per-site references, routing (e-mails, Telegram) and branded e-mails;
+      Growing's 4 forms (incl. PV plants and street lighting) created by a
+      data migration.
 
 ## Structure
 

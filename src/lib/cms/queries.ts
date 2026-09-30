@@ -6,7 +6,7 @@ import { cmsTag } from "@/cms/revalidate";
 import type { Locale } from "@/i18n/routing";
 import type { RedirectRule } from "@/lib/redirects";
 import { isSiteKey, type SiteDomains, type SiteKey } from "@/sites/config";
-import type { Faq, Group, Page, Partner, Project, Service, Site, Team } from "@/payload-types";
+import type { DevisForm, Faq, Group, Page, Partner, Project, Service, Site, Team } from "@/payload-types";
 
 /**
  * Cached CMS reads for the public site (Payload Local API).
@@ -32,7 +32,8 @@ type CmsSlug =
   | "media"
   | "sites"
   | "redirects"
-  | "group";
+  | "group"
+  | "devis-forms";
 
 function cached<A extends unknown[], R>(
   name: string,
@@ -160,6 +161,24 @@ export const getServicesByIds = cached(
     return ids.map((id) => docs.find((d) => d.id === id)).filter((d): d is Service => d !== undefined);
   },
 );
+
+/**
+ * A site's quote forms with every translation (`locale: "all"`: labels are
+ * { fr, ar, en } objects at runtime), for the form, the server action and the
+ * snapshot kept with each request.
+ */
+export const getDevisForms = cached("devis-forms", ["devis-forms"], async (site: SiteKey): Promise<DevisForm[]> => {
+  const { docs } = await (await payload()).find({
+    collection: "devis-forms",
+    where: ofSite(site),
+    locale: "all",
+    depth: 0,
+    limit: 200,
+    pagination: false,
+    ...publicRead,
+  });
+  return docs;
+});
 
 // --- Projects ----------------------------------------------------------------
 

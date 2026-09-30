@@ -37,7 +37,7 @@ export const Services: CollectionConfig = {
   },
   admin: {
     useAsTitle: "title",
-    defaultColumns: ["title", "site", "parent", "activityKey", "order", "updatedAt"],
+    defaultColumns: ["title", "site", "parent", "devisForm", "order", "updatedAt"],
     group: groups.content,
   },
   defaultSort: "order",
@@ -79,6 +79,24 @@ export const Services: CollectionConfig = {
       },
     },
     {
+      name: "devisForm",
+      type: "relationship",
+      relationTo: "devis-forms",
+      label: t3("Formulaire de devis", "Quote form", "استمارة التسعيرة"),
+      filterOptions: ({ siblingData }) => {
+        const site = idOf((siblingData as { site?: unknown }).site);
+        return site !== null ? { site: { equals: site } } : true;
+      },
+      admin: {
+        position: "sidebar",
+        description: t3(
+          "Le service apparaît dans le formulaire de devis avec ces questions. Vide = le bouton « Devis » mène à la page Contact.",
+          "The service appears in the quote form with these questions. Empty = the quote button leads to the Contact page.",
+          "تظهر الخدمة في استمارة التسعيرة بهذه الأسئلة. فارغ = يؤدي زر التسعيرة إلى صفحة الاتصال.",
+        ),
+      },
+    },
+    {
       name: "showPublicReferences",
       type: "checkbox",
       defaultValue: false,
@@ -100,11 +118,13 @@ export const Services: CollectionConfig = {
       type: "row",
       fields: [
         {
+          // Legacy (typed quote form, before Phase 5a): kept for old requests and ?activite= links.
           name: "activityKey",
           type: "select",
           options: [...activityOptions],
           label: t3("Activité", "Activity", "النشاط"),
           admin: {
+            hidden: true,
             width: "50%",
             description: t3(
               "Relie le service au formulaire de devis. Vide = le bouton « Devis » mène à la page Contact.",

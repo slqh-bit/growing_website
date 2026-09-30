@@ -80,12 +80,19 @@ describe("normalizeReference", () => {
     }
   });
 
+  it("accepts every site's prefix (its initials)", () => {
+    assert.equal(normalizeReference("he 260928 1a2b"), "HE-260928-1A2B");
+    assert.equal(normalizeReference("GRP-260928-1A2B"), "GRP-260928-1A2B");
+  });
+
   it("rejects malformed references", () => {
     for (const input of [
       "",
       "GT-26092-E88A",
       "GT-260928-E88",
-      "XX-260928-E88A",
+      "G-260928-E88A", // the site prefix has 2–3 letters
+      "ABCD-260928-E88A",
+      "G1-260928-E88A",
       "GT-260928-G88A",
       "GT-260928-E88A1",
     ]) {

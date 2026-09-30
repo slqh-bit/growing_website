@@ -1,23 +1,13 @@
 /**
  * Devis validation — shared by the form (per-step, on the client) and the
- * server action (full schema, authoritative). Error messages are translation
- * keys (`devis.errors.<key>` in messages/*.json), never user-facing text.
+ * server action (full schema, authoritative). The technical step comes from
+ * the chosen service's form definition (./form-def). Error messages are
+ * translation keys (`devis.errors.<key>` in messages/*.json), never text.
  */
 import { z } from "zod";
-import {
-  activityOptions,
-  contactChannelOptions,
-  governorateOptions,
-  phaseOptions,
-  propertyTypeOptions,
-  roofTypeOptions,
-  siteTypeOptions,
-  technicalGroupOf,
-  valuesOf,
-  waterSourceOptions,
-  type Activity,
-} from "./options";
-import { isValidTnPhone, normalizeTnPhone, toAsciiDigits } from "./phone";
+import { contactChannelOptions, governorateOptions, valuesOf } from "./options";
+import { answersSchema, type FormDef } from "./form-def";
+import { isValidTnPhone, normalizeTnPhone } from "./phone";
 
 export const devisErrorKeys = [
   "required",
@@ -25,84 +15,27 @@ export const devisErrorKeys = [
   "invalidPhone",
   "invalidEmail",
   "number",
+  "tooSmall",
   "tooLarge",
   "tooLong",
   "invalidOption",
+  "invalidDate",
+  "requireOne",
   "consent",
-  "billOrConsumption",
-  "describeWork",
 ] as const;
 export type DevisErrorKey = (typeof devisErrorKeys)[number];
 
-// --- Building blocks -------------------------------------------------------------
-
 const blankToUndefined = (v: unknown) =>
   v === null || (typeof v === "string" && v.trim() === "") ? undefined : v;
-
-/** Optional number from a text input: accepts Arabic-Indic digits and "12,5". */
-const optionalNumber = (max: number) =>
-  z.preprocess(
-    (v) => {
-      const value = blankToUndefined(v);
-      if (typeof value !== "string") return value;
-      const n = Number(toAsciiDigits(value).trim().replace(",", "."));
-      return Number.isFinite(n) ? n : value; // keep invalid text → "number" error
-    },
-    z
-      .number({ invalid_type_error: "number" })
-      .min(0, "number")
-      .max(max, "tooLarge")
-      .optional(),
-  );
-
-const optionalEnum = <V extends string>(values: [V, ...V[]]) =>
-  z.preprocess(blankToUndefined, z.enum(values, { errorMap: () => ({ message: "invalidOption" }) }).optional());
 
 const optionalText = (max: number) =>
   z.preprocess(blankToUndefined, z.string().trim().max(max, "tooLong").optional());
 
 // --- Fields ---------------------------------------------------------------------
 
-const activity = z.enum(valuesOf(activityOptions), { errorMap: () => ({ message: "chooseActivity" }) });
-
-/** Step 2 groups — keys mirror the DevisRequests collection groups. */
-const technicalShape = {
-  raccorde: z
-    .object({
-      monthlyBillTnd: optionalNumber(1_000_000),
-      monthlyConsumptionKwh: optionalNumber(10_000_000),
-      propertyType: optionalEnum(valuesOf(propertyTypeOptions)),
-      roofType: optionalEnum(valuesOf(roofTypeOptions)),
-      roofSurfaceM2: optionalNumber(1_000_000),
-      phase: optionalEnum(valuesOf(phaseOptions)),
-    })
-    .optional(),
-  pompage: z
-    .object({
-      waterSource: optionalEnum(valuesOf(waterSourceOptions)),
-      flowM3PerDay: optionalNumber(100_000),
-      depthM: optionalNumber(3_000),
-      headM: optionalNumber(3_000),
-      existingPumpCv: optionalNumber(10_000),
-    })
-    .optional(),
-  isole: z
-    .object({
-      dailyConsumptionKwh: optionalNumber(100_000),
-      autonomyDays: optionalNumber(30),
-      hasGenset: z.boolean().optional(),
-      criticalLoads: optionalText(1_000),
-    })
-    .optional(),
-  electrical: z
-    .object({
-      workNature: optionalText(2_000),
-      siteType: optionalEnum(valuesOf(siteTypeOptions)),
-      indicativePowerKva: optionalNumber(100_000),
-      existingInstallationNotes: optionalText(2_000),
-    })
-    .optional(),
-};
+/** The service chosen at step 1 (its id, as a string), among the site's quote services. */
+const serviceOf = (serviceIds: readonly string[]) =>
+  z.string({ required_error: "chooseActivity" }).refine((id) => serviceIds.includes(id), "chooseActivity");
 
 const contactShape = {
   fullName: z.string({ required_error: "required" }).trim().min(2, "required").max(120, "tooLong"),
@@ -126,60 +59,43 @@ const contactShape = {
 
 const consent = z.literal(true, { errorMap: () => ({ message: "consent" }) });
 
-// --- Per-activity requirements -----------------------------------------------------
+// --- Schemas ----------------------------------------------------------------------
 
-type TechnicalValues = { activity: Activity } & {
-  [K in keyof typeof technicalShape]?: z.output<(typeof technicalShape)[K]>;
-};
+/** What the form needs to know about each service it offers. */
+export interface ServiceForm {
+  id: string;
+  form: FormDef;
+}
 
-function refineTechnical(data: TechnicalValues, ctx: z.RefinementCtx) {
-  const fail = (path: string[], message: DevisErrorKey) => ctx.addIssue({ code: "custom", path, message });
-  switch (data.activity) {
-    case "raccorde":
-      if (data.raccorde?.monthlyBillTnd === undefined && data.raccorde?.monthlyConsumptionKwh === undefined) {
-        fail(["raccorde", "monthlyBillTnd"], "billOrConsumption");
-      }
-      break;
-    case "pompage":
-      if (!data.pompage?.waterSource) fail(["pompage", "waterSource"], "required");
-      if (data.pompage?.flowM3PerDay === undefined) fail(["pompage", "flowM3PerDay"], "required");
-      break;
-    case "isole":
-      if (data.isole?.dailyConsumptionKwh === undefined) fail(["isole", "dailyConsumptionKwh"], "required");
-      break;
-    case "bt":
-    case "mt":
-      if ((data.electrical?.workNature ?? "").length < 10) fail(["electrical", "workNature"], "describeWork");
-      break;
+export const DEVIS_STEPS = 4;
+
+/**
+ * The schema of one form step (index 0–3), validated before moving on. Step 2
+ * depends on the service chosen at step 1.
+ */
+export function stepSchema(step: number, services: readonly ServiceForm[], serviceId: string) {
+  const ids = services.map((s) => s.id);
+  const form = services.find((s) => s.id === serviceId)?.form ?? { questions: [] };
+  switch (step) {
+    case 0:
+      return z.object({ service: serviceOf(ids) });
+    case 1:
+      return z.object({ answers: answersSchema(form) });
+    case 2:
+      return z.object(contactShape);
+    default:
+      return z.object({ consent });
   }
 }
 
-// --- Schemas ----------------------------------------------------------------------
+/** Full schema (server) for a request on the service whose form is `form`. */
+export function devisSchema(serviceIds: readonly string[], form: FormDef) {
+  return z.object({ service: serviceOf(serviceIds), answers: answersSchema(form), ...contactShape, consent });
+}
 
-/** One schema per form step (index 0–3), validated before moving on. */
-export const stepSchemas = [
-  z.object({ activity }),
-  z.object({ activity, ...technicalShape }).superRefine(refineTechnical),
-  z.object(contactShape),
-  z.object({ consent }),
-] as const;
+export type DevisData = z.output<ReturnType<typeof devisSchema>>;
 
-export const DEVIS_STEPS = stepSchemas.length;
-
-/** Full schema (server). Drops the technical groups of other activities. */
-export const devisSchema = z
-  .object({ activity, ...technicalShape, ...contactShape, consent })
-  .superRefine(refineTechnical)
-  .transform((data) => {
-    const group = technicalGroupOf[data.activity];
-    const { raccorde, pompage, isole, electrical, ...rest } = data;
-    const groups = { raccorde, pompage, isole, electrical };
-    return { ...rest, [group]: groups[group] ?? {} } as typeof rest & Partial<typeof groups>;
-  });
-
-export type DevisData = z.output<typeof devisSchema>;
-
-/** Map Zod issues to `{ "pompage.depthM": "number" }` (first issue per field). */
+/** Map Zod issues to `{ "answers.depthM": "number" }` (first issue per field). */
 export function fieldErrorsOf(error: z.ZodError): Record<string, DevisErrorKey> {
   const out: Record<string, DevisErrorKey> = {};
   for (const issue of error.issues) {
@@ -196,11 +112,8 @@ export function fieldErrorsOf(error: z.ZodError): Record<string, DevisErrorKey> 
 
 /** Raw form state (text inputs are strings until parsed by the schema). */
 export interface DevisFormValues {
-  activity: Activity | "";
-  raccorde: Record<"monthlyBillTnd" | "monthlyConsumptionKwh" | "propertyType" | "roofType" | "roofSurfaceM2" | "phase", string>;
-  pompage: Record<"waterSource" | "flowM3PerDay" | "depthM" | "headM" | "existingPumpCv", string>;
-  isole: { dailyConsumptionKwh: string; autonomyDays: string; hasGenset: boolean; criticalLoads: string };
-  electrical: Record<"workNature" | "siteType" | "indicativePowerKva" | "existingInstallationNotes", string>;
+  service: string;
+  answers: Record<string, string | boolean | string[]>;
   fullName: string;
   phone: string;
   email: string;
@@ -211,11 +124,8 @@ export interface DevisFormValues {
 }
 
 export const emptyDevisValues: DevisFormValues = {
-  activity: "",
-  raccorde: { monthlyBillTnd: "", monthlyConsumptionKwh: "", propertyType: "", roofType: "", roofSurfaceM2: "", phase: "" },
-  pompage: { waterSource: "", flowM3PerDay: "", depthM: "", headM: "", existingPumpCv: "" },
-  isole: { dailyConsumptionKwh: "", autonomyDays: "", hasGenset: false, criticalLoads: "" },
-  electrical: { workNature: "", siteType: "", indicativePowerKva: "", existingInstallationNotes: "" },
+  service: "",
+  answers: {},
   fullName: "",
   phone: "",
   email: "",

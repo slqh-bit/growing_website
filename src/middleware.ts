@@ -1,12 +1,11 @@
 import createMiddleware from "next-intl/middleware";
 import type { NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
-import { isSiteKey, normalizeHost } from "./sites/config";
+import { isSiteKey, normalizeHost, SITE_PREVIEW_COOKIE } from "./sites/config";
 
 const handleI18nRouting = createMiddleware(routing);
 
 /** Development only: `?site=hikview` previews a site on plain localhost (remembered in a cookie). */
-const SITE_PREVIEW_COOKIE = "site-preview";
 const allowSitePreview = process.env.NODE_ENV !== "production";
 
 /**

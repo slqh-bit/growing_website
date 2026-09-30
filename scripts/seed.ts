@@ -26,6 +26,7 @@ import type { SiteKey } from "../src/sites/config";
 import { rich, serviceData } from "./seed-data/build";
 import { faqItems } from "./seed-data/faq";
 import { crossSell, group } from "./seed-data/group";
+import { devisForms, type SeedForm } from "./seed-data/devis-forms";
 import { hikviewAbout, hikviewFooterTagline, hikviewHome } from "./seed-data/hikview";
 import { hikviewServices } from "./seed-data/hikview-services";
 import { footerNav, legalNav, mainNav, type NavItem } from "./seed-data/navigation";
@@ -426,6 +427,53 @@ async function seedRedirects(payload: Payload, siteIds: Record<SiteKey, Id | und
   report(payload, "Redirects", results);
 }
 
+/** One locale of a seeded quote form. */
+function formData(form: SeedForm, l: Locale, site: Id) {
+  const text = (v: unknown) => (v && typeof v === "object" ? ((v as Record<Locale, string>)[l] ?? null) : null);
+  return {
+    site,
+    title: form.title,
+    questions: form.questions.map((q) => ({
+      name: q.name,
+      type: q.type,
+      label: text(q.label),
+      help: text(q.help),
+      unit: text(q.unit),
+      required: Boolean(q.required),
+      requiredGroup: q.requiredGroup ?? null,
+      min: q.min ?? null,
+      max: q.max ?? null,
+      width: q.width ?? "half",
+      options: (q.options ?? []).map((o) => ({ value: o.value, label: text(o.label) })),
+      showIf: { field: q.showIf?.field ?? null, equals: q.showIf?.equals ?? null },
+    })),
+  };
+}
+
+/** Quote forms, and each service's form when it has none yet. */
+async function seedDevisForms(payload: Payload, siteIds: Record<SiteKey, Id | undefined>) {
+  const results = [];
+  let linked = 0;
+  for (const form of devisForms) {
+    const site = siteIds[form.site];
+    if (site === undefined) continue;
+    const result = await ensure(payload, "devis-forms", bySiteAnd(site, { title: { equals: form.title } }), (l) =>
+      formData(form, l, site),
+    );
+    results.push(result);
+    for (const slug of form.services) {
+      const service = (
+        await payload.find({ collection: "services", where: bySiteAnd(site, { slug: { equals: slug } }), limit: 1, depth: 0 })
+      ).docs[0];
+      if (!service || service.devisForm) continue;
+      await payload.update({ collection: "services", id: service.id, data: { devisForm: Number(result.id) }, depth: 0, context });
+      linked++;
+    }
+  }
+  report(payload, "Quote forms", results);
+  payload.logger.info(`Quote forms: ${linked} services linked`);
+}
+
 /** The group global, unless it was already filled in the admin. */
 async function seedGroup(payload: Payload, siteIds: Record<SiteKey, Id | undefined>) {
   const current = await payload.findGlobal({ slug: "group", depth: 0 });
@@ -489,6 +537,7 @@ async function main() {
   if (siteIds.hikview !== undefined) await seedHikviewServices(payload, siteIds.hikview);
   await seedPages(payload, siteIds);
   await seedRedirects(payload, siteIds);
+  await seedDevisForms(payload, siteIds);
   await seedGroup(payload, siteIds);
   await seedCrossSell(payload, siteIds);
 

@@ -18,17 +18,17 @@ test("FR: a complete pompage request reaches the success screen", async ({ page 
 
   // Step 1: activity is required.
   await next(page, "Continuer");
-  await expect(fieldError(page, "activity")).toHaveText("Choisissez une activité pour continuer.");
+  await expect(fieldError(page, "service")).toHaveText("Choisissez une activité pour continuer.");
   await page.locator("form").getByText("Pompage solaire", { exact: true }).click();
   await next(page, "Continuer");
 
   // Step 2: technical needs, Arabic-Indic digits accepted.
   await expect(page.getByRole("heading", { level: 2, name: "Besoins techniques" })).toBeVisible();
   await next(page, "Continuer");
-  await expect(fieldError(page, "pompage-waterSource")).toHaveText("Ce champ est obligatoire.");
-  await page.selectOption("#devis-pompage-waterSource", "forage");
-  await page.fill("#devis-pompage-flowM3PerDay", "٤٠");
-  await page.fill("#devis-pompage-depthM", "80");
+  await expect(fieldError(page, "answers-waterSource")).toHaveText("Ce champ est obligatoire.");
+  await page.selectOption("#devis-answers-waterSource", "forage");
+  await page.fill("#devis-answers-flowM3PerDay", "٤٠");
+  await page.fill("#devis-answers-depthM", "80");
   await next(page, "Continuer");
 
   // Step 3: contact.
@@ -89,5 +89,32 @@ test("AR: the form is right-to-left and translated", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuetext", /الخطوة 1\/4/);
   await next(page, "متابعة");
-  await expect(fieldError(page, "activity")).toHaveText("اختر نشاطاً للمتابعة.");
+  await expect(fieldError(page, "service")).toHaveText("اختر نشاطاً للمتابعة.");
+});
+
+test("questions follow the admin-built form: street lighting asks for light points", async ({ page }) => {
+  await page.goto("/fr/devis?service=site-isole");
+  // Preselected from the service page link.
+  await next(page, "Continuer");
+  await expect(page.getByRole("heading", { level: 2, name: "Besoins techniques" })).toBeVisible();
+  await next(page, "Continuer");
+  await expect(fieldError(page, "answers-subtype")).toHaveText("Ce champ est obligatoire.");
+
+  await page.locator("form").getByText("Éclairage public solaire", { exact: true }).click();
+  await expect(page.locator("#devis-answers-lightPoints")).toBeVisible();
+  await expect(page.locator("#devis-answers-dailyConsumptionKwh")).toHaveCount(0);
+  await next(page, "Continuer");
+  await expect(fieldError(page, "answers-lightPoints")).toHaveText("Ce champ est obligatoire.");
+
+  await page.locator("form").getByText("Site isolé (maison, ferme, relais…)", { exact: true }).click();
+  await expect(page.locator("#devis-answers-dailyConsumptionKwh")).toBeVisible();
+  await expect(page.locator("#devis-answers-lightPoints")).toHaveCount(0);
+});
+
+test("a service's quote button preselects it in the form", async ({ page }) => {
+  await page.goto("/fr/services/centrale-photovoltaique");
+  await page.locator('main a[href="/fr/devis?service=centrale-photovoltaique"]').first().click();
+  await expect(page).toHaveURL(/\/fr\/devis\?service=centrale-photovoltaique$/);
+  await next(page, "Continuer");
+  await expect(page.locator("form")).toContainText("Régime du projet");
 });

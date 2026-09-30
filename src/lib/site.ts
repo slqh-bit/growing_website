@@ -1,9 +1,10 @@
 import "server-only";
+import { cookies, headers } from "next/headers";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import type { Locale } from "@/i18n/routing";
 import { getRedirectRules, getSiteDirectory } from "@/lib/cms/queries";
 import { findRedirect, redirectTarget } from "@/lib/redirects";
-import { matchSite, normalizeHost, type SiteKey } from "@/sites/config";
+import { isSiteKey, matchSite, normalizeHost, SITE_PREVIEW_COOKIE, type SiteKey } from "@/sites/config";
 
 /**
  * The site a request belongs to. The middleware rewrites every public URL to
@@ -16,6 +17,20 @@ export async function resolveSiteKey(domain: string): Promise<SiteKey> {
     throw new Error("No site configured: create one in the admin (Paramètres → Sites) or run `npm run seed`.");
   }
   return key;
+}
+
+/**
+ * The site of the current request outside a page (server actions): from the
+ * Host header, like the middleware (including the development preview cookie).
+ */
+export async function currentSiteKey(): Promise<SiteKey> {
+  const [h, c] = await Promise.all([headers(), cookies()]);
+  let host = normalizeHost(h.get("host"));
+  if (process.env.NODE_ENV !== "production") {
+    const preview = c.get(SITE_PREVIEW_COOKIE)?.value;
+    if (preview && isSiteKey(preview)) host = `${preview}.localhost`;
+  }
+  return resolveSiteKey(host);
 }
 
 /** Route params `{ domain, locale, …rest }` → `{ site, locale, …rest }`. */

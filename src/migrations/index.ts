@@ -8,6 +8,7 @@ import * as migration_20260930_082300_multisite_content from './20260930_082300_
 import * as migration_20260930_082326_drop_navigation_footer from './20260930_082326_drop_navigation_footer';
 import * as migration_20260930_090146_service_tree_references from './20260930_090146_service_tree_references';
 import * as migration_20260930_095234_group_cross_sell from './20260930_095234_group_cross_sell';
+import * as migration_20260930_101604_devis_form_builder from './20260930_101604_devis_form_builder';
 
 export const migrations = [
   {
@@ -58,6 +59,11 @@ export const migrations = [
   {
     up: migration_20260930_095234_group_cross_sell.up,
     down: migration_20260930_095234_group_cross_sell.down,
-    name: '20260930_095234_group_cross_sell'
+    name: '20260930_095234_group_cross_sell',
+  },
+  {
+    up: migration_20260930_101604_devis_form_builder.up,
+    down: migration_20260930_101604_devis_form_builder.down,
+    name: '20260930_101604_devis_form_builder'
   },
 ];
