@@ -6,6 +6,8 @@ import { routeContext } from "@/lib/site";
 import { getServices, getSite } from "@/lib/cms/queries";
 import { activityOptions } from "@/lib/devis/options";
 import { buildMetadata } from "@/lib/metadata";
+import { Link } from "@/i18n/navigation";
+import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { PageHeader } from "@/components/sections/page-header";
 import { Reveal } from "@/components/motion/reveal";
@@ -29,20 +31,19 @@ export default async function DevisPage({ params }: { params: Promise<{ domain: 
   setRequestLocale(locale);
   const [t, services, settings] = await Promise.all([
     getTranslations({ locale, namespace: "devis" }),
-    getServices(locale),
+    getServices(site, locale),
     getSite(site, locale),
   ]);
 
-  // All five activities are always offered; the CMS service (if any) supplies
-  // the editable title, description and icon.
-  const activities: ActivityChoice[] = activityOptions.map((option) => {
-    const service = services.find((s) => s.activityKey === option.value);
-    return {
-      value: option.value,
-      title: service?.title ?? option.label[locale],
-      description: service?.shortDescription ?? "",
-      icon: service?.icon ?? "Sun",
-    };
+  // The activities offered are those of this site's services that are linked
+  // to the form (Services → Activité), in the services' order; the service
+  // supplies the editable title, description and icon. Legacy values (BT/MT,
+  // merged into "Installations raccordées") stay valid for older requests only.
+  const activities: ActivityChoice[] = services.flatMap((service) => {
+    const option = activityOptions.find((o) => o.value === service.activityKey);
+    return option
+      ? [{ value: option.value, title: service.title, description: service.shortDescription, icon: service.icon }]
+      : [];
   });
 
   const reasons = [
@@ -59,7 +60,17 @@ export default async function DevisPage({ params }: { params: Promise<{ domain: 
       <section className="py-12 sm:py-16">
         <Container className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <DevisForm activities={activities} locale={locale} privacyHref={`/${locale}/politique-confidentialite`} />
+            {activities.length > 0 ? (
+              <DevisForm activities={activities} locale={locale} privacyHref={`/${locale}/politique-confidentialite`} />
+            ) : (
+              // No service of this site is linked to the form yet (plan Phase 5).
+              <Reveal className="rounded-3xl border border-border bg-surface p-8 shadow-sm">
+                <p className="text-foreground">{t("unavailable")}</p>
+                <Button asChild variant="solar" className="mt-6">
+                  <Link href="/contact">{t("unavailableCta")}</Link>
+                </Button>
+              </Reveal>
+            )}
           </div>
 
           <aside className="flex flex-col gap-4">

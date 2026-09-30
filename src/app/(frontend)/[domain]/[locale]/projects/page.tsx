@@ -29,7 +29,7 @@ export default async function ProjectsPage({
   setRequestLocale(locale);
   const [t, projects] = await Promise.all([
     getTranslations({ locale, namespace: "projects" }),
-    getProjects(locale),
+    getProjects(site, locale),
   ]);
   const views = projects.map((p) => toProjectView(p, t));
 

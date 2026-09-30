@@ -30,7 +30,7 @@ export default async function FaqPage({
 
   // Already sorted by `order`; group by (localized) category, keeping first-seen order.
   const groups = new Map<string, AccordionItemData[]>();
-  for (const item of await getFaq(locale)) {
+  for (const item of await getFaq(site, locale)) {
     const entry: AccordionItemData = {
       id: String(item.id),
       question: item.question,

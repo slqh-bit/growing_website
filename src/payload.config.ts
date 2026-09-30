@@ -13,14 +13,14 @@ import { DevisRequests } from "./collections/DevisRequests";
 import { Faq } from "./collections/Faq";
 import { Media } from "./collections/Media";
 import { Pages } from "./collections/Pages";
+import { Partners } from "./collections/Partners";
 import { Projects } from "./collections/Projects";
 import { QuoteDocuments } from "./collections/QuoteDocuments";
+import { Redirects } from "./collections/Redirects";
 import { Services } from "./collections/Services";
 import { Sites } from "./collections/Sites";
 import { Team } from "./collections/Team";
 import { Users } from "./collections/Users";
-import { Footer } from "./globals/Footer";
-import { Navigation } from "./globals/Navigation";
 import { defaultLocale, localeNames, locales, rtlLocales } from "./i18n/config";
 import { migrations } from "./migrations";
 
@@ -73,8 +73,20 @@ export default buildConfig({
     // Built-in avatar instead of Gravatar: no admin email hash sent to a third party.
     avatar: "default",
   },
-  collections: [Pages, Services, Projects, Faq, Team, DevisRequests, QuoteDocuments, Media, Sites, Users],
-  globals: [Navigation, Footer],
+  collections: [
+    Pages,
+    Services,
+    Projects,
+    Partners,
+    Faq,
+    Team,
+    DevisRequests,
+    QuoteDocuments,
+    Media,
+    Sites,
+    Redirects,
+    Users,
+  ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {

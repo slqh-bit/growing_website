@@ -70,12 +70,14 @@ export interface Config {
     pages: Page;
     services: Service;
     projects: Project;
+    partners: Partner;
     faq: Faq;
     team: Team;
     'devis-requests': DevisRequest;
     'quote-documents': QuoteDocument;
     media: Media;
     sites: Site;
+    redirects: Redirect;
     users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -87,12 +89,14 @@ export interface Config {
     pages: PagesSelect<false> | PagesSelect<true>;
     services: ServicesSelect<false> | ServicesSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
+    partners: PartnersSelect<false> | PartnersSelect<true>;
     faq: FaqSelect<false> | FaqSelect<true>;
     team: TeamSelect<false> | TeamSelect<true>;
     'devis-requests': DevisRequestsSelect<false> | DevisRequestsSelect<true>;
     'quote-documents': QuoteDocumentsSelect<false> | QuoteDocumentsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     sites: SitesSelect<false> | SitesSelect<true>;
+    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -103,14 +107,8 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('fr' | 'ar' | 'en') | ('fr' | 'ar' | 'en')[];
-  globals: {
-    navigation: Navigation;
-    footer: Footer;
-  };
-  globalsSelect: {
-    navigation: NavigationSelect<false> | NavigationSelect<true>;
-    footer: FooterSelect<false> | FooterSelect<true>;
-  };
+  globals: {};
+  globalsSelect: {};
   locale: 'fr' | 'ar' | 'en';
   widgets: {
     collections: CollectionsWidget;
@@ -150,6 +148,10 @@ export interface Page {
    * URL segment shared by all 3 languages, e.g. pompage-solaire. Generated from the title if empty.
    */
   slug: string;
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
   layout?:
     | (
         | HeroBlock
@@ -160,6 +162,7 @@ export interface Page {
         | CtaBlock
         | RichTextBlock
         | LogosBlock
+        | PartnersBlock
         | FaqBlock
       )[]
     | null;
@@ -176,31 +179,134 @@ export interface Page {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "HeroBlock".
+ * via the `definition` "sites".
  */
-export interface HeroBlock {
-  style: 'full' | 'compact';
-  badge?: string | null;
-  title: string;
-  subtitle?: string | null;
-  primaryCta?: {
-    label?: string | null;
-    /**
-     * Path without locale, e.g. /services — the locale is added automatically.
-     */
-    href?: string | null;
+export interface Site {
+  id: number;
+  /**
+   * Technical id of the site (don't change it once live).
+   */
+  key: 'growing' | 'hikview' | 'group';
+  /**
+   * Shown for an unknown domain (and locally on localhost).
+   */
+  isDefault?: boolean | null;
+  /**
+   * E.g. https://growing-technologies.tn — used for canonical links, sharing and SEO. Empty = NEXT_PUBLIC_SITE_URL.
+   */
+  url?: string | null;
+  /**
+   * Domains that show this site (www. is matched automatically). Locally: <site>.localhost:3000.
+   */
+  domains?:
+    | {
+        domain: string;
+        id?: string | null;
+      }[]
+    | null;
+  companyName: string;
+  legalName: string;
+  /**
+   * Format : 1234567/A/B/M/000
+   */
+  matriculeFiscal: string;
+  certification?: string | null;
+  /**
+   * One sentence: browser tab title, search engines, home visual.
+   */
+  tagline: string;
+  /**
+   * PNG/WebP, transparent background. Empty = badge with the initials below.
+   */
+  logo?: (number | null) | Media;
+  /**
+   * Optional.
+   */
+  logoDark?: (number | null) | Media;
+  /**
+   * Checked: the company name isn't written next to the logo.
+   */
+  logoIncludesName?: boolean | null;
+  /**
+   * E.g. GT — used when no logo is uploaded.
+   */
+  monogram?: string | null;
+  /**
+   * Square PNG, 512×512 recommended.
+   */
+  favicon?: (number | null) | Media;
+  /**
+   * Hex code (#1f6fd1). Hue and intensity are used; lightness is adjusted automatically to keep text readable. Empty = default palette (solar green / gold).
+   */
+  theme?: {
+    primary?: string | null;
+    accent?: string | null;
   };
-  secondaryCta?: {
-    label?: string | null;
-    /**
-     * Path without locale, e.g. /services — the locale is added automatically.
-     */
-    href?: string | null;
+  email: string;
+  phone: string;
+  whatsapp?: string | null;
+  /**
+   * @username
+   */
+  telegram?: string | null;
+  address: string;
+  city: string;
+  hours?: string | null;
+  coords: {
+    lat: number;
+    lng: number;
   };
-  image?: (number | null) | Media;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'hero';
+  /**
+   * Header menu. The “Request a quote” button is added automatically.
+   */
+  navItems?:
+    | {
+        label: string;
+        /**
+         * Path without locale, e.g. /services — the locale is added automatically.
+         */
+        href: string;
+        comingSoon?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  footer?: {
+    tagline?: string | null;
+    quickLinks?:
+      | {
+          label: string;
+          /**
+           * Path without locale, e.g. /services — the locale is added automatically.
+           */
+          href: string;
+          id?: string | null;
+        }[]
+      | null;
+    legalLinks?:
+      | {
+          label: string;
+          /**
+           * Path without locale, e.g. /services — the locale is added automatically.
+           */
+          href: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  socials?: {
+    facebook?: string | null;
+    instagram?: string | null;
+    linkedin?: string | null;
+  };
+  stats?:
+    | {
+        value: string;
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -252,6 +358,34 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeroBlock".
+ */
+export interface HeroBlock {
+  style: 'full' | 'compact';
+  badge?: string | null;
+  title: string;
+  subtitle?: string | null;
+  primaryCta?: {
+    label?: string | null;
+    /**
+     * Path without locale, e.g. /services — the locale is added automatically.
+     */
+    href?: string | null;
+  };
+  secondaryCta?: {
+    label?: string | null;
+    /**
+     * Path without locale, e.g. /services — the locale is added automatically.
+     */
+    href?: string | null;
+  };
+  image?: (number | null) | Media;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'hero';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "StatsBlock".
  */
 export interface StatsBlock {
@@ -296,6 +430,30 @@ export interface FeaturesBlock {
               | 'Cable'
               | 'Zap'
               | 'Sun'
+              | 'House'
+              | 'Building2'
+              | 'Factory'
+              | 'Tractor'
+              | 'Lightbulb'
+              | 'RadioTower'
+              | 'Cctv'
+              | 'Siren'
+              | 'Fingerprint'
+              | 'Flame'
+              | 'Network'
+              | 'Router'
+              | 'Wifi'
+              | 'Server'
+              | 'Phone'
+              | 'ScanBarcode'
+              | 'Store'
+              | 'Monitor'
+              | 'Presentation'
+              | 'Tv'
+              | 'ListOrdered'
+              | 'Video'
+              | 'Cpu'
+              | 'Landmark'
               | 'ShieldCheck'
               | 'MapPin'
               | 'Wrench'
@@ -392,6 +550,20 @@ export interface LogosBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PartnersBlock".
+ */
+export interface PartnersBlock {
+  title?: string | null;
+  /**
+   * Empty = all. Logos are managed in Content → Partners & brands.
+   */
+  kinds?: ('manufacturer' | 'distributor' | 'own-product' | 'certification')[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'partners';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "FaqBlock".
  */
 export interface FaqBlock {
@@ -410,6 +582,10 @@ export interface FaqBlock {
  */
 export interface Faq {
   id: number;
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
   question: string;
   answer: string;
   /**
@@ -432,10 +608,44 @@ export interface Service {
    */
   slug: string;
   /**
-   * Links the service to the quote form.
+   * The website that publishes this content.
    */
-  activityKey: 'raccorde' | 'pompage' | 'isole' | 'bt' | 'mt';
-  icon: 'PlugZap' | 'Droplets' | 'BatteryCharging' | 'Cable' | 'Zap' | 'Sun';
+  site: number | Site;
+  /**
+   * Links the service to the quote form. Empty = the quote button leads to the Contact page.
+   */
+  activityKey?: ('raccorde' | 'pompage' | 'isole' | 'bt' | 'mt') | null;
+  icon:
+    | 'PlugZap'
+    | 'Droplets'
+    | 'BatteryCharging'
+    | 'Cable'
+    | 'Zap'
+    | 'Sun'
+    | 'House'
+    | 'Building2'
+    | 'Factory'
+    | 'Tractor'
+    | 'Lightbulb'
+    | 'RadioTower'
+    | 'Cctv'
+    | 'Siren'
+    | 'Fingerprint'
+    | 'Flame'
+    | 'Network'
+    | 'Router'
+    | 'Wifi'
+    | 'Server'
+    | 'Phone'
+    | 'ScanBarcode'
+    | 'Store'
+    | 'Monitor'
+    | 'Presentation'
+    | 'Tv'
+    | 'ListOrdered'
+    | 'Video'
+    | 'Cpu'
+    | 'Landmark';
   order: number;
   /**
    * Shown on cards (≈ 1 sentence).
@@ -456,6 +666,66 @@ export interface Service {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * Parts of the page with their own anchor, e.g. #commercial → /fr/services/installation-raccordee#commercial.
+   */
+  sections?:
+    | {
+        anchor: string;
+        icon?:
+          | (
+              | 'PlugZap'
+              | 'Droplets'
+              | 'BatteryCharging'
+              | 'Cable'
+              | 'Zap'
+              | 'Sun'
+              | 'House'
+              | 'Building2'
+              | 'Factory'
+              | 'Tractor'
+              | 'Lightbulb'
+              | 'RadioTower'
+              | 'Cctv'
+              | 'Siren'
+              | 'Fingerprint'
+              | 'Flame'
+              | 'Network'
+              | 'Router'
+              | 'Wifi'
+              | 'Server'
+              | 'Phone'
+              | 'ScanBarcode'
+              | 'Store'
+              | 'Monitor'
+              | 'Presentation'
+              | 'Tv'
+              | 'ListOrdered'
+              | 'Video'
+              | 'Cpu'
+              | 'Landmark'
+            )
+          | null;
+        title: string;
+        body?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        image?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
   heroImage?: (number | null) | Media;
   benefits?:
     | {
@@ -493,6 +763,10 @@ export interface Project {
    * URL segment shared by all 3 languages, e.g. pompage-solaire. Generated from the title if empty.
    */
   slug: string;
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
   activity: number | Service;
   clientType: 'residentiel' | 'agricole' | 'industriel' | 'public';
   region: string;
@@ -533,10 +807,38 @@ export interface Project {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "partners".
+ */
+export interface Partner {
+  id: number;
+  name: string;
+  kind: 'manufacturer' | 'distributor' | 'own-product' | 'certification';
+  logo: number | Media;
+  url?: string | null;
+  /**
+   * Optional — one sentence, mainly for the group's own products.
+   */
+  description?: string | null;
+  sites: (number | Site)[];
+  /**
+   * The logo is also shown on these service pages.
+   */
+  services?: (number | Service)[] | null;
+  showInStrip?: boolean | null;
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "team".
  */
 export interface Team {
   id: number;
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
   name: string;
   role: string;
   photo?: (number | null) | Media;
@@ -658,95 +960,26 @@ export interface QuoteDocument {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "sites".
+ * via the `definition` "redirects".
  */
-export interface Site {
+export interface Redirect {
   id: number;
   /**
-   * Technical id of the site (don't change it once live).
+   * Without the language: /services/basse-tension redirects /fr/…, /ar/… and /en/….
    */
-  key: 'growing' | 'hikview' | 'group';
+  from: string;
   /**
-   * Shown for an unknown domain (and locally on localhost).
+   * Path without the language (a #… anchor is allowed) or an external https:// address.
    */
-  isDefault?: boolean | null;
+  to: string;
   /**
-   * E.g. https://growing-technologies.tn — used for canonical links, sharing and SEO. Empty = NEXT_PUBLIC_SITE_URL.
+   * Empty = every site.
    */
-  url?: string | null;
+  sites?: (number | Site)[] | null;
   /**
-   * Domains that show this site (www. is matched automatically). Locally: <site>.localhost:3000.
+   * Search engines transfer the ranking to the new address.
    */
-  domains?:
-    | {
-        domain: string;
-        id?: string | null;
-      }[]
-    | null;
-  companyName: string;
-  legalName: string;
-  /**
-   * Format : 1234567/A/B/M/000
-   */
-  matriculeFiscal: string;
-  certification?: string | null;
-  /**
-   * One sentence: browser tab title, search engines, home visual.
-   */
-  tagline: string;
-  /**
-   * PNG/WebP, transparent background. Empty = badge with the initials below.
-   */
-  logo?: (number | null) | Media;
-  /**
-   * Optional.
-   */
-  logoDark?: (number | null) | Media;
-  /**
-   * Checked: the company name isn't written next to the logo.
-   */
-  logoIncludesName?: boolean | null;
-  /**
-   * E.g. GT — used when no logo is uploaded.
-   */
-  monogram?: string | null;
-  /**
-   * Square PNG, 512×512 recommended.
-   */
-  favicon?: (number | null) | Media;
-  /**
-   * Hex code (#1f6fd1). Hue and intensity are used; lightness is adjusted automatically to keep text readable. Empty = default palette (solar green / gold).
-   */
-  theme?: {
-    primary?: string | null;
-    accent?: string | null;
-  };
-  email: string;
-  phone: string;
-  whatsapp?: string | null;
-  /**
-   * @username
-   */
-  telegram?: string | null;
-  address: string;
-  city: string;
-  hours?: string | null;
-  coords: {
-    lat: number;
-    lng: number;
-  };
-  socials?: {
-    facebook?: string | null;
-    instagram?: string | null;
-    linkedin?: string | null;
-  };
-  stats?:
-    | {
-        value: string;
-        label: string;
-        id?: string | null;
-      }[]
-    | null;
+  permanent?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -819,6 +1052,10 @@ export interface PayloadLockedDocument {
         value: number | Project;
       } | null)
     | ({
+        relationTo: 'partners';
+        value: number | Partner;
+      } | null)
+    | ({
         relationTo: 'faq';
         value: number | Faq;
       } | null)
@@ -841,6 +1078,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'sites';
         value: number | Site;
+      } | null)
+    | ({
+        relationTo: 'redirects';
+        value: number | Redirect;
       } | null)
     | ({
         relationTo: 'users';
@@ -895,6 +1136,7 @@ export interface PayloadMigration {
 export interface PagesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  site?: T;
   layout?:
     | T
     | {
@@ -906,6 +1148,7 @@ export interface PagesSelect<T extends boolean = true> {
         cta?: T | CtaBlockSelect<T>;
         richText?: T | RichTextBlockSelect<T>;
         logos?: T | LogosBlockSelect<T>;
+        partners?: T | PartnersBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
       };
   seo?:
@@ -1044,6 +1287,16 @@ export interface LogosBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PartnersBlock_select".
+ */
+export interface PartnersBlockSelect<T extends boolean = true> {
+  title?: T;
+  kinds?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "FaqBlock_select".
  */
 export interface FaqBlockSelect<T extends boolean = true> {
@@ -1059,11 +1312,22 @@ export interface FaqBlockSelect<T extends boolean = true> {
 export interface ServicesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  site?: T;
   activityKey?: T;
   icon?: T;
   order?: T;
   shortDescription?: T;
   body?: T;
+  sections?:
+    | T
+    | {
+        anchor?: T;
+        icon?: T;
+        title?: T;
+        body?: T;
+        image?: T;
+        id?: T;
+      };
   heroImage?: T;
   benefits?:
     | T
@@ -1096,6 +1360,7 @@ export interface ServicesSelect<T extends boolean = true> {
 export interface ProjectsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  site?: T;
   activity?: T;
   clientType?: T;
   region?: T;
@@ -1118,9 +1383,27 @@ export interface ProjectsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "partners_select".
+ */
+export interface PartnersSelect<T extends boolean = true> {
+  name?: T;
+  kind?: T;
+  logo?: T;
+  url?: T;
+  description?: T;
+  sites?: T;
+  services?: T;
+  showInStrip?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "faq_select".
  */
 export interface FaqSelect<T extends boolean = true> {
+  site?: T;
   question?: T;
   answer?: T;
   category?: T;
@@ -1133,6 +1416,7 @@ export interface FaqSelect<T extends boolean = true> {
  * via the `definition` "team_select".
  */
 export interface TeamSelect<T extends boolean = true> {
+  site?: T;
   name?: T;
   role?: T;
   photo?: T;
@@ -1315,6 +1599,33 @@ export interface SitesSelect<T extends boolean = true> {
         lat?: T;
         lng?: T;
       };
+  navItems?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        comingSoon?: T;
+        id?: T;
+      };
+  footer?:
+    | T
+    | {
+        tagline?: T;
+        quickLinks?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+              id?: T;
+            };
+        legalLinks?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+              id?: T;
+            };
+      };
   socials?:
     | T
     | {
@@ -1329,6 +1640,18 @@ export interface SitesSelect<T extends boolean = true> {
         label?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects_select".
+ */
+export interface RedirectsSelect<T extends boolean = true> {
+  from?: T;
+  to?: T;
+  sites?: T;
+  permanent?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1397,97 +1720,6 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "navigation".
- */
-export interface Navigation {
-  id: number;
-  items?:
-    | {
-        label: string;
-        /**
-         * Path without locale, e.g. /services — the locale is added automatically.
-         */
-        href: string;
-        comingSoon?: boolean | null;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "footer".
- */
-export interface Footer {
-  id: number;
-  tagline?: string | null;
-  quickLinks?:
-    | {
-        label: string;
-        /**
-         * Path without locale, e.g. /services — the locale is added automatically.
-         */
-        href: string;
-        id?: string | null;
-      }[]
-    | null;
-  legalLinks?:
-    | {
-        label: string;
-        /**
-         * Path without locale, e.g. /services — the locale is added automatically.
-         */
-        href: string;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "navigation_select".
- */
-export interface NavigationSelect<T extends boolean = true> {
-  items?:
-    | T
-    | {
-        label?: T;
-        href?: T;
-        comingSoon?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "footer_select".
- */
-export interface FooterSelect<T extends boolean = true> {
-  tagline?: T;
-  quickLinks?:
-    | T
-    | {
-        label?: T;
-        href?: T;
-        id?: T;
-      };
-  legalLinks?:
-    | T
-    | {
-        label?: T;
-        href?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

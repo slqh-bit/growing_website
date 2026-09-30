@@ -99,6 +99,39 @@ test.describe("Multi-site (one site per domain)", () => {
     expect(response.ok()).toBeTruthy();
     expect(await response.text()).toContain('data-site="growing"');
   });
+
+  test("each site only shows its own content", async ({ page, baseURL }) => {
+    await page.goto(onHost(baseURL, "hikview.localhost", "/fr/services/pompage-solaire"));
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Page introuvable");
+    await page.goto(onHost(baseURL, "hikview.localhost", "/fr"));
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Sécurité");
+  });
+});
+
+test.describe("Growing catalogue (4 activities)", () => {
+  test("the services page lists the four activities", async ({ page }) => {
+    await page.goto("/fr/services");
+    for (const slug of ["pompage-solaire", "site-isole", "installation-raccordee", "centrale-photovoltaique"]) {
+      await expect(page.locator(`main a[href="/fr/services/${slug}"]`).first()).toBeVisible();
+    }
+    await expect(page.locator('main a[href="/fr/services/basse-tension"]')).toHaveCount(0);
+  });
+
+  test("retired BT/MT pages redirect permanently to their section", async ({ page, request }) => {
+    const response = await request.get("/fr/services/basse-tension", { maxRedirects: 0 });
+    expect(response.status()).toBe(308);
+    expect(response.headers()["location"]).toMatch(/\/fr\/services\/installation-raccordee#commercial$/);
+
+    await page.goto("/ar/services/moyenne-tension");
+    await expect(page).toHaveURL(/\/ar\/services\/installation-raccordee#industriel$/);
+    await expect(page.locator("#industriel")).toBeInViewport();
+  });
+
+  test("a service without a quote form sends visitors to the contact page", async ({ page }) => {
+    await page.goto("/fr/services/centrale-photovoltaique");
+    await expect(page.locator("#autoproduction")).toBeAttached();
+    await expect(page.locator('main a[href="/fr/contact"]').first()).toBeVisible();
+  });
 });
 
 test.describe("SEO and platform endpoints", () => {

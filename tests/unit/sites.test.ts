@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { matchSite, normalizeHost, type SiteDomains } from "../../src/sites/config";
 import { hexToOklch, themeVars } from "../../src/lib/theme";
+import { findRedirect, normalizeRedirectPath, redirectTarget, type RedirectRule } from "../../src/lib/redirects";
 
 const sites: SiteDomains[] = [
   { key: "growing", isDefault: true, domains: [{ domain: "growing-technologies.tn" }] },
@@ -68,5 +69,35 @@ describe("theme", () => {
 
   it("caps very saturated colours", () => {
     assert.equal(themeVars({ primary: "#ff00ff" })["--primary-c"], "1.6");
+  });
+});
+
+describe("redirects", () => {
+  const rules: RedirectRule[] = [
+    { from: "/services/basse-tension", to: "/services/installation-raccordee#commercial", permanent: true, sites: ["growing"] },
+    { from: "/old-page", to: "/about", permanent: false, sites: [] },
+    { from: "/old-page", to: "/contact", permanent: true, sites: ["hikview"] },
+    { from: "/partner", to: "https://example.com/x", permanent: true, sites: [] },
+  ];
+
+  it("normalizes paths", () => {
+    assert.equal(normalizeRedirectPath("services/basse-tension/"), "/services/basse-tension");
+    assert.equal(normalizeRedirectPath("//a//b?x=1#y"), "/a/b");
+    assert.equal(normalizeRedirectPath("/"), "/");
+  });
+
+  it("matches per site, a site-specific rule winning over an all-sites one", () => {
+    assert.equal(findRedirect("/services/basse-tension/", "growing", rules)?.to, "/services/installation-raccordee#commercial");
+    assert.equal(findRedirect("/services/basse-tension", "hikview", rules), undefined);
+    assert.equal(findRedirect("/old-page", "growing", rules)?.to, "/about");
+    assert.equal(findRedirect("/old-page", "hikview", rules)?.to, "/contact");
+    assert.equal(findRedirect("/nope", "growing", rules), undefined);
+  });
+
+  it("builds the target in the visitor's language, keeping the anchor", () => {
+    assert.equal(redirectTarget("/services/installation-raccordee#commercial", "ar"), "/ar/services/installation-raccordee#commercial");
+    assert.equal(redirectTarget("/", "en"), "/en");
+    assert.equal(redirectTarget("/#top", "fr"), "/fr#top");
+    assert.equal(redirectTarget("https://example.com/x", "fr"), "https://example.com/x");
   });
 });

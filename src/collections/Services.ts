@@ -1,11 +1,15 @@
 import type { CollectionConfig } from "payload";
-import { admins, anyone, authenticated } from "../cms/access";
-import { seoField, slugField } from "../cms/fields";
+import { siteContentAccess } from "../cms/access";
+import { seoField, siteField, slugField, uniqueSlugPerSite } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
 import { activityOptions, serviceIconOptions } from "../cms/options";
 
-/** The five activities (devplan §4.1). */
+/**
+ * Activities / service pages of each site (plan §4): Growing's 4 activities,
+ * Hikview's areas (sub-pages in Phase 3). `sections` become in-page anchors
+ * (/services/installation-raccordee#commercial).
+ */
 export const Services: CollectionConfig = {
   slug: "services",
   labels: {
@@ -14,16 +18,12 @@ export const Services: CollectionConfig = {
   },
   admin: {
     useAsTitle: "title",
-    defaultColumns: ["title", "activityKey", "order", "updatedAt"],
+    defaultColumns: ["title", "site", "activityKey", "order", "updatedAt"],
     group: groups.content,
   },
   defaultSort: "order",
-  access: {
-    read: anyone,
-    create: authenticated,
-    update: authenticated,
-    delete: admins,
-  },
+  access: siteContentAccess(),
+  indexes: [...uniqueSlugPerSite, { fields: ["site", "activityKey"], unique: true }],
   hooks: revalidateCollection("services"),
   fields: [
     {
@@ -33,23 +33,22 @@ export const Services: CollectionConfig = {
       required: true,
       label: t3("Titre", "Title", "العنوان"),
     },
-    slugField(),
+    slugField("title", { unique: false }),
+    siteField(),
     {
       type: "row",
       fields: [
         {
           name: "activityKey",
           type: "select",
-          required: true,
-          unique: true,
           options: [...activityOptions],
           label: t3("Activité", "Activity", "النشاط"),
           admin: {
             width: "50%",
             description: t3(
-              "Relie le service au formulaire de devis.",
-              "Links the service to the quote form.",
-              "يربط الخدمة باستمارة التسعيرة.",
+              "Relie le service au formulaire de devis. Vide = le bouton « Devis » mène à la page Contact.",
+              "Links the service to the quote form. Empty = the quote button leads to the Contact page.",
+              "يربط الخدمة باستمارة التسعيرة. فارغ = يؤدي زر التسعيرة إلى صفحة الاتصال.",
             ),
           },
         },
@@ -92,6 +91,66 @@ export const Services: CollectionConfig = {
       type: "richText",
       localized: true,
       label: t3("Contenu", "Body", "المحتوى"),
+    },
+    {
+      // Shared rows (same anchors in every language), translated text.
+      name: "sections",
+      type: "array",
+      label: t3("Sections de la page", "Page sections", "أقسام الصفحة"),
+      labels: {
+        singular: t3("Section", "Section", "قسم"),
+        plural: t3("Sections", "Sections", "الأقسام"),
+      },
+      admin: {
+        description: t3(
+          "Parties de la page avec leur propre ancre, ex. #commercial → /fr/services/installation-raccordee#commercial.",
+          "Parts of the page with their own anchor, e.g. #commercial → /fr/services/installation-raccordee#commercial.",
+          "أجزاء من الصفحة لكلّ منها مرساة، مثل ‎#commercial.",
+        ),
+      },
+      fields: [
+        {
+          type: "row",
+          fields: [
+            {
+              name: "anchor",
+              type: "text",
+              required: true,
+              label: t3("Ancre", "Anchor", "المرساة"),
+              validate: (value: string | null | undefined) =>
+                (typeof value === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) ||
+                "Lowercase letters, digits and hyphens only (e.g. commercial).",
+              admin: { width: "50%" },
+            },
+            {
+              name: "icon",
+              type: "select",
+              options: serviceIconOptions,
+              label: t3("Icône", "Icon", "الأيقونة"),
+              admin: { width: "50%" },
+            },
+          ],
+        },
+        {
+          name: "title",
+          type: "text",
+          localized: true,
+          required: true,
+          label: t3("Titre", "Title", "العنوان"),
+        },
+        {
+          name: "body",
+          type: "richText",
+          localized: true,
+          label: t3("Contenu", "Body", "المحتوى"),
+        },
+        {
+          name: "image",
+          type: "upload",
+          relationTo: "media",
+          label: t3("Image", "Image", "صورة"),
+        },
+      ],
     },
     {
       name: "heroImage",

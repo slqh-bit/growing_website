@@ -10,12 +10,13 @@ import type {
   FeaturesBlock,
   HeroBlock,
   LogosBlock,
+  PartnersBlock,
   ProjectsBlock,
   RichTextBlock,
   StatsBlock,
 } from "@/payload-types";
 import type { SiteKey } from "@/sites/config";
-import { getFaq, getFeaturedProjects, getServices, getSite } from "@/lib/cms/queries";
+import { getFaq, getFeaturedProjects, getPartners, getServices, getSite } from "@/lib/cms/queries";
 import { populated } from "@/lib/cms/media";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ import { StatsBand } from "@/components/sections/stats-band";
 import { ServiceCard } from "@/components/sections/service-card";
 import { ProjectCard } from "@/components/sections/project-card";
 import { CtaBand } from "@/components/sections/cta-band";
+import { PartnerLogos } from "@/components/sections/partner-logos";
 import { brandOf } from "@/components/brand/logo";
 
 interface BlockProps<B> {
@@ -72,9 +74,9 @@ export async function StatsBlockView({ block, locale, site }: BlockProps<StatsBl
   return <StatsBand title={block.title} items={items} />;
 }
 
-export async function ActivityGridBlockView({ block, locale }: BlockProps<ActivityGridBlock>) {
+export async function ActivityGridBlockView({ block, locale, site }: BlockProps<ActivityGridBlock>) {
   const [services, tc] = await Promise.all([
-    getServices(locale),
+    getServices(site, locale),
     getTranslations({ locale, namespace: "common" }),
   ]);
 
@@ -131,9 +133,9 @@ export function FeaturesBlockView({ block }: BlockProps<FeaturesBlock>) {
   );
 }
 
-export async function ProjectsBlockView({ block, locale }: BlockProps<ProjectsBlock>) {
+export async function ProjectsBlockView({ block, locale, site }: BlockProps<ProjectsBlock>) {
   const [projects, tc] = await Promise.all([
-    getFeaturedProjects(locale, block.limit ?? 3),
+    getFeaturedProjects(site, locale, block.limit ?? 3),
     getTranslations({ locale, namespace: "common" }),
   ]);
   if (projects.length === 0) return null;
@@ -223,9 +225,17 @@ export function LogosBlockView({ block }: BlockProps<LogosBlock>) {
   );
 }
 
-export async function FaqBlockView({ block, locale }: BlockProps<FaqBlock>) {
+export async function PartnersBlockView({ block, locale, site }: BlockProps<PartnersBlock>) {
+  const kinds = block.kinds ?? [];
+  const partners = (await getPartners(site, locale, { strip: true })).filter(
+    (p) => kinds.length === 0 || kinds.includes(p.kind),
+  );
+  return <PartnerLogos partners={partners} title={block.title} />;
+}
+
+export async function FaqBlockView({ block, locale, site }: BlockProps<FaqBlock>) {
   const picked = (block.items ?? []).map((item) => populated<Faq>(item)).filter((f): f is Faq => f !== null);
-  const items = picked.length > 0 ? picked : await getFaq(locale);
+  const items = picked.length > 0 ? picked : await getFaq(site, locale);
   if (items.length === 0) return null;
 
   return (

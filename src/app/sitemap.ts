@@ -1,12 +1,14 @@
 import type { MetadataRoute } from "next";
+import { headers } from "next/headers";
 import { defaultLocale, locales } from "@/i18n/config";
-import { getPageSummaries, getProjects, getServices, getTeam } from "@/lib/cms/queries";
+import { getPageSummaries, getProjects, getServices, getSite, getTeam } from "@/lib/cms/queries";
 import { RESERVED_PAGE_SLUGS } from "@/lib/cms/pages";
-import { siteUrl } from "@/lib/metadata";
+import { siteOrigin } from "@/lib/metadata";
+import { resolveSiteKey } from "@/lib/site";
 
 /**
- * sitemap.xml — every indexable URL in the three locales, each entry listing
- * its hreflang alternates (+ x-default). Built on request from the cached CMS
+ * sitemap.xml — every indexable URL of the site that owns the requested domain,
+ * in the three locales, each entry listing its hreflang alternates (+ x-default). Built on request from the cached CMS
  * queries (no database access at build time); refreshed when content changes.
  */
 export const dynamic = "force-dynamic";
@@ -33,7 +35,8 @@ const SHADOWED_SLUGS = new Set([
 
 type Entry = MetadataRoute.Sitemap[number];
 
-function entries(
+function pageEntries(
+  siteUrl: string,
   path: string,
   extra: Omit<Entry, "url" | "alternates"> = {},
 ): MetadataRoute.Sitemap {
@@ -45,12 +48,16 @@ function entries(
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [services, projects, pages, team] = await Promise.all([
-    getServices(defaultLocale),
-    getProjects(defaultLocale),
-    getPageSummaries(),
-    getTeam(defaultLocale),
+  const site = await resolveSiteKey((await headers()).get("host") ?? "localhost");
+  const [services, projects, pages, team, settings] = await Promise.all([
+    getServices(site, defaultLocale),
+    getProjects(site, defaultLocale),
+    getPageSummaries(site),
+    getTeam(site, defaultLocale),
+    getSite(site, defaultLocale),
   ]);
+  const origin = siteOrigin(settings);
+  const entries = (path: string, extra?: Omit<Entry, "url" | "alternates">) => pageEntries(origin, path, extra);
 
   return [
     ...STATIC_ROUTES.flatMap(({ path, changeFrequency, priority }) => entries(path, { changeFrequency, priority })),

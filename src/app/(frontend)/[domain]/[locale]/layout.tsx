@@ -8,7 +8,7 @@ import { ThemeProvider, initScript } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { brandOf } from "@/components/brand/logo";
-import { getNavigation, getSite } from "@/lib/cms/queries";
+import { getSite } from "@/lib/cms/queries";
 import { imageSource } from "@/lib/cms/media";
 import { siteOrigin } from "@/lib/metadata";
 import { resolveSiteKey } from "@/lib/site";
@@ -73,10 +73,9 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const dir = getDir(locale);
   const plausibleDomain = process.env.PLAUSIBLE_DOMAIN;
-  const [messages, t, navigation, settings] = await Promise.all([
+  const [messages, t, settings] = await Promise.all([
     getMessages(),
     getTranslations({ locale, namespace: "common" }),
-    getNavigation(locale),
     getSite(site, locale),
   ]);
 
@@ -111,7 +110,7 @@ export default async function LocaleLayout({
               {t("skipToContent")}
             </a>
             <div className="flex min-h-dvh flex-col">
-              <SiteHeader items={navigation.items ?? []} brand={brandOf(settings)} />
+              <SiteHeader items={settings.navItems ?? []} brand={brandOf(settings)} />
               <main id="main" className="flex-1">
                 {children}
               </main>

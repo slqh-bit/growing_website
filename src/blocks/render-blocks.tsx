@@ -8,6 +8,7 @@ import {
   FeaturesBlockView,
   HeroBlockView,
   LogosBlockView,
+  PartnersBlockView,
   ProjectsBlockView,
   RichTextBlockView,
   StatsBlockView,
@@ -45,6 +46,8 @@ function BlockView({ block, locale, site }: { block: LayoutBlock; locale: Locale
       return <RichTextBlockView block={block} locale={locale} site={site} />;
     case "logos":
       return <LogosBlockView block={block} locale={locale} site={site} />;
+    case "partners":
+      return <PartnersBlockView block={block} locale={locale} site={site} />;
     case "faq":
       return <FaqBlockView block={block} locale={locale} site={site} />;
     default: {

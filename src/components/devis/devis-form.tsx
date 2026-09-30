@@ -7,7 +7,6 @@ import { get, useForm, type Path, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { rtlLocales, type Locale } from "@/i18n/config";
 import { submitDevis } from "@/lib/devis/actions";
-import { activityOptions } from "@/lib/devis/options";
 import { emptyDevisValues, stepSchemas, type DevisErrorKey, type DevisFormValues } from "@/lib/devis/schema";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -79,10 +78,10 @@ export function DevisForm({
     startedAt.current = Date.now();
     // Service pages link here with ?activite=<key> to preselect the activity.
     const preset = new URLSearchParams(window.location.search).get("activite");
-    if (preset && activityOptions.some((o) => o.value === preset)) {
+    if (preset && activities.some((a) => a.value === preset)) {
       form.setValue("activity", preset as DevisFormValues["activity"]);
     }
-  }, [form]);
+  }, [form, activities]);
 
   // Move focus to the new step's heading (screen readers announce it).
   React.useEffect(() => {

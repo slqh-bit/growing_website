@@ -1,6 +1,7 @@
 import type { CollectionAfterChangeHook, CollectionConfig } from "payload";
 import { admins, anyone } from "../cms/access";
 import { groups, t3 } from "../cms/labels";
+import { linkFields } from "../cms/fields";
 import { revalidateCollection } from "../cms/revalidate";
 import { HEX_COLOR } from "../lib/theme";
 import { normalizeHost, siteKeys } from "../sites/config";
@@ -51,7 +52,8 @@ const revalidate = revalidateCollection("sites");
 /**
  * The group's websites (plan §2, §5): one document per site with its domains,
  * company identity, contacts, key figures and brand (logo, colours). Replaces
- * the former single "Site settings" global — field names are unchanged.
+ * the former single "Site settings" global — field names are unchanged — and,
+ * since Phase 2, the former Navigation and Footer globals (Menu, Pied de page).
  */
 export const Sites: CollectionConfig = {
   slug: "sites",
@@ -319,6 +321,70 @@ export const Sites: CollectionConfig = {
                     { name: "lat", type: "number", required: true, min: -90, max: 90, label: "Latitude" },
                     { name: "lng", type: "number", required: true, min: -180, max: 180, label: "Longitude" },
                   ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          label: t3("Menu", "Menu", "القائمة"),
+          fields: [
+            {
+              name: "navItems",
+              type: "array",
+              maxRows: 8,
+              label: t3("Liens du menu", "Menu links", "روابط القائمة"),
+              admin: {
+                description: t3(
+                  "Menu du haut de page. Le bouton « Demander un devis » est ajouté automatiquement.",
+                  "Header menu. The “Request a quote” button is added automatically.",
+                  "قائمة أعلى الصفحة. يُضاف زر «اطلب تسعيرة» تلقائياً.",
+                ),
+              },
+              fields: [
+                {
+                  type: "row",
+                  fields: [
+                    ...linkFields(),
+                    {
+                      name: "comingSoon",
+                      type: "checkbox",
+                      defaultValue: false,
+                      label: t3("« Bientôt »", "“Coming soon”", "«قريباً»"),
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          label: t3("Pied de page", "Footer", "تذييل الصفحة"),
+          fields: [
+            {
+              name: "footer",
+              type: "group",
+              label: false,
+              fields: [
+                {
+                  name: "tagline",
+                  type: "textarea",
+                  localized: true,
+                  label: t3("Accroche", "Tagline", "الشعار"),
+                },
+                {
+                  name: "quickLinks",
+                  type: "array",
+                  maxRows: 10,
+                  label: t3("Liens rapides", "Quick links", "روابط سريعة"),
+                  fields: [{ type: "row", fields: linkFields() }],
+                },
+                {
+                  name: "legalLinks",
+                  type: "array",
+                  maxRows: 5,
+                  label: t3("Liens légaux", "Legal links", "روابط قانونية"),
+                  fields: [{ type: "row", fields: linkFields() }],
                 },
               ],
             },

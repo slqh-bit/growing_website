@@ -60,7 +60,9 @@
     "benefitsTitle": "Benefits",
     "processTitle": "Our process",
     "requestForActivity": "Request a quote for this service",
-    "allServices": "All services"
+    "allServices": "All services",
+    "onThisPage": "On this page",
+    "partnersTitle": "Brands & partners"
   },
   "projects": {
     "title": "Our projects",
@@ -197,7 +199,9 @@
       "certified": "ANME-certified installer",
       "subsidies": "Help with subsidies and STEG paperwork",
       "preferCall": "Prefer to talk to us?"
-    }
+    },
+    "unavailable": "The online quote form for these activities is coming soon. Meanwhile, tell us about your project: we reply within 48 working hours.",
+    "unavailableCta": "Contact us"
   },
   "notFound": {
     "title": "Page not found",

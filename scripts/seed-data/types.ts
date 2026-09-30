@@ -23,9 +23,18 @@ export interface ProcessStep {
   description: Localized;
 }
 
+export interface ServiceSection {
+  /** In-page anchor, e.g. "commercial" → /services/installation-raccordee#commercial. */
+  anchor: string;
+  icon?: string;
+  title: Localized;
+  body: Localized;
+}
+
 export interface Service {
   slug: string;
-  activityKey: ActivityKey;
+  /** Devis activity; none = the quote button leads to /contact (until Phase 5a). */
+  activityKey?: ActivityKey;
   /** lucide-react icon name resolved in the UI. */
   icon: string;
   title: Localized;
@@ -33,6 +42,7 @@ export interface Service {
   body: Localized;
   benefits: Localized<string[]>;
   process: ProcessStep[];
+  sections?: ServiceSection[];
   order: number;
 }
 

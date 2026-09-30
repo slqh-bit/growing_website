@@ -17,7 +17,7 @@ export async function generateMetadata({
   params: Promise<{ domain: string; locale: Locale }>;
 }): Promise<Metadata> {
   const { site, locale } = await routeContext(params);
-  const [t, team] = await Promise.all([getTranslations({ locale, namespace: "team" }), getTeam(locale)]);
+  const [t, team] = await Promise.all([getTranslations({ locale, namespace: "team" }), getTeam(site, locale)]);
   // Keep the "Coming soon" placeholder out of search results.
   return buildMetadata({
     site,
@@ -33,7 +33,7 @@ export async function generateMetadata({
 export default async function TeamPage({ params }: { params: Promise<{ domain: string; locale: Locale }> }) {
   const { site, locale } = await routeContext(params);
   setRequestLocale(locale);
-  const [t, team] = await Promise.all([getTranslations({ locale, namespace: "team" }), getTeam(locale)]);
+  const [t, team] = await Promise.all([getTranslations({ locale, namespace: "team" }), getTeam(site, locale)]);
 
   if (team.length === 0) return <ComingSoon locale={locale} title={t("title")} />;
 

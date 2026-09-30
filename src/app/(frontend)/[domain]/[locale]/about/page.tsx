@@ -18,7 +18,7 @@ export async function generateMetadata({
   params: Promise<{ domain: string; locale: Locale }>;
 }): Promise<Metadata> {
   const { site, locale } = await routeContext(params);
-  const page = await getPageBySlug("about", locale);
+  const page = await getPageBySlug(site, "about", locale);
   if (!page) return {};
   return buildMetadata({
     site,
@@ -35,7 +35,7 @@ export default async function AboutPage({ params }: { params: Promise<{ domain: 
   setRequestLocale(locale);
 
   const [page, settings, t] = await Promise.all([
-    getPageBySlug("about", locale),
+    getPageBySlug(site, "about", locale),
     getSite(site, locale),
     getTranslations({ locale, namespace: "about" }),
   ]);

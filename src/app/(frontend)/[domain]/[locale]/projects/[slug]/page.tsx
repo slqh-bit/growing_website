@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { MapPin, Zap, Calendar, Users, ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { routeContext } from "@/lib/site";
+import { redirectOrNotFound, routeContext } from "@/lib/site";
 import type { Service } from "@/payload-types";
 import { getProjectBySlug, getSite } from "@/lib/cms/queries";
 import { populated } from "@/lib/cms/media";
@@ -27,7 +26,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { site, locale, slug } = await routeContext(params);
-  const project = await getProjectBySlug(slug, locale);
+  const project = await getProjectBySlug(site, slug, locale);
   if (!project) return {};
   return buildMetadata({
     site,
@@ -44,8 +43,8 @@ export default async function ProjectDetailPage({ params }: { params: Params }) 
   const { site, locale, slug } = await routeContext(params);
   setRequestLocale(locale);
 
-  const project = await getProjectBySlug(slug, locale);
-  if (!project) notFound();
+  const project = await getProjectBySlug(site, slug, locale);
+  if (!project) return redirectOrNotFound(site, locale, `/projects/${decodeURIComponent(slug)}`);
 
   const [t, tn, settings] = await Promise.all([
     getTranslations({ locale, namespace: "projects" }),

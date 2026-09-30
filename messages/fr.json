@@ -60,7 +60,9 @@
     "benefitsTitle": "Bénéfices",
     "processTitle": "Notre démarche",
     "requestForActivity": "Demander un devis pour ce service",
-    "allServices": "Tous les services"
+    "allServices": "Tous les services",
+    "onThisPage": "Sur cette page",
+    "partnersTitle": "Marques & partenaires"
   },
   "projects": {
     "title": "Nos réalisations",
@@ -197,7 +199,9 @@
       "certified": "Installateur certifié ANME",
       "subsidies": "Accompagnement subventions et démarches STEG",
       "preferCall": "Vous préférez nous parler ?"
-    }
+    },
+    "unavailable": "Le formulaire de devis en ligne arrive bientôt pour ces activités. En attendant, décrivez-nous votre projet : nous vous répondons sous 48 h ouvrées.",
+    "unavailableCta": "Nous contacter"
   },
   "notFound": {
     "title": "Page introuvable",

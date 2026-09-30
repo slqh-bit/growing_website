@@ -3,19 +3,19 @@ import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import type { SiteKey } from "@/sites/config";
-import { getFooter, getServices, getSite } from "@/lib/cms/queries";
+import { getServices, getSite } from "@/lib/cms/queries";
 import { brandOf, Logo } from "@/components/brand/logo";
 import { SmartLink } from "@/components/cms/smart-link";
 import { telHref } from "@/lib/contact-links";
 
-/** Footer: links from the Footer global, activities from Services, contacts from the site. */
+/** Footer: links and tagline (Sites → Pied de page), activities from Services, contacts from the site. */
 export async function SiteFooter({ locale, site }: { locale: Locale; site: SiteKey }) {
-  const [t, footer, services, settings] = await Promise.all([
+  const [t, services, settings] = await Promise.all([
     getTranslations({ locale, namespace: "footer" }),
-    getFooter(locale),
-    getServices(locale),
+    getServices(site, locale),
     getSite(site, locale),
   ]);
+  const footer = settings.footer ?? {};
   const year = new Date().getFullYear();
   const quickLinks = footer.quickLinks ?? [];
   const legalLinks = footer.legalLinks ?? [];

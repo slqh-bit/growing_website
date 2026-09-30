@@ -25,7 +25,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ domai
   setRequestLocale(locale);
   const [t, services] = await Promise.all([
     getTranslations({ locale, namespace: "services" }),
-    getServices(locale),
+    getServices(site, locale),
   ]);
 
   return (

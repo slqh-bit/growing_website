@@ -1,11 +1,11 @@
 import { APIError, type CollectionConfig } from "payload";
 import { pageBlocks } from "../blocks/config";
-import { admins, anyone, authenticated } from "../cms/access";
-import { seoField, slugField } from "../cms/fields";
+import { siteContentAccess } from "../cms/access";
+import { seoField, siteField, slugField, uniqueSlugPerSite } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
 
-/** Flexible, block-built marketing pages: Home (slug "home"), About… (devplan §4.3). */
+/** Flexible, block-built marketing pages of each site: Home (slug "home"), About… (devplan §4.3). */
 export const Pages: CollectionConfig = {
   slug: "pages",
   labels: {
@@ -14,15 +14,11 @@ export const Pages: CollectionConfig = {
   },
   admin: {
     useAsTitle: "title",
-    defaultColumns: ["title", "slug", "updatedAt"],
+    defaultColumns: ["title", "slug", "site", "updatedAt"],
     group: groups.content,
   },
-  access: {
-    read: anyone,
-    create: authenticated,
-    update: authenticated,
-    delete: admins,
-  },
+  access: siteContentAccess(),
+  indexes: uniqueSlugPerSite,
   hooks: {
     ...revalidateCollection("pages"),
     beforeDelete: [
@@ -50,7 +46,8 @@ export const Pages: CollectionConfig = {
       required: true,
       label: t3("Titre", "Title", "العنوان"),
     },
-    slugField(),
+    slugField("title", { unique: false }),
+    siteField(),
     {
       name: "layout",
       type: "blocks",

@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { routeContext } from "@/lib/site";
+import { redirectOrNotFound, routeContext } from "@/lib/site";
 import type { Faq } from "@/payload-types";
-import { getProjectsByService, getServiceBySlug, getServices, getSite } from "@/lib/cms/queries";
+import { getPartners, getProjectsByService, getServiceBySlug, getServices, getSite } from "@/lib/cms/queries";
 import { populated } from "@/lib/cms/media";
 import { buildMetadata, siteOrigin } from "@/lib/metadata";
 import { breadcrumbLd, JsonLd, serviceLd } from "@/lib/seo/json-ld";
@@ -17,6 +16,8 @@ import { ServiceIcon } from "@/components/ui/service-icon";
 import { CmsImage } from "@/components/cms/cms-image";
 import { RichText } from "@/components/cms/rich-text";
 import { PageHeader } from "@/components/sections/page-header";
+import { PartnerLogos } from "@/components/sections/partner-logos";
+import { ServiceSections } from "@/components/sections/service-sections";
 import { ProjectCard } from "@/components/sections/project-card";
 import { CtaBand } from "@/components/sections/cta-band";
 import { Reveal, RevealGroup } from "@/components/motion/reveal";
@@ -29,7 +30,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { site, locale, slug } = await routeContext(params);
-  const service = await getServiceBySlug(slug, locale);
+  const service = await getServiceBySlug(site, slug, locale);
   if (!service) return {};
   return buildMetadata({
     site,
@@ -46,18 +47,22 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
   const { site, locale, slug } = await routeContext(params);
   setRequestLocale(locale);
 
-  const service = await getServiceBySlug(slug, locale);
-  if (!service) notFound();
+  const service = await getServiceBySlug(site, slug, locale);
+  if (!service) return redirectOrNotFound(site, locale, `/services/${decodeURIComponent(slug)}`);
 
-  const [t, tc, tn, relatedProjects, allServices, settings] = await Promise.all([
+  const [t, tc, tn, relatedProjects, allServices, settings, partners] = await Promise.all([
     getTranslations({ locale, namespace: "services" }),
     getTranslations({ locale, namespace: "common" }),
     getTranslations({ locale, namespace: "nav" }),
-    getProjectsByService(service.id, locale),
-    getServices(locale),
+    getProjectsByService(site, service.id, locale),
+    getServices(site, locale),
     getSite(site, locale),
+    getPartners(site, locale, { serviceId: service.id }),
   ]);
   const origin = siteOrigin(settings);
+  // Services without a quote form yet (plan Phase 5a) lead to the contact page.
+  const quoteHref = service.activityKey ? `/devis?activite=${service.activityKey}` : "/contact";
+  const sections = service.sections ?? [];
   const others = allServices.filter((s) => s.id !== service.id);
   const benefits = service.benefits ?? [];
   const steps = service.process ?? [];
@@ -80,7 +85,7 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
       <PageHeader eyebrow={t("title")} title={service.title} subtitle={service.shortDescription}>
         <div className="mt-2 flex flex-wrap gap-3">
           <Button asChild variant="solar">
-            <Link href={`/devis?activite=${service.activityKey}`}>
+            <Link href={quoteHref}>
               {t("requestForActivity")}
               <ArrowRight className="size-4 rtl:rotate-180" />
             </Link>
@@ -107,6 +112,10 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
               <ServiceIcon name={service.icon} className="shrink-0" />
               <RichText data={service.body} locale={locale} />
             </Reveal>
+
+            {sections.length > 0 && (
+              <ServiceSections sections={sections} locale={locale} onThisPage={t("onThisPage")} />
+            )}
 
             {steps.length > 0 && (
               <div className="mt-14">
@@ -156,12 +165,14 @@ export default async function ServiceDetailPage({ params }: { params: Params }) 
                 </>
               )}
               <Button asChild variant="solar" className="mt-6 w-full">
-                <Link href={`/devis?activite=${service.activityKey}`}>{tc("requestQuote")}</Link>
+                <Link href={quoteHref}>{tc("requestQuote")}</Link>
               </Button>
             </Reveal>
           </aside>
         </Container>
       </section>
+
+      {partners.length > 0 && <PartnerLogos partners={partners} title={t("partnersTitle")} />}
 
       {relatedProjects.length > 0 && (
         <section className="border-t border-border bg-surface-muted/40 py-16">

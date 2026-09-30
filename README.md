@@ -49,18 +49,21 @@ back to French.
 
 | Collection         | Purpose                                                       |
 | ------------------ | ------------------------------------------------------------- |
-| Pages              | Block-built pages (`home`, `about`): hero, stats, features…   |
-| Services           | The 5 activities (one per `activityKey`)                      |
+| Pages              | Block-built pages per site (`home`, `about`…): hero, stats, features, partners… |
+| Services           | Each site's activities; page sections with anchors (`#commercial`); `activityKey` links one to the quote form |
 | Projects           | Case studies, filterable by activity / region / client type  |
+| Partenaires & marques | Brands, manufacturers, own products: partners strip block + logos on linked service pages |
 | FAQ, Team          | FAQ entries (by category) and team members                   |
 | Demandes de devis  | Leads, with status workflow nouveau → contacté → devis envoyé → gagné/perdu |
 | Media              | Images (jpeg/png/webp/avif) with localized alt text          |
 | Users              | `admin` (everything) / `editor` (content only, can't delete) |
-| Sites              | One per website: domains, company identity, contacts, map, key figures, logo, colours |
-| Globals            | Navigation, Footer                                            |
+| Sites              | One per website: domains, company identity, contacts, map, key figures, logo, colours, menu, footer |
+| Redirections       | Old path → new path (all languages, per site), followed when a page isn't found |
 
 **Roles.** Editors create and edit content and leads; only admins delete
-documents, manage users, and edit sites, navigation and footer.
+documents, manage users, and edit sites (including their menu and footer).
+Every content document belongs to one site (`site` field): an editor whose
+**Sites gérés** is set only sees and edits those sites' content (empty = all).
 Anonymous visitors can read published content but never leads or users.
 
 **Everything on the public site comes from the CMS** (UI chrome such as button
@@ -72,7 +75,8 @@ labels and form text stays in `messages/*.json`):
 | Pages → any other slug       | A new page at `/{locale}/{slug}`, no code needed               |
 | Services / Projects / FAQ / Team | Their listing and detail pages, footer activities, related projects |
 | Sites                        | Per site: company name, tagline, contacts, address, map, hours, key figures, matricule, logo, favicon, colours, domains |
-| Navigation / Footer          | Header menu, footer links and tagline                         |
+| Sites → Menu / Pied de page  | Header menu, footer links and tagline (per site)              |
+| Redirections                 | Retired URLs (e.g. `/services/basse-tension` → `/services/installation-raccordee#commercial`) |
 
 The `home` page cannot be deleted (it is the site root).
 
@@ -103,8 +107,10 @@ Firefox and Edge, so no hosts-file edit is needed:
 Log in to the admin on the origin set in `NEXT_PUBLIC_SITE_URL` / `SERVER_URL`
 (e.g. `http://localhost:3000/admin`), not on a `*.localhost` host.
 
-Content (services, projects, pages, navigation) is still shared by all sites
-until it gets a per-site owner (plan Phase 2). Quote requests belong to the
+Every content document (page, service, project, FAQ, team member) belongs to
+one site, and each site's queries, sitemap and robots.txt only see their own.
+The quote form offers the activities of the current site's services; a site
+without any shows a contact prompt. Quote requests still belong to the
 default site until the devis learns about sites (Phase 5a).
 
 ### Rendering & caching
@@ -152,8 +158,10 @@ In development the schema is auto-pushed to your local DB. In production it is
 To seed a production database, run
 `NODE_ENV=production npm run seed` so it uses migrations instead of a push.
 
-The seed is idempotent (re-running updates in place) and never changes an
-existing user's password.
+The seed is create-only: it adds missing sites, pages, services, projects,
+FAQ entries and redirects, and never overwrites what was edited in the admin
+(nor an existing user's password). Content changes for existing databases
+ship as data migrations instead (e.g. the Growing catalogue restructure).
 
 ## Devis (quote requests)
 
@@ -254,6 +262,12 @@ Group platform (multi-site):
 - [x] **Phase 1** — Multi-site foundation: `Sites` collection (replaces the
       Site settings global, data migrated), hostname → site routing, per-site
       theme, logo, favicon, tagline and metadata origin, `Users.sites`.
+- [x] **Phase 2** — Per-site content (`site` on pages, services, projects,
+      FAQ, team; editors limited to their sites), per-site menu/footer,
+      sitemap and robots; Growing's 4 activities (BT/MT merged into
+      "Installations raccordées" sections, new "Centrales photovoltaïques"),
+      `Redirects` with 301/308 for the retired pages, `Partners` + partners
+      block; Hikview starter pages.
 
 ## Structure
 
@@ -263,7 +277,6 @@ src/
 │  ├─ (frontend)/[domain]/[locale]/  Public routes, per site (hostname) and locale
 │  └─ (payload)/            Payload admin + REST/GraphQL API (generated)
 ├─ collections/             Payload collections
-├─ globals/                 Payload globals (Navigation, Footer)
 ├─ sites/                   Site keys + hostname → site matching (shared with the middleware)
 ├─ blocks/                  Page-builder block configs + renderers
 ├─ cms/                     Access control, fields, options, labels, revalidation hooks

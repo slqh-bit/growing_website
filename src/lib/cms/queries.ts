@@ -4,16 +4,19 @@ import { getPayload, type Where } from "payload";
 import config from "@payload-config";
 import { cmsTag } from "@/cms/revalidate";
 import type { Locale } from "@/i18n/routing";
-import type { SiteDomains, SiteKey } from "@/sites/config";
-import type { Faq, Page, Project, Service, Site, Team } from "@/payload-types";
+import type { RedirectRule } from "@/lib/redirects";
+import { isSiteKey, type SiteDomains, type SiteKey } from "@/sites/config";
+import type { Faq, Page, Partner, Project, Service, Site, Team } from "@/payload-types";
 
 /**
  * Cached CMS reads for the public site (Payload Local API).
  *
  * - Each query is wrapped in `unstable_cache` and tagged with every collection
- *   or global it reads — including populated relations and media — so the
- *   afterChange hooks in src/cms/revalidate.ts refresh exactly what changed.
- *   Pages are then served from the full-route cache until a tag is revalidated.
+ *   it reads — including populated relations and media — so the afterChange
+ *   hooks in src/cms/revalidate.ts refresh exactly what changed. Pages are then
+ *   served from the full-route cache until a tag is revalidated.
+ * - Content belongs to one site (`site` field): every query takes the site key
+ *   and only returns that site's documents.
  * - `overrideAccess: false` applies the collections' public read rules, so the
  *   site can never read what an anonymous visitor isn't allowed to see.
  * - Missing ar/en values fall back to French (Payload localization config).
@@ -22,27 +25,33 @@ import type { Faq, Page, Project, Service, Site, Team } from "@/payload-types";
 type CmsSlug =
   | "services"
   | "projects"
+  | "partners"
   | "faq"
   | "pages"
   | "team"
   | "media"
   | "sites"
-  | "navigation"
-  | "footer";
+  | "redirects";
 
 function cached<A extends unknown[], R>(
   name: string,
   tags: CmsSlug[],
   fn: (...args: A) => Promise<R>,
 ): (...args: A) => Promise<R> {
-  // Arguments (locale, slug…) are part of the cache key automatically.
+  // Arguments (site, locale, slug…) are part of the cache key automatically.
   return unstable_cache(fn, ["cms", name], { tags: tags.map(cmsTag) });
 }
 
 const payload = () => getPayload({ config });
 const publicRead = { overrideAccess: false } as const;
 
-// --- Globals -----------------------------------------------------------------
+/** Documents of one site. */
+const ofSite = (site: SiteKey): Where => ({ "site.key": { equals: site } });
+const and = (...conditions: (Where | undefined)[]): Where => ({
+  and: conditions.filter((c): c is Where => c !== undefined),
+});
+
+// --- Sites -------------------------------------------------------------------
 
 /** Key, default flag and domains of every site (hostname → site resolution). */
 export const getSiteDirectory = cached("site-directory", ["sites"], async (): Promise<SiteDomains[]> => {
@@ -62,7 +71,7 @@ export const getSiteDirectory = cached("site-directory", ["sites"], async (): Pr
   }));
 });
 
-/** A site's identity, contacts, figures and brand (logo, favicon populated). */
+/** A site's identity, contacts, figures, brand (logo, favicon populated), menu and footer. */
 export const getSite = cached("site", ["sites", "media"], async (key: SiteKey, locale: Locale): Promise<Site> => {
   const { docs } = await (await payload()).find({
     collection: "sites",
@@ -76,38 +85,35 @@ export const getSite = cached("site", ["sites", "media"], async (key: SiteKey, l
   return docs[0];
 });
 
-export const getNavigation = cached("navigation", ["navigation"], async (locale: Locale) =>
-  (await payload()).findGlobal({ slug: "navigation", locale, depth: 0, ...publicRead }),
-);
-
-export const getFooter = cached("footer", ["footer"], async (locale: Locale) =>
-  (await payload()).findGlobal({ slug: "footer", locale, depth: 0, ...publicRead }),
-);
-
 // --- Services ----------------------------------------------------------------
 
-export const getServices = cached("services", ["services"], async (locale: Locale): Promise<Service[]> => {
-  const { docs } = await (await payload()).find({
-    collection: "services",
-    locale,
-    depth: 0,
-    sort: "order",
-    limit: 50,
-    pagination: false,
-    ...publicRead,
-  });
-  return docs;
-});
+export const getServices = cached(
+  "services",
+  ["services"],
+  async (site: SiteKey, locale: Locale): Promise<Service[]> => {
+    const { docs } = await (await payload()).find({
+      collection: "services",
+      where: ofSite(site),
+      locale,
+      depth: 0,
+      sort: "order",
+      limit: 100,
+      pagination: false,
+      ...publicRead,
+    });
+    return docs;
+  },
+);
 
 export const getServiceBySlug = cached(
   "service-by-slug",
   ["services", "media", "faq"],
-  async (slug: string, locale: Locale): Promise<Service | null> => {
+  async (site: SiteKey, slug: string, locale: Locale): Promise<Service | null> => {
     const { docs } = await (await payload()).find({
       collection: "services",
-      where: { slug: { equals: slug } },
+      where: and(ofSite(site), { slug: { equals: slug } }),
       locale,
-      depth: 1, // heroImage, faqRefs
+      depth: 1, // heroImage, section images, faqRefs
       limit: 1,
       ...publicRead,
     });
@@ -119,10 +125,10 @@ export const getServiceBySlug = cached(
 
 const PROJECT_TAGS: CmsSlug[] = ["projects", "services", "media"];
 
-async function findProjects(locale: Locale, where: Where | undefined, limit: number): Promise<Project[]> {
+async function findProjects(site: SiteKey, locale: Locale, where: Where | undefined, limit: number): Promise<Project[]> {
   const { docs } = await (await payload()).find({
     collection: "projects",
-    where,
+    where: and(ofSite(site), where),
     locale,
     depth: 1, // activity (service), coverImage, gallery
     sort: "-date",
@@ -132,30 +138,65 @@ async function findProjects(locale: Locale, where: Where | undefined, limit: num
   return docs;
 }
 
-export const getProjects = cached("projects", PROJECT_TAGS, (locale: Locale) =>
-  findProjects(locale, undefined, 200),
+export const getProjects = cached("projects", PROJECT_TAGS, (site: SiteKey, locale: Locale) =>
+  findProjects(site, locale, undefined, 200),
 );
 
-export const getFeaturedProjects = cached("projects-featured", PROJECT_TAGS, (locale: Locale, limit: number) =>
-  findProjects(locale, { featured: { equals: true } }, limit),
+export const getFeaturedProjects = cached(
+  "projects-featured",
+  PROJECT_TAGS,
+  (site: SiteKey, locale: Locale, limit: number) => findProjects(site, locale, { featured: { equals: true } }, limit),
 );
 
-export const getProjectsByService = cached("projects-by-service", PROJECT_TAGS, (serviceId: number, locale: Locale) =>
-  findProjects(locale, { activity: { equals: serviceId } }, 12),
+export const getProjectsByService = cached(
+  "projects-by-service",
+  PROJECT_TAGS,
+  (site: SiteKey, serviceId: number, locale: Locale) =>
+    findProjects(site, locale, { activity: { equals: serviceId } }, 12),
 );
 
 export const getProjectBySlug = cached(
   "project-by-slug",
   PROJECT_TAGS,
-  async (slug: string, locale: Locale): Promise<Project | null> =>
-    (await findProjects(locale, { slug: { equals: slug } }, 1))[0] ?? null,
+  async (site: SiteKey, slug: string, locale: Locale): Promise<Project | null> =>
+    (await findProjects(site, locale, { slug: { equals: slug } }, 1))[0] ?? null,
+);
+
+// --- Partners ----------------------------------------------------------------
+
+/** The site's partners/brands: all of them, those for the strip, or those of one service. */
+export const getPartners = cached(
+  "partners",
+  ["partners", "media"],
+  async (
+    site: SiteKey,
+    locale: Locale,
+    filter: { strip?: boolean; serviceId?: number } = {},
+  ): Promise<Partner[]> => {
+    const { docs } = await (await payload()).find({
+      collection: "partners",
+      where: and(
+        { "sites.key": { equals: site } },
+        filter.strip ? { showInStrip: { equals: true } } : undefined,
+        filter.serviceId !== undefined ? { services: { contains: filter.serviceId } } : undefined,
+      ),
+      locale,
+      depth: 1, // logo
+      sort: "order",
+      limit: 100,
+      pagination: false,
+      ...publicRead,
+    });
+    return docs;
+  },
 );
 
 // --- FAQ, Team, Pages --------------------------------------------------------
 
-export const getFaq = cached("faq", ["faq"], async (locale: Locale): Promise<Faq[]> => {
+export const getFaq = cached("faq", ["faq"], async (site: SiteKey, locale: Locale): Promise<Faq[]> => {
   const { docs } = await (await payload()).find({
     collection: "faq",
+    where: ofSite(site),
     locale,
     depth: 0,
     sort: "order",
@@ -166,9 +207,10 @@ export const getFaq = cached("faq", ["faq"], async (locale: Locale): Promise<Faq
   return docs;
 });
 
-export const getTeam = cached("team", ["team", "media"], async (locale: Locale): Promise<Team[]> => {
+export const getTeam = cached("team", ["team", "media"], async (site: SiteKey, locale: Locale): Promise<Team[]> => {
   const { docs } = await (await payload()).find({
     collection: "team",
+    where: ofSite(site),
     locale,
     depth: 1, // photo
     sort: "order",
@@ -182,10 +224,10 @@ export const getTeam = cached("team", ["team", "media"], async (locale: Locale):
 export const getPageBySlug = cached(
   "page-by-slug",
   ["pages", "media", "faq"],
-  async (slug: string, locale: Locale): Promise<Page | null> => {
+  async (site: SiteKey, slug: string, locale: Locale): Promise<Page | null> => {
     const { docs } = await (await payload()).find({
       collection: "pages",
-      where: { slug: { equals: slug } },
+      where: and(ofSite(site), { slug: { equals: slug } }),
       locale,
       depth: 1, // block images, logos, FAQ items
       limit: 1,
@@ -195,13 +237,14 @@ export const getPageBySlug = cached(
   },
 );
 
-/** Slugs + last update of all CMS pages (sitemap). Slugs are locale-independent. */
+/** Slugs + last update of a site's CMS pages (sitemap). Slugs are locale-independent. */
 export const getPageSummaries = cached(
   "page-summaries",
   ["pages"],
-  async (): Promise<Pick<Page, "slug" | "updatedAt">[]> => {
+  async (site: SiteKey): Promise<Pick<Page, "slug" | "updatedAt">[]> => {
     const { docs } = await (await payload()).find({
       collection: "pages",
+      where: ofSite(site),
       depth: 0,
       limit: 500,
       pagination: false,
@@ -211,3 +254,24 @@ export const getPageSummaries = cached(
     return docs.map(({ slug, updatedAt }) => ({ slug, updatedAt }));
   },
 );
+
+// --- Redirects ---------------------------------------------------------------
+
+/** Every redirect with the keys of its sites (empty = all sites). */
+export const getRedirectRules = cached("redirects", ["redirects", "sites"], async (): Promise<RedirectRule[]> => {
+  const { docs } = await (await payload()).find({
+    collection: "redirects",
+    depth: 1, // sites → key
+    limit: 1000,
+    pagination: false,
+    ...publicRead,
+  });
+  return docs.map((r) => ({
+    from: r.from,
+    to: r.to,
+    permanent: r.permanent !== false,
+    sites: (r.sites ?? [])
+      .map((s) => (typeof s === "object" ? s.key : null))
+      .filter((key): key is SiteKey => key !== null && isSiteKey(key)),
+  }));
+});

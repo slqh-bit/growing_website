@@ -235,6 +235,38 @@ export const LogosBlock: Block = {
   ],
 };
 
+/** Logos from Contenu → Partenaires & marques (those marked "in the strip"), per site. */
+export const PartnersBlock: Block = {
+  slug: "partners",
+  interfaceName: "PartnersBlock",
+  labels: {
+    singular: t3("Partenaires & marques", "Partners & brands", "الشركاء والعلامات"),
+    plural: t3("Partenaires & marques", "Partners & brands", "الشركاء والعلامات"),
+  },
+  fields: [
+    titleField,
+    {
+      name: "kinds",
+      type: "select",
+      hasMany: true,
+      label: t3("Types affichés", "Types shown", "الأنواع المعروضة"),
+      options: [
+        { value: "manufacturer", label: t3("Fabricants / marques", "Manufacturers / brands", "المصنّعون / العلامات") },
+        { value: "distributor", label: t3("Distributeurs", "Distributors", "الموزّعون") },
+        { value: "own-product", label: t3("Produits du groupe", "Group products", "منتجات المجموعة") },
+        { value: "certification", label: t3("Organismes / certifications", "Bodies / certifications", "الهيئات / الاعتمادات") },
+      ],
+      admin: {
+        description: t3(
+          "Vide = tous. Les logos se gèrent dans Contenu → Partenaires & marques.",
+          "Empty = all. Logos are managed in Content → Partners & brands.",
+          "فارغ = الكل. تُدار الشعارات في المحتوى ← الشركاء والعلامات.",
+        ),
+      },
+    },
+  ],
+};
+
 export const FaqBlock: Block = {
   slug: "faq",
   interfaceName: "FaqBlock",
@@ -267,5 +299,6 @@ export const pageBlocks: Block[] = [
   CtaBlock,
   RichTextBlock,
   LogosBlock,
+  PartnersBlock,
   FaqBlock,
 ];
