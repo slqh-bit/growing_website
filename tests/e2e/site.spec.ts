@@ -154,6 +154,32 @@ test.describe("Hikview catalogue (6 areas, sub-services)", () => {
   });
 });
 
+test.describe("Group layer", () => {
+  test("the group page presents both companies and links to the other site", async ({ page }) => {
+    await page.goto("/fr/groupe");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Growing");
+    await expect(page.locator("main")).toContainText("Hikview Engineering");
+    await expect(page.locator("main")).toContainText("Vous êtes ici");
+    await expect(page.locator('main a[href*="hikview.localhost"]').first()).toBeVisible();
+  });
+
+  test("every footer shows the group band with the sister company", async ({ page }) => {
+    await page.goto("/fr/contact");
+    const footer = page.locator("footer");
+    await expect(footer).toContainText("Membre du");
+    await expect(footer.locator('a[href*="hikview.localhost"]').first()).toBeVisible();
+    await expect(footer.locator('a[href="/fr/groupe"]').first()).toBeVisible();
+  });
+
+  test("a service suggests the sister company's related services", async ({ page }) => {
+    await page.goto("/fr/services/pompage-solaire");
+    await expect(page.locator("main")).toContainText("Chez notre société sœur Hikview Engineering");
+    await expect(
+      page.locator('main a[href$="/fr/services/securite-electronique/videosurveillance"]').first(),
+    ).toBeVisible();
+  });
+});
+
 test.describe("Growing catalogue (4 activities)", () => {
   test("the services page lists the four activities", async ({ page }) => {
     await page.goto("/fr/services");

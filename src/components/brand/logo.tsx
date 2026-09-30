@@ -2,6 +2,7 @@ import { useId } from "react";
 import Image from "next/image";
 import type { Site } from "@/payload-types";
 import { imageSource, type ImageSource } from "@/lib/cms/media";
+import { brandColors } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 /** What the header/footer need to draw a site's logo (serializable for client components). */
@@ -12,6 +13,8 @@ export interface Brand {
   logoDark: ImageSource | null;
   /** The uploaded logo is a full lockup: don't write the name next to it. */
   includesName: boolean;
+  /** The site's own colours: its logo looks the same on any site of the group. */
+  colors: ReturnType<typeof brandColors>;
 }
 
 /** "Hikview Engineering" → "HE". */
@@ -34,19 +37,28 @@ export function brandOf(site: Site): Brand {
     logo,
     logoDark: logo ? imageSource(site.logoDark) : null,
     includesName: Boolean(logo && site.logoIncludesName),
+    colors: brandColors(site.theme),
   };
 }
 
 /** Initials badge in the site's primary colours — used when no logo is uploaded. */
-export function LogoMark({ monogram, className }: { monogram: string; className?: string }) {
+export function LogoMark({
+  monogram,
+  colors,
+  className,
+}: {
+  monogram: string;
+  colors: Brand["colors"];
+  className?: string;
+}) {
   // Unique per instance: the logo renders in both header and footer.
   const gradientId = useId();
   return (
     <svg viewBox="0 0 64 64" className={cn("size-9 shrink-0", className)} aria-hidden>
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" style={{ stopColor: "var(--color-primary-400)" }} />
-          <stop offset="1" style={{ stopColor: "var(--color-primary-600)" }} />
+          <stop offset="0" style={{ stopColor: colors.markFrom }} />
+          <stop offset="1" style={{ stopColor: colors.markTo }} />
         </linearGradient>
       </defs>
       <rect width="64" height="64" rx="12" fill={`url(#${gradientId})`} />
@@ -87,7 +99,11 @@ function LogoImage({ image, className }: { image: ImageSource; className?: strin
  * on a white tile so dark lettering stays readable.
  */
 export function BrandMark({ brand }: { brand: Brand }) {
-  if (!brand.logo) return <LogoMark monogram={brand.monogram} className="size-20 rounded-2xl shadow-lg ring-1 ring-white/30" />;
+  if (!brand.logo) {
+    return (
+      <LogoMark monogram={brand.monogram} colors={brand.colors} className="size-20 rounded-2xl shadow-lg ring-1 ring-white/30" />
+    );
+  }
   if (!brand.includesName) {
     return (
       <Image
@@ -120,21 +136,25 @@ export function BrandMark({ brand }: { brand: Brand }) {
 export function Logo({ brand, className }: { brand: Brand; className?: string }) {
   const [first, ...rest] = brand.name.trim().split(/\s+/);
   return (
-    <span className={cn("inline-flex items-center gap-2.5", className)} dir="ltr">
+    <span
+      className={cn("inline-flex items-center gap-2.5", className)}
+      dir="ltr"
+      style={{ "--logo-ink": brand.colors.ink, "--logo-ink-dark": brand.colors.inkDark } as React.CSSProperties}
+    >
       {brand.logo ? (
         <>
           <LogoImage image={brand.logo} className={brand.logoDark ? "dark:hidden" : undefined} />
           {brand.logoDark && <LogoImage image={brand.logoDark} className="hidden dark:block" />}
         </>
       ) : (
-        <LogoMark monogram={brand.monogram} />
+        <LogoMark monogram={brand.monogram} colors={brand.colors} />
       )}
       {brand.includesName ? (
         <span className="sr-only">{brand.name}</span>
       ) : (
         <span className="flex flex-col uppercase leading-none">
           <span className="sr-only">{brand.name}</span>
-          <span aria-hidden className="text-[17px] font-extrabold tracking-wide text-primary-800 dark:text-primary-300">
+          <span aria-hidden className="text-[17px] font-extrabold tracking-wide text-[var(--logo-ink)] dark:text-[var(--logo-ink-dark)]">
             {first}
           </span>
           {rest.length > 0 && (

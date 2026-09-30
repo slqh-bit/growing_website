@@ -28,7 +28,8 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "switchLanguage": "Switch language",
-    "toggleTheme": "Toggle light/dark theme"
+    "toggleTheme": "Toggle light/dark theme",
+    "group": "Our group"
   },
   "home": {
     "heroBadge": "ANME-certified solar installer",
@@ -260,5 +261,16 @@
       "questions": "A question about your file?",
       "another": "Look up another request"
     }
+  },
+  "group": {
+    "title": "Our group",
+    "memberOf": "Member of {group}",
+    "visitSite": "Visit the {company} website",
+    "discover": "Discover the group",
+    "companies": "Our companies",
+    "youAreHere": "You are here",
+    "visit": "Visit the website",
+    "sisterCompany": "At our sister company {company}",
+    "sisterSubtitle": "Complementary solutions, with the same local support."
   }
 }

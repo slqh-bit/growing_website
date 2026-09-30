@@ -6,7 +6,7 @@ import { cmsTag } from "@/cms/revalidate";
 import type { Locale } from "@/i18n/routing";
 import type { RedirectRule } from "@/lib/redirects";
 import { isSiteKey, type SiteDomains, type SiteKey } from "@/sites/config";
-import type { Faq, Page, Partner, Project, Service, Site, Team } from "@/payload-types";
+import type { Faq, Group, Page, Partner, Project, Service, Site, Team } from "@/payload-types";
 
 /**
  * Cached CMS reads for the public site (Payload Local API).
@@ -31,7 +31,8 @@ type CmsSlug =
   | "team"
   | "media"
   | "sites"
-  | "redirects";
+  | "redirects"
+  | "group";
 
 function cached<A extends unknown[], R>(
   name: string,
@@ -85,6 +86,25 @@ export const getSite = cached("site", ["sites", "media"], async (key: SiteKey, l
   return docs[0];
 });
 
+/** Every site of the group, for cross-links (logo populated). */
+export const getSites = cached("sites", ["sites", "media"], async (locale: Locale): Promise<Site[]> => {
+  const { docs } = await (await payload()).find({
+    collection: "sites",
+    locale,
+    depth: 1, // logo, logoDark
+    sort: "id",
+    limit: 50,
+    pagination: false,
+    ...publicRead,
+  });
+  return docs;
+});
+
+/** The group (Paramètres → Groupe): name, page content, members, footer band. */
+export const getGroup = cached("group", ["group"], async (locale: Locale): Promise<Group> =>
+  (await payload()).findGlobal({ slug: "group", locale, depth: 0, ...publicRead }),
+);
+
 // --- Services ----------------------------------------------------------------
 
 export const getServices = cached(
@@ -118,6 +138,26 @@ export const getServiceBySlug = cached(
       ...publicRead,
     });
     return docs[0] ?? null;
+  },
+);
+
+/** Services by id, any site (cross-selling), with their site populated. */
+export const getServicesByIds = cached(
+  "services-by-ids",
+  ["services", "sites"],
+  async (ids: number[], locale: Locale): Promise<Service[]> => {
+    if (ids.length === 0) return [];
+    const { docs } = await (await payload()).find({
+      collection: "services",
+      where: { id: { in: ids } },
+      locale,
+      depth: 1, // site
+      limit: ids.length,
+      pagination: false,
+      ...publicRead,
+    });
+    // Keep the editor's order.
+    return ids.map((id) => docs.find((d) => d.id === id)).filter((d): d is Service => d !== undefined);
   },
 );
 

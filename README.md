@@ -50,7 +50,7 @@ back to French.
 | Collection         | Purpose                                                       |
 | ------------------ | ------------------------------------------------------------- |
 | Pages              | Block-built pages per site (`home`, `about`…): hero, stats, features, partners… |
-| Services           | Each site's activities / areas, and sub-services (`parent` → `/services/<area>/<sub>`); page sections with anchors (`#commercial`); `activityKey` links one to the quote form |
+| Services           | Each site's activities / areas, and sub-services (`parent` → `/services/<area>/<sub>`); page sections with anchors (`#commercial`); `activityKey` links one to the quote form; "Chez notre société sœur" cross-selling to another site's services |
 | Projects           | Case studies (named or anonymous client), filterable by service / region / client type |
 | Partenaires & marques | Brands, manufacturers, own products: partners strip block + logos on linked service pages |
 | FAQ, Team          | FAQ entries (by category) and team members                   |
@@ -59,6 +59,7 @@ back to French.
 | Users              | `admin` (everything) / `editor` (content only, can't delete) |
 | Sites              | One per website: domains, company identity, contacts, map, key figures, logo, colours, menu, footer |
 | Redirections       | Old path → new path (all languages, per site), followed when a page isn't found |
+| Groupe (global)    | Group name, "Le groupe" page (`/groupe` on every site), member companies, footer group band |
 
 **Roles.** Editors create and edit content and leads; only admins delete
 documents, manage users, and edit sites (including their menu and footer).
@@ -272,6 +273,10 @@ Group platform (multi-site):
       `/services/<area>/<sub>`, old flat URLs redirect), shared service page
       template, B2G page with every public-sector reference, named project
       clients, per-site Services intro, Hikview catalogue seeded in fr/ar/en.
+- [x] **Phase 4** — Group layer: `Group` global, `/groupe` page on every site,
+      footer group band linking to the sister company, per-service
+      cross-selling to the other site (absolute links), logos keep their own
+      brand colours on any site.
 
 ## Structure
 

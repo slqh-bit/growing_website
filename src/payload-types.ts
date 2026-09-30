@@ -107,8 +107,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('fr' | 'ar' | 'en') | ('fr' | 'ar' | 'en')[];
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    group: Group;
+  };
+  globalsSelect: {
+    group: GroupSelect<false> | GroupSelect<true>;
+  };
   locale: 'fr' | 'ar' | 'en';
   widgets: {
     collections: CollectionsWidget;
@@ -752,6 +756,10 @@ export interface Service {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Complementary services of another group company, suggested at the bottom of this page (e.g. video surveillance for a solar plant).
+   */
+  crossSell?: (number | Service)[] | null;
   faqRefs?: (number | Faq)[] | null;
   /**
    * Optional — overrides the title and description used by search engines.
@@ -1361,6 +1369,7 @@ export interface ServicesSelect<T extends boolean = true> {
         description?: T;
         id?: T;
       };
+  crossSell?: T;
   faqRefs?: T;
   seo?:
     | T
@@ -1742,6 +1751,69 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "group".
+ */
+export interface Group {
+  id: number;
+  name: string;
+  /**
+   * Subtitle of the “Our group” page.
+   */
+  tagline?: string | null;
+  story?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Order and presentation of the companies (logo, name and address come from Sites).
+   */
+  members?:
+    | {
+        site: number | Site;
+        summary?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Shows “Member of … group” and the other companies at the bottom of every page.
+   */
+  footerBand?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "group_select".
+ */
+export interface GroupSelect<T extends boolean = true> {
+  name?: T;
+  tagline?: T;
+  story?: T;
+  members?:
+    | T
+    | {
+        site?: T;
+        summary?: T;
+        id?: T;
+      };
+  footerBand?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

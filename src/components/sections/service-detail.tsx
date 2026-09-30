@@ -2,11 +2,11 @@ import { getTranslations } from "next-intl/server";
 import { Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import type { Faq, Service } from "@/payload-types";
+import type { Faq, Service, Site } from "@/payload-types";
 import type { SiteKey } from "@/sites/config";
-import { getPartners, getProjectsForService, getServices, getSite } from "@/lib/cms/queries";
+import { getPartners, getProjectsForService, getServices, getServicesByIds, getSite } from "@/lib/cms/queries";
 import { populated } from "@/lib/cms/media";
-import { siteOrigin } from "@/lib/metadata";
+import { otherSiteOrigin, siteOrigin } from "@/lib/metadata";
 import { childrenOf, parentId, servicePath, topLevel } from "@/lib/services";
 import { breadcrumbLd, JsonLd, serviceLd } from "@/lib/seo/json-ld";
 import { Container } from "@/components/ui/container";
@@ -24,18 +24,49 @@ import { CtaBand } from "@/components/sections/cta-band";
 import { Reveal, RevealGroup } from "@/components/motion/reveal";
 
 /**
+ * Services picked in "Chez notre société sœur", grouped by company, each with
+ * its absolute URL on that company's site (hidden while it has no address).
+ */
+async function crossSellGroups(service: Service, site: SiteKey, locale: Locale) {
+  const ids = (service.crossSell ?? []).map((c) => (typeof c === "object" ? c.id : c));
+  const picked = await getServicesByIds(ids, locale);
+  const bySite = new Map<number, { company: Site; items: Service[] }>();
+  for (const s of picked) {
+    const company = typeof s.site === "object" ? s.site : null;
+    if (!company || company.key === site) continue;
+    const entry = bySite.get(company.id) ?? { company, items: [] };
+    entry.items.push(s);
+    bySite.set(company.id, entry);
+  }
+  const groups = await Promise.all(
+    [...bySite.values()].map(async ({ company, items }) => {
+      const origin = otherSiteOrigin(company);
+      if (!origin) return null;
+      const theirServices = await getServices(company.key, locale);
+      return {
+        company,
+        links: items.map((s) => ({ service: s, href: `${origin}/${locale}${servicePath(s, theirServices)}` })),
+      };
+    }),
+  );
+  return groups.filter((g) => g !== null);
+}
+
+/**
  * A service page: a top-level service (Growing activity, Hikview area — with
  * its sub-services) or a sub-service (/services/<area>/<sub>, with the other
  * solutions of its area). Shared by both service routes.
  */
 export async function ServiceDetail({ site, locale, service }: { site: SiteKey; locale: Locale; service: Service }) {
-  const [t, tc, tn, allServices, settings, partners] = await Promise.all([
+  const [t, tc, tn, tg, allServices, settings, partners, crossSell] = await Promise.all([
     getTranslations({ locale, namespace: "services" }),
     getTranslations({ locale, namespace: "common" }),
     getTranslations({ locale, namespace: "nav" }),
+    getTranslations({ locale, namespace: "group" }),
     getServices(site, locale),
     getSite(site, locale),
     getPartners(site, locale, { serviceId: service.id }),
+    crossSellGroups(service, site, locale),
   ]);
   const origin = siteOrigin(settings);
   const path = servicePath(service, allServices);
@@ -200,6 +231,24 @@ export async function ServiceDetail({ site, locale, service }: { site: SiteKey; 
           </Container>
         </section>
       )}
+
+      {crossSell.map(({ company, links }) => (
+        <section key={company.id} className="border-t border-border bg-surface-muted/40 py-16">
+          <Container>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+              {tg("sisterCompany", { company: company.companyName })}
+            </h2>
+            <p className="mt-2 text-muted-foreground">{tg("sisterSubtitle")}</p>
+            <RevealGroup className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {links.map(({ service: s, href }) => (
+                <Reveal key={s.id} className="h-full">
+                  <ServiceCard service={s} href={href} locale={locale} className="h-full" />
+                </Reveal>
+              ))}
+            </RevealGroup>
+          </Container>
+        </section>
+      ))}
 
       {others.length > 0 && (
         <section className="py-16">

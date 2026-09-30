@@ -59,3 +59,24 @@ function paletteVars(name: "primary" | "accent", hex: string | null | undefined)
 export function themeVars(theme: { primary?: string | null; accent?: string | null } | null | undefined) {
   return { ...paletteVars("primary", theme?.primary), ...paletteVars("accent", theme?.accent) };
 }
+
+/** Default brand hue/intensity (the Growing palette in globals.css). */
+const DEFAULT_PRIMARY = { h: 154, c: 1 };
+
+/**
+ * A site's own logo colours as explicit CSS colours (same formulas as the
+ * primary palette), so its initials badge and wordmark keep their brand
+ * colours on another site's pages (group band, "Le groupe" page).
+ */
+export function brandColors(theme: { primary?: string | null } | null | undefined) {
+  const vars = paletteVars("primary", theme?.primary);
+  const h = vars["--primary-h"] !== undefined ? Number(vars["--primary-h"]) : DEFAULT_PRIMARY.h;
+  const c = vars["--primary-c"] !== undefined ? Number(vars["--primary-c"]) : DEFAULT_PRIMARY.c;
+  const shade = (l: number, chroma: number, dh: number) => `oklch(${l} ${round(chroma * c, 3)} ${round(h + dh, 1)})`;
+  return {
+    markFrom: shade(0.72, 0.16, -1), // primary-400
+    markTo: shade(0.51, 0.15, 0), // primary-600
+    ink: shade(0.39, 0.1, 3), // primary-800
+    inkDark: shade(0.8, 0.14, -2), // primary-300
+  };
+}

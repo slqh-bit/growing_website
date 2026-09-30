@@ -28,7 +28,8 @@
     "openMenu": "Ouvrir le menu",
     "closeMenu": "Fermer le menu",
     "switchLanguage": "Changer de langue",
-    "toggleTheme": "Basculer le thème clair/sombre"
+    "toggleTheme": "Basculer le thème clair/sombre",
+    "group": "Le groupe"
   },
   "home": {
     "heroBadge": "Installateur solaire certifié ANME",
@@ -260,5 +261,16 @@
       "questions": "Une question sur votre dossier ?",
       "another": "Rechercher une autre demande"
     }
+  },
+  "group": {
+    "title": "Le groupe",
+    "memberOf": "Membre du {group}",
+    "visitSite": "Visiter le site de {company}",
+    "discover": "Découvrir le groupe",
+    "companies": "Nos sociétés",
+    "youAreHere": "Vous êtes ici",
+    "visit": "Visiter le site",
+    "sisterCompany": "Chez notre société sœur {company}",
+    "sisterSubtitle": "Des solutions complémentaires, avec le même suivi de proximité."
   }
 }

@@ -7,6 +7,7 @@ import * as migration_20260929_154030_drop_site_settings from './20260929_154030
 import * as migration_20260930_082300_multisite_content from './20260930_082300_multisite_content';
 import * as migration_20260930_082326_drop_navigation_footer from './20260930_082326_drop_navigation_footer';
 import * as migration_20260930_090146_service_tree_references from './20260930_090146_service_tree_references';
+import * as migration_20260930_095234_group_cross_sell from './20260930_095234_group_cross_sell';
 
 export const migrations = [
   {
@@ -52,6 +53,11 @@ export const migrations = [
   {
     up: migration_20260930_090146_service_tree_references.up,
     down: migration_20260930_090146_service_tree_references.down,
-    name: '20260930_090146_service_tree_references'
+    name: '20260930_090146_service_tree_references',
+  },
+  {
+    up: migration_20260930_095234_group_cross_sell.up,
+    down: migration_20260930_095234_group_cross_sell.down,
+    name: '20260930_095234_group_cross_sell'
   },
 ];

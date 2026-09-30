@@ -6,6 +6,7 @@ import type { SiteKey } from "@/sites/config";
 import { getServices, getSite } from "@/lib/cms/queries";
 import { brandOf, Logo } from "@/components/brand/logo";
 import { SmartLink } from "@/components/cms/smart-link";
+import { GroupBand } from "@/components/layout/group-band";
 import { telHref } from "@/lib/contact-links";
 import { topLevel } from "@/lib/services";
 
@@ -99,6 +100,8 @@ export async function SiteFooter({ locale, site }: { locale: Locale; site: SiteK
             </ul>
           </div>
         </div>
+
+        <GroupBand locale={locale} site={site} />
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
           <p>

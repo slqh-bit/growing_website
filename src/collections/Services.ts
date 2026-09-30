@@ -264,6 +264,25 @@ export const Services: CollectionConfig = {
       ],
     },
     {
+      name: "crossSell",
+      type: "relationship",
+      relationTo: "services",
+      hasMany: true,
+      label: t3("Chez notre société sœur", "At our sister company", "لدى شركتنا الشقيقة"),
+      // Services of the other sites of the group.
+      filterOptions: ({ siblingData }) => {
+        const site = idOf((siblingData as { site?: unknown }).site);
+        return site !== null ? { site: { not_equals: site } } : true;
+      },
+      admin: {
+        description: t3(
+          "Services complémentaires d'une autre société du groupe, proposés en bas de cette page (ex. vidéosurveillance pour une centrale solaire).",
+          "Complementary services of another group company, suggested at the bottom of this page (e.g. video surveillance for a solar plant).",
+          "خدمات مكمّلة لدى شركة أخرى من المجموعة تُقترح أسفل هذه الصفحة.",
+        ),
+      },
+    },
+    {
       name: "faqRefs",
       type: "relationship",
       relationTo: "faq",

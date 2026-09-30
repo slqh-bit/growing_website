@@ -21,6 +21,7 @@ import { Services } from "./collections/Services";
 import { Sites } from "./collections/Sites";
 import { Team } from "./collections/Team";
 import { Users } from "./collections/Users";
+import { Group } from "./globals/Group";
 import { defaultLocale, localeNames, locales, rtlLocales } from "./i18n/config";
 import { migrations } from "./migrations";
 
@@ -87,6 +88,7 @@ export default buildConfig({
     Redirects,
     Users,
   ],
+  globals: [Group],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {

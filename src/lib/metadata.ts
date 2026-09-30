@@ -12,6 +12,22 @@ export function siteOrigin(site: Pick<Site, "url">): string {
   return site.url || siteUrl;
 }
 
+/**
+ * Where to link to *another* site of the group: its public address, else its
+ * first domain, else — in development on localhost — <key>.localhost on the
+ * same port. Null when it has no address yet (the link is then hidden).
+ */
+export function otherSiteOrigin(site: Pick<Site, "url" | "domains" | "key">): string | null {
+  if (site.url) return site.url;
+  const domain = site.domains?.[0]?.domain;
+  if (domain) return `https://${domain}`;
+  const own = new URL(siteUrl);
+  if (own.hostname === "localhost" || own.hostname.endsWith(".localhost")) {
+    return `${own.protocol}//${site.key}.localhost${own.port ? `:${own.port}` : ""}`;
+  }
+  return null;
+}
+
 const ogLocale: Record<Locale, string> = {
   fr: "fr_TN",
   ar: "ar_TN",

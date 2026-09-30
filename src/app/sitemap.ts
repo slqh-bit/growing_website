@@ -23,6 +23,7 @@ const STATIC_ROUTES: { path: string; changeFrequency: "weekly" | "monthly" | "ye
   { path: "/about", changeFrequency: "monthly", priority: 0.7 },
   { path: "/faq", changeFrequency: "monthly", priority: 0.6 },
   { path: "/contact", changeFrequency: "yearly", priority: 0.6 },
+  { path: "/groupe", changeFrequency: "yearly", priority: 0.5 },
   { path: "/mentions-legales", changeFrequency: "yearly", priority: 0.2 },
   { path: "/politique-confidentialite", changeFrequency: "yearly", priority: 0.2 },
 ];

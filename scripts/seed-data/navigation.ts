@@ -25,6 +25,7 @@ export const footerNav: NavItem[] = [
   { href: "/faq", labelKey: "faq" },
   { href: "/contact", labelKey: "contact" },
   { href: "/devis", labelKey: "devis" },
+  { href: "/groupe", labelKey: "group" },
 ];
 
 export const legalNav: NavItem[] = [

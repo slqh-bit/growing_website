@@ -25,6 +25,7 @@ import { createLocalized } from "../src/cms/localized-write";
 import type { SiteKey } from "../src/sites/config";
 import { rich, serviceData } from "./seed-data/build";
 import { faqItems } from "./seed-data/faq";
+import { crossSell, group } from "./seed-data/group";
 import { hikviewAbout, hikviewFooterTagline, hikviewHome } from "./seed-data/hikview";
 import { hikviewServices } from "./seed-data/hikview-services";
 import { footerNav, legalNav, mainNav, type NavItem } from "./seed-data/navigation";
@@ -425,6 +426,52 @@ async function seedRedirects(payload: Payload, siteIds: Record<SiteKey, Id | und
   report(payload, "Redirects", results);
 }
 
+/** The group global, unless it was already filled in the admin. */
+async function seedGroup(payload: Payload, siteIds: Record<SiteKey, Id | undefined>) {
+  const current = await payload.findGlobal({ slug: "group", depth: 0 });
+  if ((current.members ?? []).length > 0) {
+    payload.logger.info("Group: already configured");
+    return;
+  }
+  const members = group.members.filter((m) => siteIds[m.site] !== undefined);
+  let doc: AnyData | undefined;
+  for (const l of locales) {
+    const data = {
+      name: group.name[l],
+      tagline: group.tagline[l],
+      story: rich(group.story[l], l),
+      footerBand: true,
+      members: members.map((m, i) => ({
+        ...(doc ? { id: ((doc.members as { id?: string }[] | undefined) ?? [])[i]?.id } : {}),
+        site: Number(siteIds[m.site]),
+        summary: m.summary[l],
+      })),
+    };
+    doc = (await payload.updateGlobal({ slug: "group", data, locale: l, depth: 0, context })) as unknown as AnyData;
+  }
+  payload.logger.info("Group: created");
+}
+
+/** Default cross-selling, only on services that have none yet. */
+async function seedCrossSell(payload: Payload, siteIds: Record<SiteKey, Id | undefined>) {
+  const find = async (site: SiteKey, slug: string) => {
+    const siteId = siteIds[site];
+    if (siteId === undefined) return undefined;
+    return (await payload.find({ collection: "services", where: bySiteAnd(siteId, { slug: { equals: slug } }), limit: 1, depth: 0 }))
+      .docs[0];
+  };
+  let filled = 0;
+  for (const rule of crossSell) {
+    const from = await find(...rule.from);
+    if (!from || (from.crossSell ?? []).length > 0) continue;
+    const targets = (await Promise.all(rule.to.map(([site, slug]) => find(site, slug)))).filter((s) => s !== undefined);
+    if (targets.length === 0) continue;
+    await payload.update({ collection: "services", id: from.id, data: { crossSell: targets.map((t) => t.id) }, depth: 0, context });
+    filled++;
+  }
+  payload.logger.info(`Cross-selling: ${filled} services filled`);
+}
+
 // ---------------------------------------------------------------------------
 
 async function main() {
@@ -442,6 +489,8 @@ async function main() {
   if (siteIds.hikview !== undefined) await seedHikviewServices(payload, siteIds.hikview);
   await seedPages(payload, siteIds);
   await seedRedirects(payload, siteIds);
+  await seedGroup(payload, siteIds);
+  await seedCrossSell(payload, siteIds);
 
   payload.logger.info("Seed complete.");
 }
