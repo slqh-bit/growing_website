@@ -108,6 +108,52 @@ test.describe("Multi-site (one site per domain)", () => {
   });
 });
 
+test.describe("Hikview catalogue (6 areas, sub-services)", () => {
+  const hikview = (baseURL: string | undefined, path: string) => {
+    const url = new URL(path, baseURL);
+    url.hostname = "hikview.localhost";
+    return url.toString();
+  };
+
+  test("the services page lists the six areas with their sub-services", async ({ page, baseURL }) => {
+    await page.goto(hikview(baseURL, "/fr/services"));
+    for (const area of [
+      "securite-electronique",
+      "reseaux-infrastructures",
+      "gestion-point-de-vente",
+      "solutions-audiovisuelles",
+      "iot-smart-city",
+      "integration-b2g",
+    ]) {
+      await expect(page.locator(`main a[href="/fr/services/${area}"]`).first()).toBeVisible();
+    }
+    await expect(page.locator('main a[href="/fr/services/securite-electronique/videosurveillance"]')).toBeVisible();
+  });
+
+  test("a sub-service lives under its area, and its old top-level URL redirects there", async ({ page, request, baseURL }) => {
+    // Node's HTTP client doesn't resolve *.localhost: pick the site with the Host header.
+    const response = await request.get("/fr/services/videosurveillance", {
+      headers: { host: "hikview.localhost" },
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(308);
+    expect(response.headers()["location"]).toMatch(/\/fr\/services\/securite-electronique\/videosurveillance$/);
+
+    await page.goto(hikview(baseURL, "/ar/services/securite-electronique/videosurveillance"));
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("المراقبة بالفيديو");
+    // Back to the area, and the other solutions of the same area.
+    await expect(page.locator('main a[href="/ar/services/securite-electronique"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/ar/services/securite-electronique/securite-incendie"]')).toBeVisible();
+  });
+
+  test("the B2G page explains public procurement", async ({ page, baseURL }) => {
+    await page.goto(hikview(baseURL, "/fr/services/integration-b2g"));
+    await expect(page.locator("#marches-publics")).toBeAttached();
+    await expect(page.locator('main a[href="/fr/contact"]').first()).toBeVisible();
+  });
+});
+
 test.describe("Growing catalogue (4 activities)", () => {
   test("the services page lists the four activities", async ({ page }) => {
     await page.goto("/fr/services");

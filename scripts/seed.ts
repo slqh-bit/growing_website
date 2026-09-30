@@ -26,6 +26,7 @@ import type { SiteKey } from "../src/sites/config";
 import { rich, serviceData } from "./seed-data/build";
 import { faqItems } from "./seed-data/faq";
 import { hikviewAbout, hikviewFooterTagline, hikviewHome } from "./seed-data/hikview";
+import { hikviewServices } from "./seed-data/hikview-services";
 import { footerNav, legalNav, mainNav, type NavItem } from "./seed-data/navigation";
 import { projects } from "./seed-data/projects";
 import { redirects } from "./seed-data/redirects";
@@ -125,6 +126,7 @@ async function seedSites(payload: Payload): Promise<Record<SiteKey, Id | undefin
       matriculeFiscal: s.matriculeFiscal,
       certification: s.certification || null,
       tagline: s.tagline[l],
+      servicesIntro: s.servicesIntro[l],
       monogram: s.monogram,
       theme: s.theme,
       email: s.email,
@@ -194,6 +196,23 @@ async function seedServices(payload: Payload, site: Id) {
   }
   report(payload, "Growing services", results);
   return ids;
+}
+
+/** Hikview's areas first, then their sub-services (parent = the area). */
+async function seedHikviewServices(payload: Payload, site: Id) {
+  const ids: Record<string, Id> = {};
+  const results = [];
+  const ordered = [...hikviewServices.filter((s) => !s.parent), ...hikviewServices.filter((s) => s.parent)];
+  for (const s of ordered) {
+    const parent = s.parent ? ids[s.parent] : null;
+    if (s.parent && parent === undefined) throw new Error(`Unknown area "${s.parent}" for "${s.slug}"`);
+    const result = await ensure(payload, "services", bySiteAnd(site, { slug: { equals: s.slug } }), (l) =>
+      serviceData(s, l, site, { parent, showPublicReferences: s.showPublicReferences }),
+    );
+    ids[s.slug] = result.id;
+    results.push(result);
+  }
+  report(payload, "Hikview services", results);
 }
 
 async function seedProjects(payload: Payload, site: Id, serviceIds: Record<string, Id>) {
@@ -336,6 +355,9 @@ function hikviewHomeLayout(l: Locale) {
       title: h.whyTitle[l],
       items: h.why.map((item) => ({ icon: item.icon, title: item.title[l], description: item.description[l] })),
     },
+    // Both hidden until references / partners are added in the admin.
+    { blockType: "projects", title: h.projectsTitle[l], subtitle: h.projectsSubtitle[l], limit: 3 },
+    { blockType: "partners", title: h.partnersTitle[l] },
     {
       blockType: "cta",
       title: h.ctaTitle[l],
@@ -417,6 +439,7 @@ async function main() {
     await seedProjects(payload, growing, serviceIds);
     await seedFaq(payload, growing);
   }
+  if (siteIds.hikview !== undefined) await seedHikviewServices(payload, siteIds.hikview);
   await seedPages(payload, siteIds);
   await seedRedirects(payload, siteIds);
 

@@ -61,6 +61,31 @@ export const Projects: CollectionConfig = {
       type: "row",
       fields: [
         {
+          name: "client",
+          type: "text",
+          label: t3("Client", "Client", "العميل"),
+          admin: {
+            width: "70%",
+            description: t3(
+              "Ex. « Commune de Sbeitla ». Laissez vide pour un client anonyme.",
+              "E.g. “Sbeitla municipality”. Leave empty for an anonymous client.",
+              "مثال «بلدية سبيطلة». اتركه فارغاً لعميل مجهول.",
+            ),
+          },
+        },
+        {
+          name: "clientNamePublic",
+          type: "checkbox",
+          defaultValue: true,
+          label: t3("Nom du client public", "Client name is public", "اسم العميل علني"),
+          admin: { width: "30%", style: { alignSelf: "center" } },
+        },
+      ],
+    },
+    {
+      type: "row",
+      fields: [
+        {
           name: "region",
           type: "text",
           localized: true,

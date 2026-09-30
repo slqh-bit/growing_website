@@ -173,6 +173,19 @@ export const Sites: CollectionConfig = {
               ],
             },
             {
+              name: "servicesIntro",
+              type: "text",
+              localized: true,
+              label: t3("Introduction de la page Services", "Services page introduction", "مقدّمة صفحة الخدمات"),
+              admin: {
+                description: t3(
+                  "Sous-titre de /services, ex. « Quatre activités, du pompage solaire aux centrales photovoltaïques. »",
+                  "Subtitle of /services, e.g. “Four activities, from solar pumping to PV plants.”",
+                  "العنوان الفرعي لصفحة الخدمات.",
+                ),
+              },
+            },
+            {
               name: "tagline",
               type: "text",
               localized: true,

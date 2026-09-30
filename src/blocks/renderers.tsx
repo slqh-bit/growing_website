@@ -35,6 +35,7 @@ import { ProjectCard } from "@/components/sections/project-card";
 import { CtaBand } from "@/components/sections/cta-band";
 import { PartnerLogos } from "@/components/sections/partner-logos";
 import { brandOf } from "@/components/brand/logo";
+import { topLevel } from "@/lib/services";
 
 interface BlockProps<B> {
   block: B;
@@ -85,7 +86,7 @@ export async function ActivityGridBlockView({ block, locale, site }: BlockProps<
       <Container>
         {block.title && <SectionHeading title={block.title} subtitle={block.subtitle ?? undefined} />}
         <RevealGroup className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {services.map((service) => (
+          {topLevel(services).map((service) => (
             <Reveal key={service.slug} className="h-full">
               <ServiceCard service={service} locale={locale} className="h-full" />
             </Reveal>

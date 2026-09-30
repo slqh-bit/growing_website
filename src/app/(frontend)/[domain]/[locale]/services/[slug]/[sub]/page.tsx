@@ -5,19 +5,19 @@ import type { Locale } from "@/i18n/routing";
 import { redirectOrNotFound, routeContext } from "@/lib/site";
 import { getServiceBySlug, getServices } from "@/lib/cms/queries";
 import { buildMetadata } from "@/lib/metadata";
-import { parentId, servicePath } from "@/lib/services";
+import { servicePath } from "@/lib/services";
 import { ServiceDetail } from "@/components/sections/service-detail";
 
-/** A top-level service (Growing activity, Hikview area). Sub-services live at /services/<area>/<sub>. */
-type Params = Promise<{ domain: string; locale: Locale; slug: string }>;
+/** A sub-service of an area: /services/<area>/<sub> (plan §4.2). */
+type Params = Promise<{ domain: string; locale: Locale; slug: string; sub: string }>;
 
 export function generateStaticParams() {
   return [];
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const { site, locale, slug } = await routeContext(params);
-  const service = await getServiceBySlug(site, slug, locale);
+  const { site, locale, sub } = await routeContext(params);
+  const service = await getServiceBySlug(site, sub, locale);
   if (!service) return {};
   return buildMetadata({
     site,
@@ -30,14 +30,16 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   });
 }
 
-export default async function ServicePage({ params }: { params: Params }) {
-  const { site, locale, slug } = await routeContext(params);
+export default async function SubServicePage({ params }: { params: Params }) {
+  const { site, locale, slug, sub } = await routeContext(params);
   setRequestLocale(locale);
 
-  const service = await getServiceBySlug(site, slug, locale);
-  if (!service) return redirectOrNotFound(site, locale, `/services/${decodeURIComponent(slug)}`);
-  // A sub-service reached at the top level (old link, rich-text link): canonical nested URL.
-  if (parentId(service) !== null) permanentRedirect(`/${locale}${servicePath(service, await getServices(site, locale))}`);
+  const requested = `/services/${decodeURIComponent(slug)}/${decodeURIComponent(sub)}`;
+  const service = await getServiceBySlug(site, sub, locale);
+  if (!service) return redirectOrNotFound(site, locale, requested);
+  // Moved to another area, or not a sub-service: its canonical URL.
+  const path = servicePath(service, await getServices(site, locale));
+  if (path !== requested) permanentRedirect(`/${locale}${path}`);
 
   return <ServiceDetail site={site} locale={locale} service={service} />;
 }

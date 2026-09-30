@@ -212,6 +212,10 @@ export interface Site {
   matriculeFiscal: string;
   certification?: string | null;
   /**
+   * Subtitle of /services, e.g. “Four activities, from solar pumping to PV plants.”
+   */
+  servicesIntro?: string | null;
+  /**
    * One sentence: browser tab title, search engines, home visual.
    */
   tagline: string;
@@ -612,6 +616,14 @@ export interface Service {
    */
   site: number | Site;
   /**
+   * Empty = main service (/services/…). Otherwise a sub-service of this area (/services/area/…).
+   */
+  parent?: (number | null) | Service;
+  /**
+   * Lists every “Public / B2G” project of the site on this page (e.g. the B2G integrator page).
+   */
+  showPublicReferences?: boolean | null;
+  /**
    * Links the service to the quote form. Empty = the quote button leads to the Contact page.
    */
   activityKey?: ('raccorde' | 'pompage' | 'isole' | 'bt' | 'mt') | null;
@@ -769,6 +781,11 @@ export interface Project {
   site: number | Site;
   activity: number | Service;
   clientType: 'residentiel' | 'agricole' | 'industriel' | 'public';
+  /**
+   * E.g. “Sbeitla municipality”. Leave empty for an anonymous client.
+   */
+  client?: string | null;
+  clientNamePublic?: boolean | null;
   region: string;
   /**
    * Empty for LV/MV.
@@ -1313,6 +1330,8 @@ export interface ServicesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   site?: T;
+  parent?: T;
+  showPublicReferences?: T;
   activityKey?: T;
   icon?: T;
   order?: T;
@@ -1363,6 +1382,8 @@ export interface ProjectsSelect<T extends boolean = true> {
   site?: T;
   activity?: T;
   clientType?: T;
+  client?: T;
+  clientNamePublic?: T;
   region?: T;
   powerKwc?: T;
   date?: T;
@@ -1574,6 +1595,7 @@ export interface SitesSelect<T extends boolean = true> {
   legalName?: T;
   matriculeFiscal?: T;
   certification?: T;
+  servicesIntro?: T;
   tagline?: T;
   logo?: T;
   logoDark?: T;

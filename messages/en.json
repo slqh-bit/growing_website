@@ -34,7 +34,7 @@
     "heroBadge": "ANME-certified solar installer",
     "heroTitle": "Solar energy, working for your future",
     "heroSubtitle": "Growing Technologies designs and installs reliable solar and electrical solutions in Sbeitla and across central Tunisia.",
-    "activitiesTitle": "Our five activities",
+    "activitiesTitle": "Our four activities",
     "activitiesSubtitle": "End-to-end expertise, from photovoltaics to medium voltage.",
     "statsTitle": "Our experience in numbers",
     "projectsTitle": "Recent projects",
@@ -56,13 +56,16 @@
   },
   "services": {
     "title": "Our services",
-    "subtitle": "Five areas of expertise in energy and electrical works.",
+    "subtitle": "Discover our areas of expertise.",
     "benefitsTitle": "Benefits",
     "processTitle": "Our process",
     "requestForActivity": "Request a quote for this service",
     "allServices": "All services",
     "onThisPage": "On this page",
-    "partnersTitle": "Brands & partners"
+    "partnersTitle": "Brands & partners",
+    "subServicesTitle": "Our solutions",
+    "publicReferences": "Public-sector references",
+    "sameArea": "Also in {area}"
   },
   "projects": {
     "title": "Our projects",

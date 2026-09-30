@@ -34,7 +34,7 @@
     "heroBadge": "مركّب شمسي معتمد من الوكالة الوطنية للتحكم في الطاقة",
     "heroTitle": "الطاقة الشمسية في خدمة مستقبلك",
     "heroSubtitle": "تصمّم Growing Technologies وتركّب حلولاً شمسية وكهربائية موثوقة في سبيطلة وكامل وسط تونس.",
-    "activitiesTitle": "أنشطتنا الخمسة",
+    "activitiesTitle": "أنشطتنا الأربعة",
     "activitiesSubtitle": "خبرة متكاملة من الكهروضوئي إلى الجهد المتوسط.",
     "statsTitle": "خبرتنا بالأرقام",
     "projectsTitle": "إنجازات حديثة",
@@ -56,13 +56,16 @@
   },
   "services": {
     "title": "خدماتنا",
-    "subtitle": "خمسة مجالات خبرة في الطاقة والكهرباء.",
+    "subtitle": "اكتشف مجالات خبرتنا.",
     "benefitsTitle": "الفوائد",
     "processTitle": "منهجيتنا",
     "requestForActivity": "اطلب تسعيرة لهذه الخدمة",
     "allServices": "كل الخدمات",
     "onThisPage": "في هذه الصفحة",
-    "partnersTitle": "العلامات والشركاء"
+    "partnersTitle": "العلامات والشركاء",
+    "subServicesTitle": "حلولنا",
+    "publicReferences": "مراجع القطاع العمومي",
+    "sameArea": "في نفس المجال: {area}"
   },
   "projects": {
     "title": "إنجازاتنا",

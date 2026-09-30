@@ -72,6 +72,13 @@ export const hikviewHome = {
       },
     },
   ],
+  projectsTitle: { fr: "Nos références", ar: "مراجعنا", en: "Our references" },
+  projectsSubtitle: {
+    fr: "Quelques projets réalisés pour nos clients privés et institutionnels.",
+    ar: "بعض المشاريع المنجزة لحرفائنا الخواص والعموميين.",
+    en: "A few projects delivered for our private and public-sector clients.",
+  },
+  partnersTitle: { fr: "Marques & partenaires", ar: "العلامات والشركاء", en: "Brands & partners" },
   ctaTitle: { fr: "Un projet de sécurité ou de réseau ?", ar: "لديك مشروع أمن أو شبكة؟", en: "A security or network project?" },
   ctaSubtitle: {
     fr: "Décrivez-nous votre besoin : nous revenons vers vous sous 48 h ouvrées.",

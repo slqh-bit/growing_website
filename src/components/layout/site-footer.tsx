@@ -7,6 +7,7 @@ import { getServices, getSite } from "@/lib/cms/queries";
 import { brandOf, Logo } from "@/components/brand/logo";
 import { SmartLink } from "@/components/cms/smart-link";
 import { telHref } from "@/lib/contact-links";
+import { topLevel } from "@/lib/services";
 
 /** Footer: links and tagline (Sites → Pied de page), activities from Services, contacts from the site. */
 export async function SiteFooter({ locale, site }: { locale: Locale; site: SiteKey }) {
@@ -56,7 +57,7 @@ export async function SiteFooter({ locale, site }: { locale: Locale; site: SiteK
           <div>
             <h3 className="text-sm font-semibold text-foreground">{t("activities")}</h3>
             <ul className="mt-4 space-y-2.5">
-              {services.map((s) => (
+              {topLevel(services).map((s) => (
                 <li key={s.slug}>
                   <Link
                     href={`/services/${s.slug}`}

@@ -1,9 +1,11 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
-import type { Payload, PayloadRequest } from 'payload'
-import { createLocalized, updateLocalized } from '../cms/localized-write'
-import { serviceData } from '../../scripts/seed-data/build'
+import { randomBytes } from 'crypto'
+import type { SQL } from 'drizzle-orm'
+import { locales } from '../i18n/config'
+import { rich } from '../../scripts/seed-data/build'
 import { redirects } from '../../scripts/seed-data/redirects'
 import { services } from '../../scripts/seed-data/services'
+import type { Service } from '../../scripts/seed-data/types'
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
@@ -317,7 +319,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   WHERE l."_parent_id" IN (SELECT "id" FROM "sites_footer_legal_links");`)
 
   // 3. Growing's catalogue: 5 services → 4 activities (plan §4.1).
-  await restructureGrowingCatalogue(payload, req)
+  await restructureGrowingCatalogue(db, payload)
 }
 
 /**
@@ -326,78 +328,113 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
  * and redirected (301) to its #commercial / #industriel sections, "Site isolé"
  * becomes "Sites isolés & éclairage public solaire", "Centrales
  * photovoltaïques" is created and the activities are reordered.
+ *
+ * Plain SQL against the tables as they are at this migration, not the Local
+ * API: later migrations add fields to services, and the Local API would write
+ * columns that don't exist yet at this point.
  */
-async function restructureGrowingCatalogue(payload: Payload, req: PayloadRequest): Promise<void> {
-  const site = (
-    await payload.find({ collection: 'sites', where: { key: { equals: 'growing' } }, limit: 1, depth: 0, req })
-  ).docs[0]
-  if (!site) return
+async function restructureGrowingCatalogue(db: MigrateUpArgs['db'], payload: MigrateUpArgs['payload']): Promise<void> {
+  const rows = async (query: SQL) => ((await db.execute(query)) as unknown as { rows: Record<string, unknown>[] }).rows
 
-  const findService = async (slug: string) =>
-    (
-      await payload.find({
-        collection: 'services',
-        where: { and: [{ site: { equals: site.id } }, { slug: { equals: slug } }] },
-        limit: 1,
-        depth: 0,
-        req,
-      })
-    ).docs[0]
+  const site = (await rows(sql`SELECT "id" FROM "sites" WHERE "key" = 'growing' LIMIT 1`))[0]?.id as number | undefined
+  if (site === undefined) return
+  const serviceId = async (slug: string) =>
+    (await rows(sql`SELECT "id" FROM "services" WHERE "site_id" = ${site} AND "slug" = ${slug} LIMIT 1`))[0]?.id as
+      | number
+      | undefined
 
-  const legacy = (await Promise.all(['basse-tension', 'moyenne-tension'].map(findService))).filter(
-    (s): s is NonNullable<typeof s> => s !== undefined,
+  const legacy = (await Promise.all(['basse-tension', 'moyenne-tension'].map(serviceId))).filter(
+    (id): id is number => id !== undefined,
   )
   if (legacy.length === 0) return
   payload.logger.info('Restructuring the Growing catalogue (5 services → 4 activities)…')
 
+  const rowId = () => randomBytes(12).toString('hex')
   const catalogue = Object.fromEntries(services.map((s) => [s.slug, s]))
-  const context = { disableRevalidate: true }
+
+  /** Writes a service's fields, translations and rows (benefits, process, sections). */
+  async function writeService(s: Service, existing: number | undefined): Promise<number> {
+    let id = existing
+    if (id === undefined) {
+      id = (
+        await rows(sql`INSERT INTO "services" ("slug", "activity_key", "icon", "order", "site_id")
+          VALUES (${s.slug}, ${s.activityKey ?? null}, ${s.icon}, ${s.order}, ${site}) RETURNING "id"`)
+      )[0]!.id as number
+    } else {
+      await db.execute(sql`UPDATE "services" SET "activity_key" = ${s.activityKey ?? null}, "icon" = ${s.icon},
+        "order" = ${s.order}, "updated_at" = now() WHERE "id" = ${id}`)
+    }
+
+    for (const l of locales) {
+      await db.execute(sql`INSERT INTO "services_locales" ("title", "short_description", "body", "_locale", "_parent_id")
+        VALUES (${s.title[l]}, ${s.shortDescription[l]}, ${JSON.stringify(rich(s.body[l], l))}::jsonb, ${l}, ${id})
+        ON CONFLICT ("_locale", "_parent_id") DO UPDATE SET "title" = EXCLUDED."title",
+          "short_description" = EXCLUDED."short_description", "body" = EXCLUDED."body"`)
+    }
+
+    await db.execute(sql`DELETE FROM "services_benefits" WHERE "_parent_id" = ${id}`)
+    for (const l of locales) {
+      for (const [i, text] of s.benefits[l].entries()) {
+        await db.execute(sql`INSERT INTO "services_benefits" ("_order", "_parent_id", "_locale", "id", "text")
+          VALUES (${i + 1}, ${id}, ${l}, ${rowId()}, ${text})`)
+      }
+    }
+
+    await db.execute(sql`DELETE FROM "services_process" WHERE "_parent_id" = ${id}`)
+    for (const [i, step] of s.process.entries()) {
+      const stepId = rowId()
+      await db.execute(sql`INSERT INTO "services_process" ("_order", "_parent_id", "id") VALUES (${i + 1}, ${id}, ${stepId})`)
+      for (const l of locales) {
+        await db.execute(sql`INSERT INTO "services_process_locales" ("title", "description", "_locale", "_parent_id")
+          VALUES (${step.title[l]}, ${step.description[l]}, ${l}, ${stepId})`)
+      }
+    }
+
+    await db.execute(sql`DELETE FROM "services_sections" WHERE "_parent_id" = ${id}`)
+    for (const [i, section] of (s.sections ?? []).entries()) {
+      const sectionId = rowId()
+      await db.execute(sql`INSERT INTO "services_sections" ("_order", "_parent_id", "id", "anchor", "icon")
+        VALUES (${i + 1}, ${id}, ${sectionId}, ${section.anchor}, ${section.icon ?? null})`)
+      for (const l of locales) {
+        await db.execute(sql`INSERT INTO "services_sections_locales" ("title", "body", "_locale", "_parent_id")
+          VALUES (${section.title[l]}, ${JSON.stringify(rich(section.body[l], l))}::jsonb, ${l}, ${sectionId})`)
+      }
+    }
+    return id
+  }
 
   // Updated / new activities first, so projects can move to "raccordée".
   const ids: Record<string, number> = {}
   for (const slug of ['pompage-solaire', 'site-isole', 'installation-raccordee', 'centrale-photovoltaique']) {
     const seed = catalogue[slug]
     if (!seed) continue
-    const existing = await findService(slug)
-    if (!existing) {
-      ids[slug] = Number(await createLocalized(payload, 'services', (l) => serviceData(seed, l, site.id), { req }))
-    } else if (slug === 'pompage-solaire') {
-      await payload.update({ collection: 'services', id: existing.id, data: { order: seed.order }, depth: 0, context, req })
-      ids[slug] = existing.id
+    const existing = await serviceId(slug)
+    if (slug === 'pompage-solaire' && existing !== undefined) {
+      await db.execute(sql`UPDATE "services" SET "order" = ${seed.order} WHERE "id" = ${existing}`)
+      ids[slug] = existing
     } else {
-      await updateLocalized(payload, 'services', existing.id, (l) => serviceData(seed, l, site.id), { req })
-      ids[slug] = existing.id
+      ids[slug] = await writeService(seed, existing)
     }
   }
 
   const raccordee = ids['installation-raccordee']
   for (const old of legacy) {
     if (raccordee !== undefined) {
-      await payload.update({
-        collection: 'projects',
-        where: { activity: { equals: old.id } },
-        data: { activity: raccordee },
-        depth: 0,
-        context,
-        req,
-      })
+      await db.execute(sql`UPDATE "projects" SET "activity_id" = ${raccordee} WHERE "activity_id" = ${old}`)
     }
-    await payload.delete({ collection: 'services', id: old.id, depth: 0, context, req })
+    // Cascades to translations, rows and relations.
+    await db.execute(sql`DELETE FROM "services" WHERE "id" = ${old}`)
   }
 
   for (const redirect of redirects.filter((r) => r.site === 'growing')) {
-    const { totalDocs } = await payload.count({ collection: 'redirects', where: { from: { equals: redirect.from } }, req })
-    if (totalDocs > 0) continue
-    await payload.create({
-      collection: 'redirects',
-      data: { from: redirect.from, to: redirect.to, sites: [site.id], permanent: true },
-      depth: 0,
-      context,
-      req,
-    })
+    const exists = (await rows(sql`SELECT 1 FROM "redirects" WHERE "from" = ${redirect.from} LIMIT 1`)).length > 0
+    if (exists) continue
+    const id = (
+      await rows(sql`INSERT INTO "redirects" ("from", "to", "permanent") VALUES (${redirect.from}, ${redirect.to}, true) RETURNING "id"`)
+    )[0]!.id
+    await db.execute(sql`INSERT INTO "redirects_rels" ("order", "parent_id", "path", "sites_id") VALUES (1, ${id}, 'sites', ${site})`)
   }
 }
-
 
 export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
   await db.execute(sql`

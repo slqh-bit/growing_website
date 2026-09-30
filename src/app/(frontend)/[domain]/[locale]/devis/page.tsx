@@ -46,11 +46,16 @@ export default async function DevisPage({ params }: { params: Promise<{ domain: 
       : [];
   });
 
+  // The certification lines only apply to a certified site (Sites → Certification).
   const reasons = [
     { icon: FileCheck2, text: t("aside.free") },
     { icon: Clock, text: t("aside.fast") },
-    { icon: ShieldCheck, text: t("aside.certified") },
-    { icon: BadgeCheck, text: t("aside.subsidies") },
+    ...(settings.certification
+      ? [
+          { icon: ShieldCheck, text: t("aside.certified") },
+          { icon: BadgeCheck, text: t("aside.subsidies") },
+        ]
+      : []),
   ];
 
   return (

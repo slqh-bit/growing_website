@@ -50,8 +50,8 @@ back to French.
 | Collection         | Purpose                                                       |
 | ------------------ | ------------------------------------------------------------- |
 | Pages              | Block-built pages per site (`home`, `about`…): hero, stats, features, partners… |
-| Services           | Each site's activities; page sections with anchors (`#commercial`); `activityKey` links one to the quote form |
-| Projects           | Case studies, filterable by activity / region / client type  |
+| Services           | Each site's activities / areas, and sub-services (`parent` → `/services/<area>/<sub>`); page sections with anchors (`#commercial`); `activityKey` links one to the quote form |
+| Projects           | Case studies (named or anonymous client), filterable by service / region / client type |
 | Partenaires & marques | Brands, manufacturers, own products: partners strip block + logos on linked service pages |
 | FAQ, Team          | FAQ entries (by category) and team members                   |
 | Demandes de devis  | Leads, with status workflow nouveau → contacté → devis envoyé → gagné/perdu |
@@ -268,6 +268,10 @@ Group platform (multi-site):
       "Installations raccordées" sections, new "Centrales photovoltaïques"),
       `Redirects` with 301/308 for the retired pages, `Partners` + partners
       block; Hikview starter pages.
+- [x] **Phase 3** — Hikview site: service tree (6 areas → 15 sub-services at
+      `/services/<area>/<sub>`, old flat URLs redirect), shared service page
+      template, B2G page with every public-sector reference, named project
+      clients, per-site Services intro, Hikview catalogue seeded in fr/ar/en.
 
 ## Structure
 

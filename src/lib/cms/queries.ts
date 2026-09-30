@@ -148,11 +148,19 @@ export const getFeaturedProjects = cached(
   (site: SiteKey, locale: Locale, limit: number) => findProjects(site, locale, { featured: { equals: true } }, limit),
 );
 
-export const getProjectsByService = cached(
-  "projects-by-service",
+/** Projects of these services (an area + its sub-services), plus every public-sector one if asked. */
+export const getProjectsForService = cached(
+  "projects-for-service",
   PROJECT_TAGS,
-  (site: SiteKey, serviceId: number, locale: Locale) =>
-    findProjects(site, locale, { activity: { equals: serviceId } }, 12),
+  (site: SiteKey, serviceIds: number[], withPublicReferences: boolean, locale: Locale) =>
+    findProjects(
+      site,
+      locale,
+      withPublicReferences
+        ? { or: [{ activity: { in: serviceIds } }, { clientType: { equals: "public" } }] }
+        : { activity: { in: serviceIds } },
+      withPublicReferences ? 24 : 12,
+    ),
 );
 
 export const getProjectBySlug = cached(

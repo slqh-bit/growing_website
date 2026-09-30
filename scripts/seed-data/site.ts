@@ -14,6 +14,7 @@ export interface SiteSeed {
   matriculeFiscal: string;
   certification: string;
   tagline: Localized;
+  servicesIntro: Localized;
   monogram: string;
   /** Uploaded as the logo when the site has none (path from the repo root). */
   logoFile?: string;
@@ -52,6 +53,11 @@ export const sites: SiteSeed[] = [
       fr: "Énergie solaire & électricité — installateur certifié ANME",
       ar: "طاقة شمسية وكهرباء — مركّب معتمد من الوكالة الوطنية للتحكم في الطاقة",
       en: "Solar energy & electrical works — ANME-certified installer",
+    },
+    servicesIntro: {
+      fr: "Quatre activités, du pompage solaire aux centrales photovoltaïques.",
+      ar: "أربعة أنشطة، من الضخّ الشمسي إلى المحطات الكهروضوئية.",
+      en: "Four activities, from solar pumping to utility-scale PV plants.",
     },
     monogram: "GT",
     logoFile: "public/apple-icon.png",
@@ -94,6 +100,11 @@ export const sites: SiteSeed[] = [
       fr: "Sécurité électronique, réseaux & solutions technologiques",
       ar: "الأمن الإلكتروني، الشبكات والحلول التكنولوجية",
       en: "Electronic security, networks & technology solutions",
+    },
+    servicesIntro: {
+      fr: "Six domaines d'expertise, de la sécurité électronique aux projets publics.",
+      ar: "ستة مجالات خبرة، من الأمن الإلكتروني إلى المشاريع العمومية.",
+      en: "Six areas of expertise, from electronic security to public-sector projects.",
     },
     monogram: "HE",
     // Blue + cyan (plan §3.2).

@@ -5,7 +5,8 @@ import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { redirectOrNotFound, routeContext } from "@/lib/site";
 import type { Service } from "@/payload-types";
-import { getProjectBySlug, getSite } from "@/lib/cms/queries";
+import { getProjectBySlug, getServices, getSite } from "@/lib/cms/queries";
+import { servicePath } from "@/lib/services";
 import { populated } from "@/lib/cms/media";
 import { buildMetadata, siteOrigin } from "@/lib/metadata";
 import { breadcrumbLd, JsonLd } from "@/lib/seo/json-ld";
@@ -46,10 +47,11 @@ export default async function ProjectDetailPage({ params }: { params: Params }) 
   const project = await getProjectBySlug(site, slug, locale);
   if (!project) return redirectOrNotFound(site, locale, `/projects/${decodeURIComponent(slug)}`);
 
-  const [t, tn, settings] = await Promise.all([
+  const [t, tn, settings, services] = await Promise.all([
     getTranslations({ locale, namespace: "projects" }),
     getTranslations({ locale, namespace: "nav" }),
     getSite(site, locale),
+    getServices(site, locale),
   ]);
   const service = populated<Service>(project.activity);
   const gallery = (project.gallery ?? []).filter((m) => typeof m === "object");
@@ -58,8 +60,15 @@ export default async function ProjectDetailPage({ params }: { params: Params }) 
     month: "long",
   }).format(new Date(project.date));
 
+  const clientName = project.clientNamePublic !== false ? project.client?.trim() : "";
   const specs = [
-    { icon: Users, label: t("client"), value: t(`clientType.${project.clientType}`) },
+    {
+      icon: Users,
+      label: t("client"),
+      value: clientName
+        ? `${clientName} · ${t(`clientType.${project.clientType}`)}`
+        : t(`clientType.${project.clientType}`),
+    },
     { icon: MapPin, label: t("region"), value: project.region },
     ...(project.powerKwc != null ? [{ icon: Zap, label: t("power"), value: `${project.powerKwc} kWc` }] : []),
     { icon: Calendar, label: t("date"), value: dateFmt },
@@ -122,7 +131,7 @@ export default async function ProjectDetailPage({ params }: { params: Params }) 
             {service && (
               <Reveal className="mt-8">
                 <Link
-                  href={`/services/${service.slug}`}
+                  href={servicePath(service, services)}
                   className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:border-primary-300 hover:text-brand"
                 >
                   <ServiceIcon name={service.icon} className="size-6 rounded-md" iconClassName="size-3.5" />

@@ -11,9 +11,16 @@ import type { Service } from "./types";
 export const rich = (text: string, locale: Locale) =>
   lexicalFromText(text, rtlLocales.includes(locale) ? "rtl" : "ltr");
 
-export function serviceData(s: Service, l: Locale, site: number | string) {
+export function serviceData(
+  s: Service,
+  l: Locale,
+  site: number | string,
+  extra: { parent?: number | string | null; showPublicReferences?: boolean } = {},
+) {
   return {
     site,
+    parent: extra.parent ?? null,
+    showPublicReferences: extra.showPublicReferences ?? false,
     title: s.title[l],
     slug: s.slug,
     activityKey: s.activityKey ?? null,

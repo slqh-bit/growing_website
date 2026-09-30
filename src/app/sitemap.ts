@@ -5,6 +5,7 @@ import { getPageSummaries, getProjects, getServices, getSite, getTeam } from "@/
 import { RESERVED_PAGE_SLUGS } from "@/lib/cms/pages";
 import { siteOrigin } from "@/lib/metadata";
 import { resolveSiteKey } from "@/lib/site";
+import { servicePath } from "@/lib/services";
 
 /**
  * sitemap.xml — every indexable URL of the site that owns the requested domain,
@@ -64,7 +65,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // /team stays "Coming soon" (noindex) until the first member is added.
     ...(team.length > 0 ? entries("/team", { changeFrequency: "monthly", priority: 0.4 }) : []),
     ...services.flatMap((s) =>
-      entries(`/services/${s.slug}`, { lastModified: s.updatedAt, changeFrequency: "monthly", priority: 0.8 }),
+      entries(servicePath(s, services), { lastModified: s.updatedAt, changeFrequency: "monthly", priority: 0.8 }),
     ),
     ...projects.flatMap((p) =>
       entries(`/projects/${p.slug}`, { lastModified: p.updatedAt, changeFrequency: "yearly", priority: 0.6 }),

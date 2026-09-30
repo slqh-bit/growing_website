@@ -49,15 +49,15 @@ export function localBusinessLd(settings: Site, locale: Locale, description: str
   };
 }
 
-/** `origin`: the site's public origin (siteOrigin). */
-export function serviceLd(service: Service, locale: Locale, origin: string): object {
+/** `origin`: the site's public origin (siteOrigin); `path`: the service's locale-less path. */
+export function serviceLd(service: Service, locale: Locale, origin: string, path: string): object {
   return {
     "@context": "https://schema.org",
     "@type": "Service",
     name: service.title,
     description: service.shortDescription,
     serviceType: service.title,
-    url: `${origin}/${locale}/services/${service.slug}`,
+    url: `${origin}/${locale}${path}`,
     provider: { "@id": orgId(origin) },
     areaServed: { "@type": "Country", name: "Tunisia" },
     inLanguage: locale,
