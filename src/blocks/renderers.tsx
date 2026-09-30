@@ -14,7 +14,8 @@ import type {
   RichTextBlock,
   StatsBlock,
 } from "@/payload-types";
-import { getFaq, getFeaturedProjects, getServices, getSiteSettings } from "@/lib/cms/queries";
+import type { SiteKey } from "@/sites/config";
+import { getFaq, getFeaturedProjects, getServices, getSite } from "@/lib/cms/queries";
 import { populated } from "@/lib/cms/media";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
@@ -31,18 +32,17 @@ import { StatsBand } from "@/components/sections/stats-band";
 import { ServiceCard } from "@/components/sections/service-card";
 import { ProjectCard } from "@/components/sections/project-card";
 import { CtaBand } from "@/components/sections/cta-band";
+import { brandOf } from "@/components/brand/logo";
 
 interface BlockProps<B> {
   block: B;
   locale: Locale;
+  site: SiteKey;
 }
 
-export async function HeroBlockView({ block, locale }: BlockProps<HeroBlock>) {
+export async function HeroBlockView({ block, locale, site }: BlockProps<HeroBlock>) {
   if (block.style === "full") {
-    const [settings, tc] = await Promise.all([
-      getSiteSettings(locale),
-      getTranslations({ locale, namespace: "common" }),
-    ]);
+    const settings = await getSite(site, locale);
     return (
       <Hero
         badge={block.badge}
@@ -51,8 +51,8 @@ export async function HeroBlockView({ block, locale }: BlockProps<HeroBlock>) {
         primaryCta={block.primaryCta}
         secondaryCta={block.secondaryCta}
         image={block.image}
-        companyName={settings.companyName}
-        tagline={tc("companyTagline")}
+        brand={brandOf(settings)}
+        tagline={settings.tagline}
         stats={settings.stats ?? []}
       />
     );
@@ -67,8 +67,8 @@ export async function HeroBlockView({ block, locale }: BlockProps<HeroBlock>) {
   );
 }
 
-export async function StatsBlockView({ block, locale }: BlockProps<StatsBlock>) {
-  const items = block.useSiteStats === false ? (block.items ?? []) : ((await getSiteSettings(locale)).stats ?? []);
+export async function StatsBlockView({ block, locale, site }: BlockProps<StatsBlock>) {
+  const items = block.useSiteStats === false ? (block.items ?? []) : ((await getSite(site, locale)).stats ?? []);
   return <StatsBand title={block.title} items={items} />;
 }
 
@@ -164,8 +164,8 @@ export async function ProjectsBlockView({ block, locale }: BlockProps<ProjectsBl
   );
 }
 
-export function CtaBlockView({ block, locale }: BlockProps<CtaBlock>) {
-  return <CtaBand locale={locale} title={block.title} subtitle={block.subtitle} button={block.button} />;
+export function CtaBlockView({ block, locale, site }: BlockProps<CtaBlock>) {
+  return <CtaBand locale={locale} site={site} title={block.title} subtitle={block.subtitle} button={block.button} />;
 }
 
 export function RichTextBlockView({ block, locale }: BlockProps<RichTextBlock>) {

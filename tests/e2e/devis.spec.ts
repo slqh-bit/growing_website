@@ -59,7 +59,8 @@ test("FR: a complete pompage request reaches the success screen", async ({ page 
   expect(reference).toMatch(/^GT-\d{6}-[0-9A-F]{4}$/);
 
   // Tracking: the success link pre-fills the reference; the phone must match.
-  await page.getByRole("link", { name: "Suivre ma demande" }).click();
+  // Scoped to the page: the header also links to /suivi.
+  await page.locator("#main").getByRole("link", { name: "Suivre ma demande" }).click();
   await expect(page).toHaveURL(new RegExp(`/fr/suivi\\?ref=${reference}$`));
   await expect(page.locator("#track-reference")).toHaveValue(reference);
   await page.fill("#track-phone", "22 333 444");

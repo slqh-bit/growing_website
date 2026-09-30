@@ -8,6 +8,7 @@ import { access } from "fs/promises";
 import path from "path";
 import type { Payload } from "payload";
 import type { DevisRequest } from "@/payload-types";
+import { findSite } from "../../cms/sites";
 import { quotesDir } from "./quote-files";
 import type { DevisStatus } from "./tracking";
 
@@ -123,7 +124,8 @@ export async function notifyStatusChange(payload: Payload, lead: DevisRequest): 
   const subject = copy.subject[status];
   if (!lead.email || !subject) return;
 
-  const settings = await payload.findGlobal({ slug: "site-settings", locale: lang, depth: 0 });
+  // Leads belong to the default site until the devis gets a site (plan Phase 5a).
+  const settings = await findSite(payload, lang);
   const ref = lead.reference ?? String(lead.id);
   const url = trackingUrl(lead);
   const html = layout(

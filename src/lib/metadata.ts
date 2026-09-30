@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
 import { locales, defaultLocale, type Locale } from "@/i18n/routing";
-import type { Media } from "@/payload-types";
+import type { Media, Site } from "@/payload-types";
+import type { SiteKey } from "@/sites/config";
 import { imageSource } from "@/lib/cms/media";
-import { getSiteSettings } from "@/lib/cms/queries";
+import { getSite } from "@/lib/cms/queries";
 
 export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+/** Public origin of a site (Sites → Adresse publique), else NEXT_PUBLIC_SITE_URL. */
+export function siteOrigin(site: Pick<Site, "url">): string {
+  return site.url || siteUrl;
+}
 
 const ogLocale: Record<Locale, string> = {
   fr: "fr_TN",
@@ -30,6 +36,7 @@ export interface SeoFields {
  * @param path Locale-agnostic route, e.g. "" (home) or "/services/site-isole".
  */
 export async function buildMetadata({
+  site,
   locale,
   path,
   title,
@@ -39,6 +46,7 @@ export async function buildMetadata({
   seo,
   noindex = false,
 }: {
+  site: SiteKey;
   locale: Locale;
   path: string;
   title?: string;
@@ -49,7 +57,7 @@ export async function buildMetadata({
   seo?: SeoFields | null;
   noindex?: boolean;
 }): Promise<Metadata> {
-  const { companyName } = await getSiteSettings(locale);
+  const { companyName } = await getSite(site, locale);
   const route = path === "/" ? "" : path;
   const finalTitle = seo?.metaTitle || title;
   const finalDescription = seo?.metaDescription || description;

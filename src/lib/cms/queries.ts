@@ -4,7 +4,8 @@ import { getPayload, type Where } from "payload";
 import config from "@payload-config";
 import { cmsTag } from "@/cms/revalidate";
 import type { Locale } from "@/i18n/routing";
-import type { Faq, Page, Project, Service, Team } from "@/payload-types";
+import type { SiteDomains, SiteKey } from "@/sites/config";
+import type { Faq, Page, Project, Service, Site, Team } from "@/payload-types";
 
 /**
  * Cached CMS reads for the public site (Payload Local API).
@@ -25,7 +26,7 @@ type CmsSlug =
   | "pages"
   | "team"
   | "media"
-  | "site-settings"
+  | "sites"
   | "navigation"
   | "footer";
 
@@ -43,9 +44,37 @@ const publicRead = { overrideAccess: false } as const;
 
 // --- Globals -----------------------------------------------------------------
 
-export const getSiteSettings = cached("site-settings", ["site-settings"], async (locale: Locale) =>
-  (await payload()).findGlobal({ slug: "site-settings", locale, depth: 0, ...publicRead }),
-);
+/** Key, default flag and domains of every site (hostname → site resolution). */
+export const getSiteDirectory = cached("site-directory", ["sites"], async (): Promise<SiteDomains[]> => {
+  const { docs } = await (await payload()).find({
+    collection: "sites",
+    depth: 0,
+    sort: "id",
+    limit: 50,
+    pagination: false,
+    select: { key: true, isDefault: true, domains: true },
+    ...publicRead,
+  });
+  return docs.map(({ key, isDefault, domains }) => ({
+    key,
+    isDefault,
+    domains: (domains ?? []).map(({ domain }) => ({ domain })),
+  }));
+});
+
+/** A site's identity, contacts, figures and brand (logo, favicon populated). */
+export const getSite = cached("site", ["sites", "media"], async (key: SiteKey, locale: Locale): Promise<Site> => {
+  const { docs } = await (await payload()).find({
+    collection: "sites",
+    where: { key: { equals: key } },
+    locale,
+    depth: 1, // logo, logoDark, favicon
+    limit: 1,
+    ...publicRead,
+  });
+  if (!docs[0]) throw new Error(`Site "${key}" is missing in the CMS (Paramètres → Sites).`);
+  return docs[0];
+});
 
 export const getNavigation = cached("navigation", ["navigation"], async (locale: Locale) =>
   (await payload()).findGlobal({ slug: "navigation", locale, depth: 0, ...publicRead }),

@@ -16,11 +16,11 @@ import { Pages } from "./collections/Pages";
 import { Projects } from "./collections/Projects";
 import { QuoteDocuments } from "./collections/QuoteDocuments";
 import { Services } from "./collections/Services";
+import { Sites } from "./collections/Sites";
 import { Team } from "./collections/Team";
 import { Users } from "./collections/Users";
 import { Footer } from "./globals/Footer";
 import { Navigation } from "./globals/Navigation";
-import { SiteSettings } from "./globals/SiteSettings";
 import { defaultLocale, localeNames, locales, rtlLocales } from "./i18n/config";
 import { migrations } from "./migrations";
 
@@ -67,14 +67,14 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     meta: {
-      titleSuffix: " — Growing Technologies",
+      titleSuffix: " — Administration",
     },
     dateFormat: "dd/MM/yyyy",
     // Built-in avatar instead of Gravatar: no admin email hash sent to a third party.
     avatar: "default",
   },
-  collections: [Pages, Services, Projects, Faq, Team, DevisRequests, QuoteDocuments, Media, Users],
-  globals: [SiteSettings, Navigation, Footer],
+  collections: [Pages, Services, Projects, Faq, Team, DevisRequests, QuoteDocuments, Media, Sites, Users],
+  globals: [Navigation, Footer],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {

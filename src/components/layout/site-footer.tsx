@@ -2,18 +2,19 @@ import { getTranslations } from "next-intl/server";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { getFooter, getServices, getSiteSettings } from "@/lib/cms/queries";
-import { Logo } from "@/components/brand/logo";
+import type { SiteKey } from "@/sites/config";
+import { getFooter, getServices, getSite } from "@/lib/cms/queries";
+import { brandOf, Logo } from "@/components/brand/logo";
 import { SmartLink } from "@/components/cms/smart-link";
 import { telHref } from "@/lib/contact-links";
 
-/** Footer: links from the Footer global, activities from Services, contacts from Site settings. */
-export async function SiteFooter({ locale }: { locale: Locale }) {
+/** Footer: links from the Footer global, activities from Services, contacts from the site. */
+export async function SiteFooter({ locale, site }: { locale: Locale; site: SiteKey }) {
   const [t, footer, services, settings] = await Promise.all([
     getTranslations({ locale, namespace: "footer" }),
     getFooter(locale),
     getServices(locale),
-    getSiteSettings(locale),
+    getSite(site, locale),
   ]);
   const year = new Date().getFullYear();
   const quickLinks = footer.quickLinks ?? [];
@@ -25,7 +26,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Logo name={settings.companyName} />
+            <Logo brand={brandOf(settings)} />
             {footer.tagline && <p className="mt-4 max-w-xs text-sm text-muted-foreground">{footer.tagline}</p>}
             <p className="mt-4 text-xs text-muted-foreground">
               {t("matricule")}: <span dir="ltr">{settings.matriculeFiscal}</span>

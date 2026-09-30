@@ -1,6 +1,6 @@
 import type { Locale } from "@/i18n/config";
-import type { Service, SiteSetting } from "@/payload-types";
-import { siteUrl } from "@/lib/metadata";
+import type { Service, Site } from "@/payload-types";
+import { siteOrigin } from "@/lib/metadata";
 
 /**
  * schema.org structured data (JSON-LD) — devplan §7: LocalBusiness + Service.
@@ -16,21 +16,22 @@ export function JsonLd({ data }: { data: object }) {
   );
 }
 
-const orgId = () => `${siteUrl}/#organization`;
+const orgId = (origin: string) => `${origin}/#organization`;
 
 /** The company as a LocalBusiness (Electrician is a LocalBusiness subtype). */
-export function localBusinessLd(settings: SiteSetting, locale: Locale, description: string): object {
+export function localBusinessLd(settings: Site, locale: Locale, description: string): object {
+  const origin = siteOrigin(settings);
   const sameAs = [settings.socials?.facebook, settings.socials?.instagram, settings.socials?.linkedin].filter(
     (url): url is string => Boolean(url),
   );
   return {
     "@context": "https://schema.org",
     "@type": "Electrician",
-    "@id": orgId(),
+    "@id": orgId(origin),
     name: settings.companyName,
     legalName: settings.legalName,
     description,
-    url: `${siteUrl}/${locale}`,
+    url: `${origin}/${locale}`,
     telephone: settings.phone,
     email: settings.email,
     taxID: settings.matriculeFiscal,
@@ -48,22 +49,23 @@ export function localBusinessLd(settings: SiteSetting, locale: Locale, descripti
   };
 }
 
-export function serviceLd(service: Service, locale: Locale): object {
+/** `origin`: the site's public origin (siteOrigin). */
+export function serviceLd(service: Service, locale: Locale, origin: string): object {
   return {
     "@context": "https://schema.org",
     "@type": "Service",
     name: service.title,
     description: service.shortDescription,
     serviceType: service.title,
-    url: `${siteUrl}/${locale}/services/${service.slug}`,
-    provider: { "@id": orgId() },
+    url: `${origin}/${locale}/services/${service.slug}`,
+    provider: { "@id": orgId(origin) },
     areaServed: { "@type": "Country", name: "Tunisia" },
     inLanguage: locale,
   };
 }
 
 /** Breadcrumb trail, e.g. Home › Services › Pompage solaire. */
-export function breadcrumbLd(items: { name: string; path: string }[], locale: Locale): object {
+export function breadcrumbLd(items: { name: string; path: string }[], locale: Locale, origin: string): object {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -71,7 +73,7 @@ export function breadcrumbLd(items: { name: string; path: string }[], locale: Lo
       "@type": "ListItem",
       position: i + 1,
       name: item.name,
-      item: `${siteUrl}/${locale}${item.path}`,
+      item: `${origin}/${locale}${item.path}`,
     })),
   };
 }

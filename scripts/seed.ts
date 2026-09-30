@@ -5,6 +5,8 @@
  *
  * Idempotent: documents are matched by a stable key (slug, activity, question,
  * email) and updated in place, so re-running never duplicates anything.
+ * Sites are the exception: created only when missing (their identity, contacts
+ * and brand are managed in the admin), and a missing logo is filled in.
  *
  * Content source: the typed modules in scripts/seed-data/ and the UI message
  * catalogs in messages/*.json. After seeding, the CMS is the source of truth:
@@ -24,7 +26,7 @@ import { faqItems } from "./seed-data/faq";
 import { footerNav, legalNav, mainNav } from "./seed-data/navigation";
 import { projects } from "./seed-data/projects";
 import { services } from "./seed-data/services";
-import { siteSettings } from "./seed-data/site";
+import { sites } from "./seed-data/site";
 import { defaultLocale, locales, rtlLocales, type Locale } from "../src/i18n/config";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -269,7 +271,7 @@ function aboutLayout(l: Locale) {
     {
       blockType: "hero",
       style: "compact",
-      badge: siteSettings.certification,
+      badge: sites[0]!.certification,
       title: msg(l, "about.title"),
       subtitle: msg(l, "about.subtitle"),
     },
@@ -308,29 +310,68 @@ async function seedPages(payload: Payload) {
   payload.logger.info(`Pages: ${pages.map((p) => p.slug).join(", ")}`);
 }
 
-async function seedGlobals(payload: Payload) {
-  const s = siteSettings;
-  await upsertGlobal(payload, "site-settings", (l) => ({
-    companyName: s.companyName,
-    legalName: s.legalName,
-    matriculeFiscal: s.matriculeFiscal,
-    certification: s.certification,
-    email: s.email,
-    phone: s.phone,
-    whatsapp: s.whatsapp,
-    telegram: s.telegram,
-    address: s.address[l],
-    city: s.city[l],
-    hours: msg(l, "contact.hoursValue"),
-    coords: { lat: s.coords.lat, lng: s.coords.lng },
-    socials: {
-      facebook: s.socials.facebook || null,
-      instagram: s.socials.instagram || null,
-      linkedin: s.socials.linkedin || null,
-    },
-    stats: s.stats.map((stat) => ({ value: stat.value, label: stat.label[l] })),
-  }));
+async function seedSites(payload: Payload) {
+  for (const s of sites) {
+    const build = (l: Locale) => ({
+      key: s.key,
+      isDefault: s.isDefault,
+      companyName: s.companyName,
+      legalName: s.legalName,
+      matriculeFiscal: s.matriculeFiscal,
+      certification: s.certification || null,
+      tagline: s.tagline[l],
+      monogram: s.monogram,
+      theme: s.theme,
+      email: s.email,
+      phone: s.phone,
+      whatsapp: s.whatsapp || null,
+      telegram: s.telegram || null,
+      address: s.address[l],
+      city: s.city[l],
+      hours: msg(l, "contact.hoursValue"),
+      coords: s.coords,
+      socials: {
+        facebook: s.socials.facebook || null,
+        instagram: s.socials.instagram || null,
+        linkedin: s.socials.linkedin || null,
+      },
+      stats: s.stats.map((stat) => ({ value: stat.value, label: stat.label[l] })),
+    });
 
+    const found = await payload.find({ collection: "sites", where: { key: { equals: s.key } }, limit: 1, depth: 0 });
+    let site = found.docs[0];
+    if (!site) {
+      await upsert(payload, "sites", { key: { equals: s.key } }, build);
+      site = (await payload.find({ collection: "sites", where: { key: { equals: s.key } }, limit: 1, depth: 0 })).docs[0]!;
+      payload.logger.info(`Site ${s.key} created.`);
+    }
+
+    if (s.logoFile && !site.logo) {
+      const logo = await uploadImage(payload, s.logoFile, () => `${s.companyName} — logo`);
+      await payload.update({ collection: "sites", id: site.id, data: { logo }, depth: 0, context });
+      payload.logger.info(`Site ${s.key}: logo uploaded.`);
+    }
+  }
+  payload.logger.info(`Sites: ${sites.map((s) => s.key).join(", ")}`);
+}
+
+/** Uploads an image from the repo into Media (alt text in every locale). */
+async function uploadImage(payload: Payload, file: string, alt: (l: Locale) => string): Promise<number> {
+  const media = await payload.create({
+    collection: "media",
+    data: { alt: alt(defaultLocale) },
+    filePath: path.resolve(dirname, "..", file),
+    locale: defaultLocale,
+    depth: 0,
+    context,
+  });
+  for (const locale of otherLocales) {
+    await payload.update({ collection: "media", id: media.id, data: { alt: alt(locale) }, locale, depth: 0, context });
+  }
+  return media.id;
+}
+
+async function seedGlobals(payload: Payload) {
   await upsertGlobal(payload, "navigation", (l) => ({
     items: mainNav.map((item) => ({
       label: msg(l, `nav.${item.labelKey}`),
@@ -346,7 +387,7 @@ async function seedGlobals(payload: Payload) {
     quickLinks: toLinks(l, footerNav),
     legalLinks: toLinks(l, legalNav),
   }));
-  payload.logger.info("Globals: site-settings, navigation, footer");
+  payload.logger.info("Globals: navigation, footer");
 }
 
 // ---------------------------------------------------------------------------
@@ -360,6 +401,7 @@ async function main() {
   await seedProjects(payload, serviceIds);
   await seedFaq(payload);
   await seedPages(payload);
+  await seedSites(payload);
   await seedGlobals(payload);
 
   payload.logger.info("Seed complete.");

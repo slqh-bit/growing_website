@@ -75,6 +75,7 @@ export interface Config {
     'devis-requests': DevisRequest;
     'quote-documents': QuoteDocument;
     media: Media;
+    sites: Site;
     users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -91,6 +92,7 @@ export interface Config {
     'devis-requests': DevisRequestsSelect<false> | DevisRequestsSelect<true>;
     'quote-documents': QuoteDocumentsSelect<false> | QuoteDocumentsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    sites: SitesSelect<false> | SitesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -102,12 +104,10 @@ export interface Config {
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('fr' | 'ar' | 'en') | ('fr' | 'ar' | 'en')[];
   globals: {
-    'site-settings': SiteSetting;
     navigation: Navigation;
     footer: Footer;
   };
   globalsSelect: {
-    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     navigation: NavigationSelect<false> | NavigationSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
   };
@@ -658,12 +658,110 @@ export interface QuoteDocument {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sites".
+ */
+export interface Site {
+  id: number;
+  /**
+   * Technical id of the site (don't change it once live).
+   */
+  key: 'growing' | 'hikview' | 'group';
+  /**
+   * Shown for an unknown domain (and locally on localhost).
+   */
+  isDefault?: boolean | null;
+  /**
+   * E.g. https://growing-technologies.tn — used for canonical links, sharing and SEO. Empty = NEXT_PUBLIC_SITE_URL.
+   */
+  url?: string | null;
+  /**
+   * Domains that show this site (www. is matched automatically). Locally: <site>.localhost:3000.
+   */
+  domains?:
+    | {
+        domain: string;
+        id?: string | null;
+      }[]
+    | null;
+  companyName: string;
+  legalName: string;
+  /**
+   * Format : 1234567/A/B/M/000
+   */
+  matriculeFiscal: string;
+  certification?: string | null;
+  /**
+   * One sentence: browser tab title, search engines, home visual.
+   */
+  tagline: string;
+  /**
+   * PNG/WebP, transparent background. Empty = badge with the initials below.
+   */
+  logo?: (number | null) | Media;
+  /**
+   * Optional.
+   */
+  logoDark?: (number | null) | Media;
+  /**
+   * Checked: the company name isn't written next to the logo.
+   */
+  logoIncludesName?: boolean | null;
+  /**
+   * E.g. GT — used when no logo is uploaded.
+   */
+  monogram?: string | null;
+  /**
+   * Square PNG, 512×512 recommended.
+   */
+  favicon?: (number | null) | Media;
+  /**
+   * Hex code (#1f6fd1). Hue and intensity are used; lightness is adjusted automatically to keep text readable. Empty = default palette (solar green / gold).
+   */
+  theme?: {
+    primary?: string | null;
+    accent?: string | null;
+  };
+  email: string;
+  phone: string;
+  whatsapp?: string | null;
+  /**
+   * @username
+   */
+  telegram?: string | null;
+  address: string;
+  city: string;
+  hours?: string | null;
+  coords: {
+    lat: number;
+    lng: number;
+  };
+  socials?: {
+    facebook?: string | null;
+    instagram?: string | null;
+    linkedin?: string | null;
+  };
+  stats?:
+    | {
+        value: string;
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
   name?: string | null;
   role: 'admin' | 'editor';
+  /**
+   * Sites whose content and requests this editor manages. Empty = all sites. No effect for an administrator.
+   */
+  sites?: (number | Site)[] | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -739,6 +837,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'sites';
+        value: number | Site;
       } | null)
     | ({
         relationTo: 'users';
@@ -1172,11 +1274,72 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sites_select".
+ */
+export interface SitesSelect<T extends boolean = true> {
+  key?: T;
+  isDefault?: T;
+  url?: T;
+  domains?:
+    | T
+    | {
+        domain?: T;
+        id?: T;
+      };
+  companyName?: T;
+  legalName?: T;
+  matriculeFiscal?: T;
+  certification?: T;
+  tagline?: T;
+  logo?: T;
+  logoDark?: T;
+  logoIncludesName?: T;
+  monogram?: T;
+  favicon?: T;
+  theme?:
+    | T
+    | {
+        primary?: T;
+        accent?: T;
+      };
+  email?: T;
+  phone?: T;
+  whatsapp?: T;
+  telegram?: T;
+  address?: T;
+  city?: T;
+  hours?: T;
+  coords?:
+    | T
+    | {
+        lat?: T;
+        lng?: T;
+      };
+  socials?:
+    | T
+    | {
+        facebook?: T;
+        instagram?: T;
+        linkedin?: T;
+      };
+  stats?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
+  sites?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1237,48 +1400,6 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings".
- */
-export interface SiteSetting {
-  id: number;
-  companyName: string;
-  legalName: string;
-  /**
-   * Format : 1234567/A/B/M/000
-   */
-  matriculeFiscal: string;
-  certification?: string | null;
-  email: string;
-  phone: string;
-  whatsapp?: string | null;
-  /**
-   * @username
-   */
-  telegram?: string | null;
-  address: string;
-  city: string;
-  hours?: string | null;
-  coords: {
-    lat: number;
-    lng: number;
-  };
-  socials?: {
-    facebook?: string | null;
-    instagram?: string | null;
-    linkedin?: string | null;
-  };
-  stats?:
-    | {
-        value: string;
-        label: string;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "navigation".
  */
 export interface Navigation {
@@ -1326,46 +1447,6 @@ export interface Footer {
     | null;
   updatedAt?: string | null;
   createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings_select".
- */
-export interface SiteSettingsSelect<T extends boolean = true> {
-  companyName?: T;
-  legalName?: T;
-  matriculeFiscal?: T;
-  certification?: T;
-  email?: T;
-  phone?: T;
-  whatsapp?: T;
-  telegram?: T;
-  address?: T;
-  city?: T;
-  hours?: T;
-  coords?:
-    | T
-    | {
-        lat?: T;
-        lng?: T;
-      };
-  socials?:
-    | T
-    | {
-        facebook?: T;
-        instagram?: T;
-        linkedin?: T;
-      };
-  stats?:
-    | T
-    | {
-        value?: T;
-        label?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

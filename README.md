@@ -1,8 +1,12 @@
-# Growing Technologies — Website
+# Growing Technologies & Hikview Engineering — Websites
 
-Trilingual (Arabic / French / English, RTL-aware) marketing website for
-**Growing Technologies**, an ANME-certified solar installer based in Sbeitla,
-Tunisia. Built per [`growing-technologies-website-devplan.md`](./growing-technologies-website-devplan.md).
+Trilingual (Arabic / French / English, RTL-aware) marketing websites for the
+group: **Growing Technologies** (ANME-certified solar installer) and **Hikview
+Engineering** (electronic security, networks, technology solutions), both based
+in Sbeitla, Tunisia. One Next.js + Payload app serves every site, each on its
+own domain (see [Multi-site](#multi-site)). Built per
+[`growing-technologies-website-devplan.md`](./growing-technologies-website-devplan.md)
+and the group platform plan (multi-site, phases 1–9).
 
 ## Stack
 
@@ -52,10 +56,11 @@ back to French.
 | Demandes de devis  | Leads, with status workflow nouveau → contacté → devis envoyé → gagné/perdu |
 | Media              | Images (jpeg/png/webp/avif) with localized alt text          |
 | Users              | `admin` (everything) / `editor` (content only, can't delete) |
-| Globals            | Site settings (contacts, matricule fiscal, map, stats), Navigation, Footer |
+| Sites              | One per website: domains, company identity, contacts, map, key figures, logo, colours |
+| Globals            | Navigation, Footer                                            |
 
 **Roles.** Editors create and edit content and leads; only admins delete
-documents, manage users, and edit site settings, navigation and footer.
+documents, manage users, and edit sites, navigation and footer.
 Anonymous visitors can read published content but never leads or users.
 
 **Everything on the public site comes from the CMS** (UI chrome such as button
@@ -66,10 +71,41 @@ labels and form text stays in `messages/*.json`):
 | Pages → `home`, `about`      | Home / About sections (hero, stats, features, projects, CTA…) |
 | Pages → any other slug       | A new page at `/{locale}/{slug}`, no code needed               |
 | Services / Projects / FAQ / Team | Their listing and detail pages, footer activities, related projects |
-| Site settings                | Company name, contacts, address, map, hours, key figures, matricule |
+| Sites                        | Per site: company name, tagline, contacts, address, map, hours, key figures, matricule, logo, favicon, colours, domains |
 | Navigation / Footer          | Header menu, footer links and tagline                         |
 
 The `home` page cannot be deleted (it is the site root).
+
+## Multi-site
+
+Every public URL is served for the site that owns the requested domain:
+
+- `src/middleware.ts` rewrites `/{locale}/…` to `/{hostname}/{locale}/…`
+  internally (`app/(frontend)/[domain]/[locale]`), so each domain gets its own
+  statically cached pages; browser URLs don't change.
+- Pages resolve the hostname to a site (`src/lib/site.ts`) from **Sites →
+  Noms de domaine** in the admin (`www.` is matched too). Unknown domains — and
+  plain `localhost` — show the site marked **Site par défaut**.
+- The site's **colours** (Sites → Marque) set the hue/intensity of the CSS
+  palettes (`src/lib/theme.ts`, `src/styles/globals.css`); lightness steps are
+  fixed, so contrast holds for any colour. Logo, dark-mode logo, favicon and
+  initials badge come from the same tab. Saving a site updates the live pages.
+
+**Local development** — `*.localhost` resolves to your machine in Chrome,
+Firefox and Edge, so no hosts-file edit is needed:
+
+| URL | Site |
+| --- | --- |
+| `http://localhost:3000` | the default site (Growing) |
+| `http://growing.localhost:3000`, `http://hikview.localhost:3000` | that site |
+| `http://localhost:3000/fr?site=hikview` | preview a site on plain localhost (dev only, remembered in a cookie; `?site=` clears it) |
+
+Log in to the admin on the origin set in `NEXT_PUBLIC_SITE_URL` / `SERVER_URL`
+(e.g. `http://localhost:3000/admin`), not on a `*.localhost` host.
+
+Content (services, projects, pages, navigation) is still shared by all sites
+until it gets a per-site owner (plan Phase 2). Quote requests belong to the
+default site until the devis learns about sites (Phase 5a).
 
 ### Rendering & caching
 
@@ -213,15 +249,22 @@ Production runs with Docker Compose on a single VPS — see
       mobile Lighthouse ≥ 90, Plausible, Docker/Caddy/backup deployment kit,
       unit + e2e tests and CI.
 
+Group platform (multi-site):
+
+- [x] **Phase 1** — Multi-site foundation: `Sites` collection (replaces the
+      Site settings global, data migrated), hostname → site routing, per-site
+      theme, logo, favicon, tagline and metadata origin, `Users.sites`.
+
 ## Structure
 
 ```
 src/
 ├─ app/
-│  ├─ (frontend)/[locale]/  Localized public routes
+│  ├─ (frontend)/[domain]/[locale]/  Public routes, per site (hostname) and locale
 │  └─ (payload)/            Payload admin + REST/GraphQL API (generated)
 ├─ collections/             Payload collections
-├─ globals/                 Payload globals (SiteSettings, Navigation, Footer)
+├─ globals/                 Payload globals (Navigation, Footer)
+├─ sites/                   Site keys + hostname → site matching (shared with the middleware)
 ├─ blocks/                  Page-builder block configs + renderers
 ├─ cms/                     Access control, fields, options, labels, revalidation hooks
 ├─ migrations/              Database migrations (generated)
@@ -230,7 +273,7 @@ src/
 ├─ lib/cms/                 Cached CMS queries, media helpers, page helpers
 ├─ components/              UI primitives, layout, sections, motion, cms (RichText, images)
 ├─ i18n/                    Locale config (shared with the CMS), routing
-└─ middleware.ts            Locale detection (skips /admin and /api)
+└─ middleware.ts            Locale detection + site rewrite (skips /admin and /api)
 messages/                   UI-chrome catalogs: ar.json, fr.json, en.json
 scripts/seed.ts             Idempotent CMS seed (content in scripts/seed-data/)
 tests/                      unit/ (node:test) and e2e/ (Playwright)

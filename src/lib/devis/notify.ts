@@ -1,6 +1,7 @@
 import "server-only";
 import type { Payload } from "payload";
-import type { DevisRequest, SiteSetting } from "@/payload-types";
+import type { DevisRequest, Site } from "@/payload-types";
+import { findSite } from "../../cms/sites";
 import { activityLabel, contactSummary, technicalSummary, type SummaryRow } from "./fields";
 import { contactChannelOptions, labelOf } from "./options";
 import { buttonHtml, escapeHtml, layout, siteUrl, trackingUrl } from "./email";
@@ -11,7 +12,8 @@ import { buttonHtml, escapeHtml, layout, siteUrl, trackingUrl } from "./email";
  * got their confirmation; each channel fails independently and is logged.
  */
 export async function notifyNewLead(payload: Payload, lead: DevisRequest): Promise<void> {
-  const settings = await payload.findGlobal({ slug: "site-settings", locale: "fr", depth: 0 });
+  // Leads belong to the default site until the devis gets a site (plan Phase 5a).
+  const settings = await findSite(payload, "fr");
   const channels: [string, () => Promise<unknown>][] = [
     ["team email", () => sendTeamEmail(payload, lead, settings)],
     ["client auto-reply", () => (lead.email ? sendClientEmail(payload, lead, settings) : Promise.resolve())],
@@ -55,7 +57,7 @@ function textRows(rows: SummaryRow[]): string {
 
 // --- Team email --------------------------------------------------------------------
 
-async function sendTeamEmail(payload: Payload, lead: DevisRequest, settings: SiteSetting) {
+async function sendTeamEmail(payload: Payload, lead: DevisRequest, settings: Site) {
   const to = process.env.DEVIS_NOTIFY_EMAIL || settings.email;
   const s = frenchSummary(lead);
   const ref = lead.reference ?? String(lead.id);
@@ -93,7 +95,7 @@ Admin : ${adminUrl(lead)}`;
 
 // --- Client auto-reply (French, devplan §6.3) --------------------------------------
 
-async function sendClientEmail(payload: Payload, lead: DevisRequest, settings: SiteSetting) {
+async function sendClientEmail(payload: Payload, lead: DevisRequest, settings: Site) {
   const ref = lead.reference ?? String(lead.id);
   const activity = activityLabel(lead.activity, "fr");
   const channel = channelLabel(lead);

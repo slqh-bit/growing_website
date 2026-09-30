@@ -1,7 +1,8 @@
 import { ArrowRight, Phone } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { getSiteSettings } from "@/lib/cms/queries";
+import type { SiteKey } from "@/sites/config";
+import { getSite } from "@/lib/cms/queries";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/motion/reveal";
@@ -11,15 +12,17 @@ import { telHref } from "@/lib/contact-links";
 /**
  * Closing call-to-action band. The CTA block passes its own copy; inner pages
  * use the default quote-request copy from the UI message catalog. The phone
- * number always comes from Site settings.
+ * number always comes from the site (Paramètres → Sites).
  */
 export async function CtaBand({
   locale,
+  site,
   title,
   subtitle,
   button,
 }: {
   locale: Locale;
+  site: SiteKey;
   title?: string | null;
   subtitle?: string | null;
   button?: CtaLink;
@@ -27,7 +30,7 @@ export async function CtaBand({
   const [t, tc, settings] = await Promise.all([
     getTranslations({ locale, namespace: "home" }),
     getTranslations({ locale, namespace: "common" }),
-    getSiteSettings(locale),
+    getSite(site, locale),
   ]);
 
   const label = button?.label || tc("requestQuote");

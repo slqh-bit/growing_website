@@ -4,7 +4,7 @@ import * as React from "react";
 import { useTranslations } from "next-intl";
 import { Menu, X, ArrowRight, ListChecks } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
-import { Logo } from "@/components/brand/logo";
+import { Logo, type Brand } from "@/components/brand/logo";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ export interface HeaderNavItem {
 }
 
 /** Sticky header. Menu items come from the CMS Navigation global. */
-export function SiteHeader({ items, companyName }: { items: HeaderNavItem[]; companyName: string }) {
+export function SiteHeader({ items, brand }: { items: HeaderNavItem[]; brand: Brand }) {
   const t = useTranslations("nav");
   const tc = useTranslations("common");
   const pathname = usePathname();
@@ -49,7 +49,7 @@ export function SiteHeader({ items, companyName }: { items: HeaderNavItem[]; com
     >
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="shrink-0">
-          <Logo name={companyName} />
+          <Logo brand={brand} />
         </Link>
 
         {/* Desktop nav */}

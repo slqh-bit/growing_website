@@ -71,6 +71,36 @@ test.describe("content pages", () => {
   });
 });
 
+test.describe("Multi-site (one site per domain)", () => {
+  // Chromium resolves *.localhost to the loopback address, like the dev setup.
+  const onHost = (baseURL: string | undefined, host: string, path: string) => {
+    const url = new URL(path, baseURL);
+    url.hostname = host;
+    return url.toString();
+  };
+
+  test("the default site answers on localhost", async ({ page }) => {
+    await page.goto("/fr");
+    await expect(page.locator("html")).toHaveAttribute("data-site", "growing");
+    await expect(page).toHaveTitle(/Growing Technologies/);
+  });
+
+  test("hikview.localhost shows the Hikview site with its own brand colours", async ({ page, baseURL }) => {
+    await page.goto(onHost(baseURL, "hikview.localhost", "/fr/contact"));
+    const html = page.locator("html");
+    await expect(html).toHaveAttribute("data-site", "hikview");
+    await expect(html).toHaveAttribute("style", /--primary-h:\s*256/);
+    await expect(page).toHaveTitle(/Hikview Engineering/);
+    await expect(page.locator("header")).toContainText(/Hikview/i);
+  });
+
+  test("an unknown domain falls back to the default site", async ({ request }) => {
+    const response = await request.get("/fr", { headers: { host: "unknown.example.com" } });
+    expect(response.ok()).toBeTruthy();
+    expect(await response.text()).toContain('data-site="growing"');
+  });
+});
+
 test.describe("SEO and platform endpoints", () => {
   test("home page carries LocalBusiness JSON-LD", async ({ page }) => {
     await page.goto("/fr");
