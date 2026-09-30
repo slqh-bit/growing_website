@@ -33,7 +33,8 @@ type CmsSlug =
   | "sites"
   | "redirects"
   | "group"
-  | "devis-forms";
+  | "devis-forms"
+  | "company-documents";
 
 function cached<A extends unknown[], R>(
   name: string,
@@ -342,3 +343,53 @@ export const getRedirectRules = cached("redirects", ["redirects", "sites"], asyn
       .filter((key): key is SiteKey => key !== null && isSiteKey(key)),
   }));
 });
+
+// --- Company documents (Phase 6) ------------------------------------------------
+
+/** A company document as the public page shows it: "on request" ones carry no file URL. */
+export interface PublicDocument {
+  id: number;
+  title: string;
+  type: string;
+  description: string | null;
+  validUntil: string | null;
+  visibility: "public" | "on-request";
+  url: string | null;
+  filesize: number | null;
+  mimeType: string | null;
+}
+
+/**
+ * The site's public and "on request" documents. The Local API runs with
+ * overrideAccess here (visitors may not read "on request" documents through
+ * the API); only metadata leaves this function, and a file URL only for
+ * public documents. Expired ones are filtered by the page at render time.
+ */
+export const getCompanyDocuments = cached(
+  "company-documents",
+  ["company-documents", "sites"],
+  async (site: SiteKey, locale: Locale): Promise<PublicDocument[]> => {
+    const { docs } = await (await payload()).find({
+      collection: "company-documents",
+      where: and(ofSite(site), { visibility: { in: ["public", "on-request"] } }),
+      locale,
+      depth: 0,
+      sort: "title",
+      limit: 200,
+      pagination: false,
+      overrideAccess: true,
+    });
+    return docs.map((d) => ({
+      id: d.id,
+      title: d.title,
+      type: d.type,
+      description: d.description ?? null,
+      validUntil: d.validUntil ?? null,
+      visibility: d.visibility === "public" ? "public" : "on-request",
+      // Relative, so each site serves its own documents (Payload's `url` uses SERVER_URL).
+      url: d.visibility === "public" && d.filename ? `/api/company-documents/file/${encodeURIComponent(d.filename)}` : null,
+      filesize: d.filesize ?? null,
+      mimeType: d.mimeType ?? null,
+    }));
+  },
+);

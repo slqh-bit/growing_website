@@ -29,7 +29,8 @@
     "closeMenu": "Fermer le menu",
     "switchLanguage": "Changer de langue",
     "toggleTheme": "Basculer le thème clair/sombre",
-    "group": "Le groupe"
+    "group": "Le groupe",
+    "documents": "Documents administratifs"
   },
   "home": {
     "heroBadge": "Installateur solaire certifié ANME",
@@ -66,7 +67,10 @@
     "partnersTitle": "Marques & partenaires",
     "subServicesTitle": "Nos solutions",
     "publicReferences": "Références institutionnelles",
-    "sameArea": "Dans le même domaine : {area}"
+    "sameArea": "Dans le même domaine : {area}",
+    "documentsTitle": "Dossier administratif",
+    "documentsBody": "Attestations fiscale et CNSS, RNE, certificats : nos documents à jour pour vos appels d'offres.",
+    "documentsCta": "Voir les documents"
   },
   "projects": {
     "title": "Nos réalisations",
@@ -288,5 +292,24 @@
     "visit": "Visiter le site",
     "sisterCompany": "Chez notre société sœur {company}",
     "sisterSubtitle": "Des solutions complémentaires, avec le même suivi de proximité."
+  },
+  "documents": {
+    "title": "Documents administratifs",
+    "subtitle": "Pour vos appels d'offres et consultations : nos attestations et certificats à jour, à télécharger.",
+    "identity": "Identité de l'entreprise",
+    "legalName": "Raison sociale",
+    "taxId": "Matricule fiscal",
+    "rne": "Identifiant unique (RNE)",
+    "address": "Siège",
+    "certification": "Certification",
+    "validUntil": "Valide jusqu'au {date}",
+    "noExpiry": "Sans date d'expiration",
+    "download": "Télécharger",
+    "downloadLabel": "Télécharger {title}",
+    "onRequest": "Sur demande",
+    "requestCta": "Demander ce document",
+    "empty": "Nos documents administratifs seront bientôt disponibles ici. Contactez-nous pour les recevoir.",
+    "contactCta": "Nous contacter",
+    "note": "Les documents expirés sont retirés automatiquement. Besoin d'une pièce qui n'est pas listée ? Écrivez-nous."
   }
 }

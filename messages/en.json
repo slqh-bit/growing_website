@@ -29,7 +29,8 @@
     "closeMenu": "Close menu",
     "switchLanguage": "Switch language",
     "toggleTheme": "Toggle light/dark theme",
-    "group": "Our group"
+    "group": "Our group",
+    "documents": "Company documents"
   },
   "home": {
     "heroBadge": "ANME-certified solar installer",
@@ -66,7 +67,10 @@
     "partnersTitle": "Brands & partners",
     "subServicesTitle": "Our solutions",
     "publicReferences": "Public-sector references",
-    "sameArea": "Also in {area}"
+    "sameArea": "Also in {area}",
+    "documentsTitle": "Company documents",
+    "documentsBody": "Tax and social-security certificates, business register, certifications: our up-to-date documents for your tenders.",
+    "documentsCta": "See the documents"
   },
   "projects": {
     "title": "Our projects",
@@ -288,5 +292,24 @@
     "visit": "Visit the website",
     "sisterCompany": "At our sister company {company}",
     "sisterSubtitle": "Complementary solutions, with the same local support."
+  },
+  "documents": {
+    "title": "Company documents",
+    "subtitle": "For your tenders and requests for quotations: our up-to-date certificates, ready to download.",
+    "identity": "Company details",
+    "legalName": "Legal name",
+    "taxId": "Tax ID",
+    "rne": "Company ID (RNE)",
+    "address": "Registered office",
+    "certification": "Certification",
+    "validUntil": "Valid until {date}",
+    "noExpiry": "No expiry date",
+    "download": "Download",
+    "downloadLabel": "Download {title}",
+    "onRequest": "On request",
+    "requestCta": "Request this document",
+    "empty": "Our company documents will soon be available here. Contact us to receive them.",
+    "contactCta": "Contact us",
+    "note": "Expired documents are removed automatically. Need a document that isn't listed? Write to us."
   }
 }

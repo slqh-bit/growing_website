@@ -17,3 +17,9 @@ export const MAX_QUOTE_BYTES = 10 * 1024 * 1024;
  * name is a single path segment, and staff are logged in anyway).
  */
 export const attachmentsDir = path.resolve(quotesDir, "attachments");
+
+/**
+ * Company documents (CompanyDocuments): private by default, so outside media/
+ * too; public ones are served through Payload's access check (/api/…/file/).
+ */
+export const companyDocumentsDir = path.resolve(quotesDir, "company-documents");

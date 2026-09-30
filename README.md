@@ -241,6 +241,32 @@ Phone numbers accept spaces, `+216`/`00216` and Arabic-Indic digits, and are
 stored as `+216XXXXXXXX`; numbers in answers accept Arabic-Indic digits and
 decimal commas.
 
+## Tender documents
+
+Each company keeps its tender documents in **Appels d'offres → Documents
+administratifs**: tax and CNSS certificates, RNE extract, certificates,
+completion certificates, datasheets. Each document has a type, an optional
+validity date and a visibility:
+
+- **Public**: listed on the site's `/{locale}/documents` page and downloadable;
+- **On request**: listed without its file, with a link to the contact page;
+- **Internal**: team only.
+
+An expired document is no longer listed or downloadable, whatever its
+visibility (checked by the collection's read access, to the day in Tunis
+time). The page also shows the company's legal identity (Sites → Entreprise,
+incl. the RNE number). Service pages with **Lien vers les documents
+administratifs** (B2G, PV plants) show a box linking to it, and every footer
+links to it.
+
+**Expiry alerts:** a Payload job (`src/jobs/document-expiry.ts`) runs daily at
+07:00 (`TZ`, Africa/Tunis in production) inside the app and emails the site's
+team (same recipients and Telegram group as quote requests) when a document
+is 30 days, then 7 days from expiring, and once expired — each level once;
+entering a new date starts over. The admin dashboard lists the documents to
+renew, and the list shows a validity badge. Files are private uploads stored
+in `quotes/company-documents/` (same volume and backup as quote PDFs).
+
 ## SEO, performance & analytics
 
 - **Metadata:** per-page title/description/Open Graph, canonical and `hreflang`
@@ -329,6 +355,10 @@ Group platform (multi-site):
       (private `DevisAttachments`, per-form label/mode, content checks, sent
       with the team email), site-visit request, date answers in local format,
       area pages linking to the quote form.
+- [x] **Phase 6** — Tender documents: `CompanyDocuments` (type, validity,
+      public / on request / internal), `/documents` page per company with its
+      legal identity, links from footers and the B2G / PV plant pages, daily
+      expiry alerts (Payload job, email + Telegram) and dashboard warning.
 
 ## Structure
 

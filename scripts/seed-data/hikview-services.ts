@@ -527,6 +527,7 @@ export const hikviewServices: HikviewService[] = [
     icon: "Landmark",
     order: 6,
     showPublicReferences: true,
+    showDocuments: true,
     title: L("Intégrateur de projets publics (B2G)", "Public-sector systems integrator (B2G)", "مُدمج المشاريع العمومية"),
     shortDescription: L(
       "Réponse aux marchés publics et intégration clés en main de projets multi-lots pour les institutions.",

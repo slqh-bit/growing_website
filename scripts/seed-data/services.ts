@@ -301,6 +301,7 @@ export const services: Service[] = [
     slug: "centrale-photovoltaique",
     icon: "Sun",
     order: 4,
+    showDocuments: true,
     title: {
       fr: "Centrales photovoltaïques (1 à 10 MW)",
       ar: "محطات الطاقة الشمسية الكهروضوئية (1 إلى 10 ميغاواط)",

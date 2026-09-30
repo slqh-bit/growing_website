@@ -244,3 +244,37 @@ test.describe("SEO and platform endpoints", () => {
     expect(headers["critical-ch"]).toBeUndefined();
   });
 });
+
+test.describe("Tender documents (Phase 6)", () => {
+  const onHikview = (baseURL: string | undefined, path: string) => {
+    const url = new URL(path, baseURL);
+    url.hostname = "hikview.localhost";
+    return url.toString();
+  };
+
+  test("each company has a documents page with its legal identity, linked from the footer", async ({ page, baseURL }) => {
+    await page.goto(onHikview(baseURL, "/fr/documents"));
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Documents administratifs");
+    await expect(page.locator("aside")).toContainText("1667878K");
+    await page.goto("/fr/documents");
+    await expect(page.locator("aside")).toContainText("Growing Technologies");
+    await expect(page.locator('footer a[href="/fr/documents"]')).toBeVisible();
+  });
+
+  test("the B2G page links to the documents", async ({ page, baseURL }) => {
+    await page.goto(onHikview(baseURL, "/fr/services/integration-b2g"));
+    await page.locator('main a[href="/fr/documents"]').click();
+    await expect(page).toHaveURL(/\/fr\/documents$/);
+  });
+
+  test("visitors only get public documents through the API", async ({ request }) => {
+    const response = await request.get("/api/company-documents?depth=0&limit=100");
+    expect(response.ok()).toBeTruthy();
+    const { docs } = (await response.json()) as { docs: { visibility: string; validUntil?: string | null }[] };
+    for (const doc of docs) {
+      expect(doc.visibility).toBe("public");
+      if (doc.validUntil) expect(new Date(doc.validUntil).getTime()).toBeGreaterThan(Date.now() - 2 * 86_400_000);
+    }
+  });
+});
+

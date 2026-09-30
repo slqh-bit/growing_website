@@ -44,6 +44,8 @@ export interface Service {
   process: ProcessStep[];
   sections?: ServiceSection[];
   order: number;
+  /** Shows the "Company documents" box (tender-oriented pages). */
+  showDocuments?: boolean;
 }
 
 export interface Project {

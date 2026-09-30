@@ -173,6 +173,18 @@ export const Sites: CollectionConfig = {
               ],
             },
             {
+              name: "rne",
+              type: "text",
+              label: t3("Identifiant unique (RNE)", "Company ID (RNE)", "المعرّف الوحيد (السجل الوطني للمؤسسات)"),
+              admin: {
+                description: t3(
+                  "Affiché sur la page Documents administratifs.",
+                  "Shown on the company documents page.",
+                  "يظهر في صفحة الوثائق الإدارية.",
+                ),
+              },
+            },
+            {
               name: "servicesIntro",
               type: "text",
               localized: true,

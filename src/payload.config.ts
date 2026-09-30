@@ -9,6 +9,7 @@ import { en } from "@payloadcms/translations/languages/en";
 import { fr } from "@payloadcms/translations/languages/fr";
 import sharp from "sharp";
 
+import { CompanyDocuments } from "./collections/CompanyDocuments";
 import { DevisAttachments } from "./collections/DevisAttachments";
 import { DevisForms } from "./collections/DevisForms";
 import { DevisRequests } from "./collections/DevisRequests";
@@ -23,6 +24,7 @@ import { Services } from "./collections/Services";
 import { Sites } from "./collections/Sites";
 import { Team } from "./collections/Team";
 import { Users } from "./collections/Users";
+import { documentExpiryTask } from "./jobs/document-expiry";
 import { Group } from "./globals/Group";
 import { defaultLocale, localeNames, locales, rtlLocales } from "./i18n/config";
 import { migrations } from "./migrations";
@@ -75,6 +77,10 @@ export default buildConfig({
     dateFormat: "dd/MM/yyyy",
     // Built-in avatar instead of Gravatar: no admin email hash sent to a third party.
     avatar: "default",
+    components: {
+      // Company documents that are expired or about to expire.
+      beforeDashboard: ["/components/admin/document-expiry#DocumentExpiry"],
+    },
   },
   collections: [
     Pages,
@@ -87,12 +93,19 @@ export default buildConfig({
     DevisForms,
     QuoteDocuments,
     DevisAttachments,
+    CompanyDocuments,
     Media,
     Sites,
     Redirects,
     Users,
   ],
   globals: [Group],
+  // Background tasks. The scheduler queues each task at its `schedule` time and
+  // this autoRun (checked every 10 minutes, in the Next.js server process) runs it.
+  jobs: {
+    tasks: [documentExpiryTask],
+    autoRun: [{ cron: "0 */10 * * * *", queue: "daily" }],
+  },
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {

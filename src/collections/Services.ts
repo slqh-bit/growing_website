@@ -115,6 +115,24 @@ export const Services: CollectionConfig = {
       },
     },
     {
+      name: "showDocuments",
+      type: "checkbox",
+      defaultValue: false,
+      label: t3(
+        "Lien vers les documents administratifs",
+        "Link to the company documents",
+        "رابط إلى الوثائق الإدارية",
+      ),
+      admin: {
+        position: "sidebar",
+        description: t3(
+          "Ajoute un encart « Dossier administratif » menant à la page /documents (ex. pages B2G et centrales PV).",
+          "Adds a “Company documents” box linking to the /documents page (e.g. B2G and PV plant pages).",
+          "يضيف إطار « الملف الإداري » يؤدي إلى صفحة ‎/documents.",
+        ),
+      },
+    },
+    {
       type: "row",
       fields: [
         {

@@ -9,6 +9,7 @@ import { answersSummary, pick, type Answers, type FormSnapshot } from "./form-de
 import { contactChannelOptions, labelOf } from "./options";
 import { buttonHtml, emailBrand, escapeHtml, fromOf, layout, siteUrl, trackingUrl, type EmailBrand } from "./email";
 import { attachmentsDir } from "./quote-files";
+import { sendTelegram as postToTeamChat, teamEmails } from "../team-notify";
 
 /**
  * New-lead notifications (plan §6.4): team email (French summary) to the
@@ -30,21 +31,6 @@ export async function notifyNewLead(payload: Payload, lead: DevisRequest): Promi
       payload.logger.error({ err: result.reason, msg: `Devis ${lead.reference}: ${channels[i]![0]} failed` });
     }
   });
-}
-
-// --- Routing (Sites → Demandes de devis) -------------------------------------------
-
-/** The site's team addresses; the default site also falls back to DEVIS_NOTIFY_EMAIL; else the site's email. */
-function teamEmails(site: Site): string[] {
-  const listed = (site.notify?.emails ?? []).map((e) => e.email).filter(Boolean);
-  if (listed.length > 0) return listed;
-  if (site.isDefault && process.env.DEVIS_NOTIFY_EMAIL) return [process.env.DEVIS_NOTIFY_EMAIL];
-  return [site.email];
-}
-
-/** The site's Telegram group; the default site also falls back to TELEGRAM_CHAT_ID. */
-function telegramChat(site: Site): string | undefined {
-  return site.notify?.telegramChatId || (site.isDefault ? process.env.TELEGRAM_CHAT_ID : undefined) || undefined;
 }
 
 // --- Helpers ---------------------------------------------------------------------
@@ -212,10 +198,6 @@ ${site.legalName} — ${site.address}`;
 // --- Telegram (optional) ------------------------------------------------------------
 
 async function sendTelegram(lead: DevisRequest, site: Site, files: DevisAttachment[]) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = telegramChat(site);
-  if (!token || !chatId) return;
-
   const s = frenchSummary(lead);
   const line = (r: SummaryRow) => `• ${escapeHtml(r.label)} : <b>${escapeHtml(r.value)}</b>`;
   const text = [
@@ -229,14 +211,5 @@ async function sendTelegram(lead: DevisRequest, site: Site, files: DevisAttachme
     "",
     `<a href="${escapeHtml(adminUrl(lead))}">Ouvrir dans l'admin</a>`,
   ].join("\n");
-
-  // TELEGRAM_API_URL allows a self-hosted Bot API server (defaults to Telegram's).
-  const base = (process.env.TELEGRAM_API_URL || "https://api.telegram.org").replace(/\/$/, "");
-  const res = await fetch(`${base}/bot${token}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true }),
-    signal: AbortSignal.timeout(8_000),
-  });
-  if (!res.ok) throw new Error(`Telegram API responded ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  await postToTeamChat(site, text);
 }

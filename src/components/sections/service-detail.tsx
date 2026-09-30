@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Check, ArrowRight, ArrowLeft } from "lucide-react";
+import { Check, ArrowRight, ArrowLeft, FileText } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import type { Faq, Service, Site } from "@/payload-types";
@@ -198,6 +198,22 @@ export async function ServiceDetail({ site, locale, service }: { site: SiteKey; 
               <Button asChild variant="solar" className="mt-6 w-full">
                 <Link href={quoteHref}>{tc("requestQuote")}</Link>
               </Button>
+              {service.showDocuments && (
+                <div className="mt-6 border-t border-border pt-5">
+                  <p className="flex items-center gap-2 font-semibold text-foreground">
+                    <FileText className="size-4 text-brand" aria-hidden />
+                    {t("documentsTitle")}
+                  </p>
+                  <p className="mt-1.5 text-sm text-muted-foreground">{t("documentsBody")}</p>
+                  <Link
+                    href="/documents"
+                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-700 underline-offset-2 hover:underline dark:text-primary-300"
+                  >
+                    {t("documentsCta")}
+                    <ArrowRight className="size-4 rtl:rotate-180" aria-hidden />
+                  </Link>
+                </div>
+              )}
             </Reveal>
           </aside>
         </Container>

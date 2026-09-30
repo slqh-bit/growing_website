@@ -21,6 +21,7 @@ export function serviceData(
     site,
     parent: extra.parent ?? null,
     showPublicReferences: extra.showPublicReferences ?? false,
+    showDocuments: s.showDocuments ?? false,
     title: s.title[l],
     slug: s.slug,
     activityKey: s.activityKey ?? null,
