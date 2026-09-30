@@ -23,7 +23,10 @@ export interface DevisChoice {
 
 /** A form document (fetched with `locale: "all"`) as a definition. */
 export function toFormDef(form: DevisForm): FormDef {
-  return { questions: (form.questions ?? []) as unknown as QuestionDef[] };
+  return {
+    questions: (form.questions ?? []) as unknown as QuestionDef[],
+    attachments: (form.attachments ?? null) as FormDef["attachments"],
+  };
 }
 
 const idOf = (v: number | { id: number } | null | undefined) => (v && typeof v === "object" ? v.id : (v ?? null));

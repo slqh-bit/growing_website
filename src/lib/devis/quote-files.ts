@@ -10,3 +10,10 @@ export const quotesDir = path.resolve(process.cwd(), "quotes");
 
 /** Largest quote PDF accepted (also keeps the email attachment deliverable). */
 export const MAX_QUOTE_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Files clients attach to their requests (DevisAttachments): private too, in
+ * the same volume and backup. Quote-documents URLs can't reach them (a file
+ * name is a single path segment, and staff are logged in anyway).
+ */
+export const attachmentsDir = path.resolve(quotesDir, "attachments");

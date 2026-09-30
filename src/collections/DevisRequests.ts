@@ -1,6 +1,6 @@
 import { after } from "next/server";
-import type { Access, CollectionAfterChangeHook, CollectionConfig, Field } from "payload";
-import { admins, authenticated, managedSiteIds } from "../cms/access";
+import type { CollectionAfterChangeHook, CollectionConfig, Field } from "payload";
+import { admins, authenticated, ownSites } from "../cms/access";
 import { siteField } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { devisStatusOptions } from "../cms/options";
@@ -25,13 +25,6 @@ const onlyFor =
   (...activities: string[]) =>
   (data: Record<string, unknown>) =>
     !data?.formSnapshot && activities.includes(String(data?.activity));
-
-/** Staff see the requests of the sites they manage (Users → Sites gérés). */
-const ownSites: Access = ({ req: { user } }) => {
-  if (!user) return false;
-  const ids = managedSiteIds(user);
-  return ids ? { site: { in: ids } } : true;
-};
 
 /** Step 2 of the devis form — technical needs per activity (devplan §6). */
 const technicalFields: Field[] = [
@@ -361,6 +354,20 @@ export const DevisRequests: CollectionConfig = {
           label: t3("Formulaire (copie)", "Form (snapshot)", "الاستمارة (نسخة)"),
           admin: { hidden: true },
         },
+        {
+          name: "attachments",
+          type: "upload",
+          relationTo: "devis-attachments",
+          hasMany: true,
+          label: t3("Pièces jointes du client", "Client attachments", "مرفقات العميل"),
+          admin: {
+            description: t3(
+              "Plans, photos ou cahier des charges envoyés avec la demande.",
+              "Plans, photos or specifications sent with the request.",
+              "مخططات أو صور أو كرّاس شروط أُرسلت مع الطلب.",
+            ),
+          },
+        },
         ...technicalFields,
       ],
     },
@@ -407,6 +414,12 @@ export const DevisRequests: CollectionConfig = {
           ],
         },
         { name: "address", type: "textarea", maxLength: 500, label: t3("Adresse", "Address", "العنوان") },
+        {
+          name: "siteVisit",
+          type: "checkbox",
+          defaultValue: false,
+          label: t3("Visite technique sur site souhaitée", "On-site technical visit requested", "طلب زيارة تقنية للموقع"),
+        },
       ],
     },
 

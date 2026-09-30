@@ -35,6 +35,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    // Quote requests carry up to 20 MB of attachments (src/lib/devis/attachments.ts).
+    serverActions: { bodySizeLimit: "22mb" },
   },
   // Payload ships ESM that imports `.js` paths which resolve to TS sources.
   webpack: (webpackConfig) => {

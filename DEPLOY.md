@@ -15,7 +15,7 @@ Internet ──► caddy ──► app (Next.js + Payload, :3000) ──► db (
 | Service  | Image                         | Exposed         | Persistent data         |
 | -------- | ----------------------------- | --------------- | ----------------------- |
 | `caddy`  | `caddy:2-alpine`              | 80, 443 tcp/udp | `caddy_data` (certs)    |
-| `app`    | built from `Dockerfile`       | internal :3000  | `media` (public uploads), `quotes` (private quote PDFs) |
+| `app`    | built from `Dockerfile`       | internal :3000  | `media` (public uploads), `quotes` (private: quote PDFs, client attachments in `attachments/`) |
 | `db`     | `postgres:16-alpine`          | none            | `pgdata`                |
 | `backup` | `postgres:16-alpine`          | none            | `deploy/backups/` (host) |
 | `tools`  | `Dockerfile` builder stage    | on demand       | —                       |
@@ -97,8 +97,9 @@ to `deploy/backups/`:
 
 - `db-YYYYMMDD-HHMMSS.dump` — `pg_dump` custom format (verified after writing)
 - `media-YYYYMMDD-HHMMSS.tar.gz` — every uploaded image
-- `quotes-YYYYMMDD-HHMMSS.tar.gz` — the quote PDFs sent to clients (private:
-  treat these archives, like the database dumps, as confidential)
+- `quotes-YYYYMMDD-HHMMSS.tar.gz` — the quote PDFs sent to clients and the
+  files clients attached to their requests (private: treat these archives,
+  like the database dumps, as confidential)
 
 Files older than `BACKUP_RETENTION_DAYS` (default 14) are deleted.
 

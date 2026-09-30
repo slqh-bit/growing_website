@@ -57,7 +57,9 @@ export function FieldShell({
 }) {
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <div className="flex items-center gap-1.5">
+      {/* Positioned: the help tooltip is anchored to this row, so it stays within the
+          field's width instead of overflowing the page from a long label's end. */}
+      <div className="relative flex items-center gap-1.5">
         <label htmlFor={id} className="text-sm font-medium text-foreground">
           {label}
           {required && (

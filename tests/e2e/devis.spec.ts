@@ -118,3 +118,86 @@ test("a service's quote button preselects it in the form", async ({ page }) => {
   await next(page, "Continuer");
   await expect(page.locator("form")).toContainText("Régime du projet");
 });
+
+// --- Hikview (plan §6.3): its own forms, files and site visit, HE- references -------
+
+const onHikview = (baseURL: string | undefined, path: string) => {
+  const url = new URL(path, baseURL);
+  url.hostname = "hikview.localhost"; // Chromium resolves *.localhost to the loopback address
+  return url.toString();
+};
+
+/** A small but well-formed PDF (Payload checks the header, xref and %%EOF). */
+const pdf = Buffer.from(
+  "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\nxref\n0 2\n0000000000 65535 f \n0000000009 00000 n \ntrailer<</Size 2/Root 1 0 R>>\nstartxref\n45\n%%EOF\n",
+  "latin1",
+);
+
+test("Hikview: a public-sector request carries its tender specs and asks for a site visit", async ({ page, baseURL }) => {
+  test.slow();
+  await page.goto(onHikview(baseURL, "/fr/devis?service=integration-b2g"));
+  await next(page, "Continuer");
+
+  // Step 2: the B2G form, with its own attachments label.
+  const form = page.locator("form");
+  await expect(form).toContainText("Institution / organisme");
+  await expect(form).toContainText("Cahier des charges (CDC)");
+  await next(page, "Continuer");
+  await expect(fieldError(page, "answers-institution")).toHaveText("Ce champ est obligatoire.");
+  await page.fill("#devis-answers-institution", "Commune de Test E2E");
+  await page.fill("#devis-answers-description", "Vidéoprotection du centre-ville et contrôle d'accès de la mairie.");
+  await page.fill("#devis-answers-deadline", "2026-12-31");
+
+  // Files: refused at once when the type is wrong; a fake image only fails on the server.
+  const files = page.locator("#devis-attachments");
+  await files.setInputFiles({ name: "setup.exe", mimeType: "application/octet-stream", buffer: Buffer.from("MZ") });
+  await expect(fieldError(page, "attachments")).toContainText("Format non accepté");
+  await files.setInputFiles([
+    { name: "cdc.pdf", mimeType: "application/pdf", buffer: pdf },
+    { name: "photo.jpg", mimeType: "image/jpeg", buffer: Buffer.from("<html><script>alert(1)</script></html>") },
+  ]);
+  await expect(fieldError(page, "attachments")).toHaveCount(0);
+  await expect(form.getByRole("listitem")).toHaveCount(2);
+  await next(page, "Continuer");
+
+  // Step 3: contact + site visit.
+  await page.fill("#devis-fullName", "Test E2E Hikview");
+  await page.fill("#devis-phone", "22 333 444");
+  await page.selectOption("#devis-region", "kasserine");
+  await page.check("#devis-siteVisit");
+  await next(page, "Continuer");
+
+  // Step 4: the review lists the files and the visit.
+  await expect(form).toContainText("Cahier des charges (CDC)");
+  await expect(form).toContainText("cdc.pdf");
+  await expect(form).toContainText("Visite technique sur site");
+  await expect(form).toContainText("Souhaitée");
+  await page.check("#devis-consent");
+  await page.waitForTimeout(5_200);
+  await page.getByRole("button", { name: "Envoyer ma demande" }).click();
+
+  // The server reads the files: the fake image sends the client back to step 2.
+  await expect(page.getByRole("heading", { level: 2, name: "Besoins techniques" })).toBeVisible({ timeout: 15_000 });
+  await expect(fieldError(page, "attachments")).toContainText("Format non accepté");
+  await page.getByRole("button", { name: "Retirer photo.jpg" }).click();
+  await next(page, "Continuer");
+  await next(page, "Continuer");
+  await page.getByRole("button", { name: "Envoyer ma demande" }).click();
+
+  await expect(page.getByRole("heading", { name: "Demande envoyée !" })).toBeVisible({ timeout: 15_000 });
+  const reference = (await page.locator("span.font-mono").textContent())!.trim();
+  expect(reference).toMatch(/^HE-\d{6}-[0-9A-F]{4}$/);
+});
+
+test("Hikview: area pages open the quote form, sub-services preselect theirs", async ({ page, baseURL }) => {
+  await page.goto(onHikview(baseURL, "/fr/services/securite-electronique"));
+  await page.locator('main a[href="/fr/devis"]').first().click();
+  await expect(page.locator("form")).toContainText("Vidéosurveillance");
+  await expect(page.locator("form")).toContainText("Sécurité incendie");
+
+  await page.goto(onHikview(baseURL, "/fr/services/securite-electronique/securite-incendie"));
+  await page.locator('main a[href="/fr/devis?service=securite-incendie"]').first().click();
+  await next(page, "Continuer");
+  await expect(page.locator("form")).toContainText("Type d'établissement");
+});
+

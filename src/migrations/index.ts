@@ -9,6 +9,7 @@ import * as migration_20260930_082326_drop_navigation_footer from './20260930_08
 import * as migration_20260930_090146_service_tree_references from './20260930_090146_service_tree_references';
 import * as migration_20260930_095234_group_cross_sell from './20260930_095234_group_cross_sell';
 import * as migration_20260930_101604_devis_form_builder from './20260930_101604_devis_form_builder';
+import * as migration_20260930_132453_hikview_forms_attachments from './20260930_132453_hikview_forms_attachments';
 
 export const migrations = [
   {
@@ -64,6 +65,11 @@ export const migrations = [
   {
     up: migration_20260930_101604_devis_form_builder.up,
     down: migration_20260930_101604_devis_form_builder.down,
-    name: '20260930_101604_devis_form_builder'
+    name: '20260930_101604_devis_form_builder',
+  },
+  {
+    up: migration_20260930_132453_hikview_forms_attachments.up,
+    down: migration_20260930_132453_hikview_forms_attachments.down,
+    name: '20260930_132453_hikview_forms_attachments'
   },
 ];

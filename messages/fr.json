@@ -175,9 +175,13 @@
       "tooLarge": "Valeur trop élevée.",
       "tooLong": "Texte trop long.",
       "invalidOption": "Choix invalide.",
+      "tooSmall": "Valeur trop petite.",
+      "invalidDate": "Date invalide.",
+      "requireOne": "Renseignez au moins l'un de ces champs.",
+      "fileType": "Format non accepté : PDF, JPG, PNG, WebP, HEIC, Word (.docx), Excel (.xlsx) ou DWG.",
+      "fileTooLarge": "Fichier trop lourd : 10 Mo maximum par fichier, 20 Mo au total.",
+      "tooManyFiles": "5 fichiers maximum.",
       "consent": "Votre accord est nécessaire pour traiter la demande.",
-      "billOrConsumption": "Indiquez votre facture mensuelle ou votre consommation.",
-      "describeWork": "Décrivez les travaux en quelques mots (10 caractères minimum).",
       "fixErrors": "Veuillez corriger les champs signalés.",
       "rateLimited": "Trop de demandes envoyées depuis votre connexion. Réessayez dans quelques minutes ou appelez-nous.",
       "server": "Votre demande n'a pas pu être enregistrée. Réessayez ou appelez-nous.",
@@ -205,7 +209,19 @@
       "preferCall": "Vous préférez nous parler ?"
     },
     "unavailable": "Le formulaire de devis en ligne arrive bientôt pour ces activités. En attendant, décrivez-nous votre projet : nous vous répondons sous 48 h ouvrées.",
-    "unavailableCta": "Nous contacter"
+    "unavailableCta": "Nous contacter",
+    "attachments": {
+      "label": "Documents (plans, photos…)",
+      "help": "Plans, photos du site, factures ou cahier des charges nous aident à chiffrer plus vite.",
+      "add": "Ajouter des fichiers",
+      "limits": "PDF, photos, Word, Excel ou DWG · {max} fichiers, 10 Mo chacun",
+      "selected": "Fichiers ajoutés",
+      "remove": "Retirer {name}"
+    },
+    "siteVisit": {
+      "label": "Je souhaite une visite technique sur site",
+      "help": "Un technicien se déplace pour relever les mesures et les contraintes avant le devis."
+    }
   },
   "notFound": {
     "title": "Page introuvable",

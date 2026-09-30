@@ -433,6 +433,11 @@ function formData(form: SeedForm, l: Locale, site: Id) {
   return {
     site,
     title: form.title,
+    attachments: {
+      mode: form.attachments?.mode ?? "optional",
+      label: text(form.attachments?.label),
+      help: text(form.attachments?.help),
+    },
     questions: form.questions.map((q) => ({
       name: q.name,
       type: q.type,

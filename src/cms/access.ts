@@ -41,6 +41,13 @@ export function managedSiteIds(user: unknown): Id[] | null {
   return ids.length > 0 ? ids : null;
 }
 
+/** Staff only, limited to the sites they manage (quote requests and their files). */
+export const ownSites: Access = ({ req: { user } }) => {
+  if (!user) return false;
+  const ids = managedSiteIds(user);
+  return ids ? { site: { in: ids } } : true;
+};
+
 /**
  * Access for documents owned by one site (`site` field) or several (`sites`):
  * the public reads everything published (the site filters its own queries),

@@ -225,6 +225,7 @@ export const contactLabels = {
   region: t3("Gouvernorat", "Governorate", "الولاية"),
   address: t3("Adresse du site", "Site address", "عنوان الموقع"),
   preferredChannel: t3("Canal préféré", "Preferred channel", "وسيلة الاتصال المفضّلة"),
+  siteVisit: t3("Visite technique sur site", "On-site technical visit", "زيارة تقنية للموقع"),
   activity: t3("Activité", "Activity", "النشاط"),
 } as const;
 
@@ -280,8 +281,12 @@ export function technicalSummary(lead: LeadLike, locale: Locale): SummaryRow[] {
 }
 
 /** Contact rows (empty values omitted). */
+const siteVisitRequested = t3("Souhaitée", "Requested", "مطلوبة");
+
 export function contactSummary(
-  lead: Pick<LeadLike, "fullName" | "phone" | "email" | "region" | "address" | "preferredChannel">,
+  lead: Pick<LeadLike, "fullName" | "phone" | "email" | "region" | "address" | "preferredChannel"> & {
+    siteVisit?: boolean | null;
+  },
   locale: Locale,
 ): SummaryRow[] {
   const rows: [keyof typeof contactLabels, string | null | undefined][] = [
@@ -291,6 +296,7 @@ export function contactSummary(
     ["region", labelOf(governorateOptions, lead.region, locale)],
     ["address", lead.address],
     ["preferredChannel", labelOf(contactChannelOptions, lead.preferredChannel, locale)],
+    ["siteVisit", lead.siteVisit ? siteVisitRequested[locale] : null],
   ];
   return rows.flatMap(([key, value]) => (value ? [{ label: contactLabels[key][locale], value }] : []));
 }

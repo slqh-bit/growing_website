@@ -147,10 +147,10 @@ test.describe("Hikview catalogue (6 areas, sub-services)", () => {
     await expect(page.locator('main a[href="/ar/services/securite-electronique/securite-incendie"]')).toBeVisible();
   });
 
-  test("the B2G page explains public procurement", async ({ page, baseURL }) => {
+  test("the B2G page explains public procurement and has its own quote form", async ({ page, baseURL }) => {
     await page.goto(hikview(baseURL, "/fr/services/integration-b2g"));
     await expect(page.locator("#marches-publics")).toBeAttached();
-    await expect(page.locator('main a[href="/fr/contact"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/fr/devis?service=integration-b2g"]').first()).toBeVisible();
   });
 });
 

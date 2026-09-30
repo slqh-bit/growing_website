@@ -3,7 +3,7 @@ import { siteContentAccess } from "../cms/access";
 import { siteField } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
-import { choiceTypes, questionTypes, type QuestionType } from "../lib/devis/form-def";
+import { choiceTypes, questionTypes, questionsProblem, type QuestionType } from "../lib/devis/form-def";
 
 const KEY = /^[a-zA-Z][a-zA-Z0-9]*$/;
 
@@ -18,25 +18,9 @@ const typeLabels: Record<QuestionType, ReturnType<typeof t3>> = {
   date: t3("Date", "Date", "تاريخ"),
 };
 
-type QuestionRow = { name?: string; options?: { value?: string }[] | null; showIf?: { field?: string | null } | null };
-
 /** Keys unique in the form, conditions pointing at an earlier question, option values unique. */
-const validateQuestions: Validate = (value) => {
-  const rows = (value ?? []) as QuestionRow[];
-  const seen = new Set<string>();
-  for (const [i, row] of rows.entries()) {
-    const name = row.name ?? "";
-    if (seen.has(name)) return `Question ${i + 1}: the key "${name}" is already used in this form.`;
-    const condition = row.showIf?.field;
-    if (condition && !seen.has(condition)) {
-      return `Question ${i + 1}: "Afficher si" must name an earlier question's key (not "${condition}").`;
-    }
-    seen.add(name);
-    const values = (row.options ?? []).map((o) => o.value ?? "");
-    if (new Set(values).size !== values.length) return `Question ${i + 1}: two choices have the same value.`;
-  }
-  return true;
-};
+const validateQuestions: Validate = (value) =>
+  questionsProblem((value ?? []) as Parameters<typeof questionsProblem>[0]) ?? true;
 
 const showFor =
   (...types: QuestionType[]) =>
@@ -75,6 +59,53 @@ export const DevisForms: CollectionConfig = {
       label: t3("Nom (admin)", "Name (admin)", "الاسم (للإدارة)"),
     },
     siteField(),
+    {
+      name: "attachments",
+      type: "group",
+      label: t3("Pièces jointes", "Attachments", "المرفقات"),
+      admin: {
+        description: t3(
+          "Le client peut joindre jusqu'à 5 fichiers (PDF, photos, Word, Excel, DWG ; 10 Mo chacun) à la fin des questions.",
+          "The client can attach up to 5 files (PDF, photos, Word, Excel, DWG; 10 MB each) after the questions.",
+          "يمكن للعميل إرفاق 5 ملفات كحدّ أقصى (PDF، صور، Word، Excel، DWG؛ 10 م.ب لكل ملف) بعد الأسئلة.",
+        ),
+      },
+      fields: [
+        {
+          type: "row",
+          fields: [
+            {
+              name: "mode",
+              type: "select",
+              required: true,
+              defaultValue: "optional",
+              options: [
+                { value: "optional", label: t3("Facultatives", "Optional", "اختيارية") },
+                { value: "required", label: t3("Obligatoires", "Required", "إلزامية") },
+                { value: "off", label: t3("Désactivées", "Off", "معطّلة") },
+              ],
+              label: t3("Pièces jointes", "Attachments", "المرفقات"),
+              admin: { width: "30%" },
+            },
+            {
+              name: "label",
+              type: "text",
+              localized: true,
+              label: t3("Libellé", "Label", "التسمية"),
+              admin: {
+                width: "70%",
+                description: t3(
+                  "Vide = « Documents (plans, photos…) ». Ex. « Cahier des charges (CDC) ».",
+                  "Empty = “Documents (plans, photos…)”. E.g. “Tender specifications”.",
+                  "فارغ = « وثائق (مخططات، صور…) ».",
+                ),
+              },
+            },
+          ],
+        },
+        { name: "help", type: "textarea", localized: true, label: t3("Aide", "Help", "مساعدة") },
+      ],
+    },
     {
       name: "questions",
       type: "array",

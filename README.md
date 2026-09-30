@@ -179,17 +179,33 @@ key, a type (short/long text, number with unit and min/max, drop-down, single
 or multiple choice, checkbox, date), a label and help text in fr/ar/en, a
 "required" flag, an "at least one of…" group (e.g. bill OR consumption) and an
 optional "only show if <question> = <value>" condition. A service without a
-form gets a "Contact" button instead.
+form gets a "Contact" button instead (an area whose sub-services have forms
+links to `/devis`).
+
+Seeded forms: Growing's 4 activities and Hikview's 15 (one per sub-service,
+the IoT form shared by both IoT pages, and the public-sector/B2G form).
+
+Every form also offers, after its questions, **attachments** (Formulaire →
+Pièces jointes: optional, required or off, with its own label, e.g. "Cahier
+des charges (CDC)"): up to 5 files, 10 MB each and 20 MB in all, PDF, JPG,
+PNG, WebP, HEIC, Word (.docx), Excel (.xlsx) or DWG. The browser checks type
+and size; the server checks them again, checks each file's first bytes match
+its extension, and Payload checks the content type. Files are private
+(**Demandes → Pièces jointes clients**, staff of the request's site only),
+stored in `quotes/attachments/` next to the quote PDFs (same Docker volume and
+backup). The contact step has a **site visit** checkbox.
 
 | Piece | Where |
 | --- | --- |
 | Form definition → validation, visibility, summaries | `src/lib/devis/form-def.ts` |
 | Step schemas (service, answers, contact, consent) | `src/lib/devis/schema.ts` |
 | The site's services with their forms | `src/lib/devis/choices.ts` |
-| Server action (site from the host, anti-spam, rate limit, save) | `src/lib/devis/actions.ts` |
+| Server action (site from the host, anti-spam, rate limit, files, save) | `src/lib/devis/actions.ts` |
+| Attachment rules (types, sizes, signatures) | `src/lib/devis/attachments.ts` |
 | Team email, client auto-reply, Telegram (per site) | `src/lib/devis/notify.ts` |
 | Admin view of a request's answers | `src/components/admin/devis-answers.tsx` |
 | Form UI | `src/components/devis/` |
+| Seeded forms | `scripts/seed-data/devis-forms.ts`, `hikview-devis-forms.ts` |
 | Legacy typed form (display of pre-builder requests) | `src/lib/devis/fields.ts` |
 
 On submit the server finds the site from the request's host, re-reads the
@@ -202,8 +218,9 @@ the response, each channel independently (a mail outage never loses a lead):
 
 - **Team email** (French) to the site's team — **Sites → Demandes de devis →
   E-mails de l'équipe**; else, for the default site, `DEVIS_NOTIFY_EMAIL`;
-  else the site's email — with the full summary, a reply-to set to the client
-  and a link to the lead in the admin.
+  else the site's email — with the full summary, the client's files attached
+  (up to 10 MB in all; beyond that they are listed, to open in the admin), a
+  reply-to set to the client and a link to the lead in the admin.
 - **Client auto-reply** (French, only if an email was given), in the site's
   colours and name — reference and next steps only; free-text answers are
   never echoed back (no spam relay).
@@ -244,7 +261,7 @@ decimal commas.
 ## Tests & CI
 
 ```bash
-npm test                                   # unit: devis schema, phone, rate limit
+npm test                                   # unit: devis forms and schema, sites, phone, rate limit…
 npm run build && NODE_ENV=production npm run seed
 npm run test:e2e                           # Playwright, desktop + mobile, on :3100
 ```
@@ -308,6 +325,10 @@ Group platform (multi-site):
       per-site references, routing (e-mails, Telegram) and branded e-mails;
       Growing's 4 forms (incl. PV plants and street lighting) created by a
       data migration.
+- [x] **Phase 5b** — Hikview's 15 quote forms (seeded), client attachments
+      (private `DevisAttachments`, per-form label/mode, content checks, sent
+      with the team email), site-visit request, date answers in local format,
+      area pages linking to the quote form.
 
 ## Structure
 

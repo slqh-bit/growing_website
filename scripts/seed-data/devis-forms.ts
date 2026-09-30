@@ -1,5 +1,5 @@
 import { t3 } from "../../src/cms/labels";
-import type { QuestionDef } from "../../src/lib/devis/form-def";
+import type { AttachmentsMode, QuestionDef } from "../../src/lib/devis/form-def";
 import {
   phaseOptions,
   roofTypeOptions,
@@ -7,19 +7,27 @@ import {
   type LabeledOption,
 } from "../../src/lib/devis/options";
 import type { SiteKey } from "../../src/sites/config";
+import { hikviewDevisForms } from "./hikview-devis-forms";
 
 /**
  * Quote forms (Contenu → Formulaires de devis) and the services they belong
  * to. Growing's four forms carry over the questions of the former typed form
  * (same keys, labels and help) plus the plan's additions: usage and voltage
  * for grid-connected systems, street lighting for off-grid, and utility-scale
- * PV plants. Seed data only: once created, forms are edited in the admin.
+ * PV plants. Hikview's forms are in ./hikview-devis-forms. Seed data only:
+ * once created, forms are edited in the admin.
  */
 export interface SeedForm {
   site: SiteKey;
   /** Services (slugs) that use this form. */
   services: string[];
   title: string;
+  /** Files the client may attach (default: optional, generic label). */
+  attachments?: {
+    mode?: AttachmentsMode;
+    label?: ReturnType<typeof t3>;
+    help?: ReturnType<typeof t3>;
+  };
   questions: (QuestionDef & { label: ReturnType<typeof t3> })[];
 }
 
@@ -28,7 +36,17 @@ const opt = (value: string, fr: string, en: string, ar: string) => ({ value, lab
 
 const kwh = t3("kWh", "kWh", "ك.و.س");
 
-export const devisForms: SeedForm[] = [
+/** Also set on existing databases by the 5b migration. */
+export const centraleAttachments = {
+  label: t3("Documents du projet", "Project documents", "وثائق المشروع"),
+  help: t3(
+    "Plan ou coordonnées du terrain, factures STEG MT, études déjà réalisées…",
+    "Land plan or coordinates, MV STEG bills, studies already carried out…",
+    "مخطط الأرض أو إحداثياتها، فواتير الستاغ بالجهد المتوسط، الدراسات المنجزة…",
+  ),
+};
+
+const growingDevisForms: SeedForm[] = [
   {
     site: "growing",
     services: ["installation-raccordee"],
@@ -279,6 +297,7 @@ export const devisForms: SeedForm[] = [
     site: "growing",
     services: ["centrale-photovoltaique"],
     title: "Centrale photovoltaïque (1 à 10 MW)",
+    attachments: centraleAttachments,
     questions: [
       {
         name: "regime",
@@ -360,3 +379,5 @@ export const devisForms: SeedForm[] = [
     ],
   },
 ];
+
+export const devisForms: SeedForm[] = [...growingDevisForms, ...hikviewDevisForms];

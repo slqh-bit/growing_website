@@ -21,6 +21,9 @@ export const devisErrorKeys = [
   "invalidOption",
   "invalidDate",
   "requireOne",
+  "fileType",
+  "fileTooLarge",
+  "tooManyFiles",
   "consent",
 ] as const;
 export type DevisErrorKey = (typeof devisErrorKeys)[number];
@@ -55,6 +58,7 @@ const contactShape = {
     blankToUndefined,
     z.enum(valuesOf(contactChannelOptions), { errorMap: () => ({ message: "invalidOption" }) }).default("call"),
   ),
+  siteVisit: z.preprocess((v) => v === true || v === "true" || v === "on", z.boolean()),
 };
 
 const consent = z.literal(true, { errorMap: () => ({ message: "consent" }) });
@@ -120,6 +124,8 @@ export interface DevisFormValues {
   region: string;
   address: string;
   preferredChannel: string;
+  /** "I'd like a technical visit on site". */
+  siteVisit: boolean;
   consent: boolean;
 }
 
@@ -132,5 +138,6 @@ export const emptyDevisValues: DevisFormValues = {
   region: "",
   address: "",
   preferredChannel: "call",
+  siteVisit: false,
   consent: false,
 };

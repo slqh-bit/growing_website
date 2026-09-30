@@ -85,8 +85,13 @@ export async function ServiceDetail({ site, locale, service }: { site: SiteKey; 
     locale,
   );
 
-  // Services without a quote form (Services → Formulaire de devis) lead to the contact page.
-  const quoteHref = service.devisForm ? `/devis?service=${service.slug}` : "/contact";
+  // The service's own quote form (Services → Formulaire de devis); an area whose
+  // sub-services have forms opens the quote form's list; otherwise the contact page.
+  const quoteHref = service.devisForm
+    ? `/devis?service=${service.slug}`
+    : subServices.some((s) => s.devisForm)
+      ? "/devis"
+      : "/contact";
   const sections = service.sections ?? [];
   const benefits = service.benefits ?? [];
   const steps = service.process ?? [];

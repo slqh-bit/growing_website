@@ -9,6 +9,7 @@ import { en } from "@payloadcms/translations/languages/en";
 import { fr } from "@payloadcms/translations/languages/fr";
 import sharp from "sharp";
 
+import { DevisAttachments } from "./collections/DevisAttachments";
 import { DevisForms } from "./collections/DevisForms";
 import { DevisRequests } from "./collections/DevisRequests";
 import { Faq } from "./collections/Faq";
@@ -85,6 +86,7 @@ export default buildConfig({
     DevisRequests,
     DevisForms,
     QuoteDocuments,
+    DevisAttachments,
     Media,
     Sites,
     Redirects,

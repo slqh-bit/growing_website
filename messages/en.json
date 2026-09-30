@@ -175,9 +175,13 @@
       "tooLarge": "Value too large.",
       "tooLong": "Text too long.",
       "invalidOption": "Invalid choice.",
+      "tooSmall": "Value too small.",
+      "invalidDate": "Invalid date.",
+      "requireOne": "Fill in at least one of these fields.",
+      "fileType": "Format not accepted: PDF, JPG, PNG, WebP, HEIC, Word (.docx), Excel (.xlsx) or DWG.",
+      "fileTooLarge": "File too large: 10 MB per file, 20 MB in total.",
+      "tooManyFiles": "5 files at most.",
       "consent": "Your consent is needed to process the request.",
-      "billOrConsumption": "Enter your monthly bill or your consumption.",
-      "describeWork": "Describe the work in a few words (at least 10 characters).",
       "fixErrors": "Please fix the highlighted fields.",
       "rateLimited": "Too many requests from your connection. Try again in a few minutes or call us.",
       "server": "Your request could not be saved. Please try again or call us.",
@@ -205,7 +209,19 @@
       "preferCall": "Prefer to talk to us?"
     },
     "unavailable": "The online quote form for these activities is coming soon. Meanwhile, tell us about your project: we reply within 48 working hours.",
-    "unavailableCta": "Contact us"
+    "unavailableCta": "Contact us",
+    "attachments": {
+      "label": "Documents (plans, photos…)",
+      "help": "Plans, site photos, bills or specifications help us price your project faster.",
+      "add": "Add files",
+      "limits": "PDF, photos, Word, Excel or DWG · {max} files, 10 MB each",
+      "selected": "Files added",
+      "remove": "Remove {name}"
+    },
+    "siteVisit": {
+      "label": "I'd like a technical visit on site",
+      "help": "A technician comes to take measurements and note the site's constraints before the quote."
+    }
   },
   "notFound": {
     "title": "Page not found",

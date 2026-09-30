@@ -8,11 +8,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { rtlLocales, type Locale } from "@/i18n/config";
 import { submitDevis } from "@/lib/devis/actions";
 import { emptyDevisValues, stepSchema, type DevisErrorKey, type DevisFormValues } from "@/lib/devis/schema";
+import { checkAttachments, type AttachmentErrorKey } from "@/lib/devis/attachments";
+import { attachmentsMode } from "@/lib/devis/form-def";
 import type { DevisChoice } from "@/lib/devis/choices";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StepProgress } from "./step-progress";
-import { ActivityStep, ContactStep, ReviewStep, TechnicalStep } from "./steps";
+import { ActivityStep, ContactStep, ReviewStep, TechnicalStep, type FilesState } from "./steps";
 import { DevisSuccess } from "./devis-success";
 
 const STEP_KEYS = ["activity", "technical", "contact", "review"] as const;
@@ -31,7 +33,7 @@ declare global {
 function stepOfPath(path: string): number {
   const root = path.split(".")[0] ?? "";
   if (root === "service") return 0;
-  if (root === "answers") return 1;
+  if (root === "answers" || root === "attachments") return 1;
   if (root === "consent") return 3;
   return 2;
 }
@@ -60,6 +62,10 @@ export function DevisForm({
   const [submitting, setSubmitting] = React.useState(false);
   const [banner, setBanner] = React.useState<Banner | null>(null);
   const [success, setSuccess] = React.useState<{ reference: string; name: string; email?: string } | null>(null);
+  // Attachments live outside react-hook-form (File objects, checked on their own).
+  const [files, setFiles] = React.useState<File[]>([]);
+  const [fileError, setFileError] = React.useState<AttachmentErrorKey | "required" | null>(null);
+  const attachments: FilesState = { files, setFiles, error: fileError, setError: setFileError };
 
   // The resolver validates only the current step's schema (step 2: the chosen service's questions).
   const stepRef = React.useRef(0);
@@ -131,8 +137,19 @@ export function DevisForm({
     });
   }
 
+  /** The chosen service's attachments rule, checked with the technical step. */
+  function checkFiles(): boolean {
+    const def = activities.find((a) => a.id === form.getValues("service"))?.form;
+    const mode = def ? attachmentsMode(def) : "off";
+    const problem = mode === "off" ? null : mode === "required" && files.length === 0 ? "required" : checkAttachments(files);
+    setFileError(problem);
+    return problem === null;
+  }
+
   async function next() {
-    if (!(await form.trigger())) return focusFirstInvalid();
+    const valid = await form.trigger();
+    const filesValid = step !== 1 || checkFiles();
+    if (!valid || !filesValid) return focusFirstInvalid();
     goTo(step + 1);
   }
 
@@ -141,13 +158,16 @@ export function DevisForm({
     if (!(await form.trigger())) return focusFirstInvalid();
 
     const values = form.getValues();
+    const def = activities.find((a) => a.id === values.service)?.form;
+    const upload = new FormData();
+    if (def && attachmentsMode(def) !== "off") files.forEach((f) => upload.append("files", f));
     setSubmitting(true);
     try {
-      const result = await submitDevis(values, {
-        locale,
-        website: honeypot.current?.value ?? "",
-        startedAt: startedAt.current,
-      });
+      const result = await submitDevis(
+        values,
+        { locale, website: honeypot.current?.value ?? "", startedAt: startedAt.current },
+        upload,
+      );
       if (result.ok) {
         // Conversion goal (no personal data: service and language only).
         const service = activities.find((a) => a.id === values.service);
@@ -158,7 +178,9 @@ export function DevisForm({
       if (result.error === "validation") {
         const entries = Object.entries(result.fieldErrors);
         entries.forEach(([path, message]) =>
-          form.setError(path as Path<DevisFormValues>, { type: "server", message }),
+          path === "attachments"
+            ? setFileError(message as AttachmentErrorKey | "required")
+            : form.setError(path as Path<DevisFormValues>, { type: "server", message }),
         );
         const target = Math.min(...entries.map(([path]) => stepOfPath(path)));
         if (target !== step) goTo(target, { keepErrors: true });
@@ -176,6 +198,8 @@ export function DevisForm({
 
   function reset() {
     form.reset(emptyDevisValues);
+    setFiles([]);
+    setFileError(null);
     startedAt.current = Date.now();
     hasNavigated.current = false;
     stepRef.current = 0;
@@ -240,7 +264,14 @@ export function DevisForm({
 
             {step === 0 && <ActivityStep form={form} field={field} locale={locale} errorOf={errorOf} activities={activities} />}
             {step === 1 && (
-              <TechnicalStep form={form} field={field} locale={locale} errorOf={errorOf} activities={activities} />
+              <TechnicalStep
+                form={form}
+                field={field}
+                locale={locale}
+                errorOf={errorOf}
+                activities={activities}
+                attachments={attachments}
+              />
             )}
             {step === 2 && <ContactStep form={form} field={field} locale={locale} errorOf={errorOf} />}
             {step === 3 && (
@@ -252,6 +283,7 @@ export function DevisForm({
                 activities={activities}
                 onEdit={(s) => goTo(s)}
                 privacyHref={privacyHref}
+                files={files}
               />
             )}
         </div>

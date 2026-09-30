@@ -6,11 +6,21 @@ import type { Path, UseFormRegisterReturn, UseFormReturn } from "react-hook-form
 import type { Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 import { contactLabels, contactSummary } from "@/lib/devis/fields";
-import { answersSchema, answersSummary, isVisible, pick, type Answers, type QuestionDef } from "@/lib/devis/form-def";
+import {
+  answersSchema,
+  answersSummary,
+  attachmentsMode,
+  isVisible,
+  pick,
+  type Answers,
+  type QuestionDef,
+} from "@/lib/devis/form-def";
+import type { AttachmentErrorKey } from "@/lib/devis/attachments";
 import type { DevisChoice } from "@/lib/devis/choices";
 import { contactChannelOptions, governorateOptions } from "@/lib/devis/options";
 import { stepSchema, type DevisFormValues } from "@/lib/devis/schema";
 import { ServiceIcon } from "@/components/ui/service-icon";
+import { AttachmentsField, useAttachmentsLabel } from "./attachments-field";
 import { FieldError, FieldShell, describedBy, fieldId, inputClass } from "./field-shell";
 
 type Form = UseFormReturn<DevisFormValues>;
@@ -100,7 +110,22 @@ export function ActivityStep({ form, field, errorOf, activities }: StepProps & {
 /** Questions that take the whole row. */
 const wideTypes = new Set(["textarea", "checkbox", "radio", "multiselect"]);
 
-export function TechnicalStep({ form, field, locale, errorOf, activities }: StepProps & { activities: DevisChoice[] }) {
+/** The attachments picked at step 2 (kept outside react-hook-form: File objects). */
+export interface FilesState {
+  files: File[];
+  setFiles: (files: File[]) => void;
+  error: AttachmentErrorKey | "required" | null;
+  setError: (key: AttachmentErrorKey | "required" | null) => void;
+}
+
+export function TechnicalStep({
+  form,
+  field,
+  locale,
+  errorOf,
+  activities,
+  attachments,
+}: StepProps & { activities: DevisChoice[]; attachments: FilesState }) {
   const t = useTranslations("devis");
   const service = form.watch("service");
   const answers = (form.watch("answers") ?? {}) as Answers;
@@ -121,6 +146,16 @@ export function TechnicalStep({ form, field, locale, errorOf, activities }: Step
             labels={{ moreInfo: t("moreInfo"), select: t("select"), placeholder: t("placeholders.textarea") }}
           />
         ))}
+      {attachmentsMode(def) !== "off" && (
+        <AttachmentsField
+          def={def}
+          locale={locale}
+          files={attachments.files}
+          onChange={attachments.setFiles}
+          error={attachments.error ? t(`errors.${attachments.error}`) : undefined}
+          onError={attachments.setError}
+        />
+      )}
     </div>
   );
 }
@@ -398,6 +433,19 @@ export function ContactStep({ form, field, locale, errorOf }: StepProps) {
           })}
         </div>
       </fieldset>
+
+      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-surface px-4 py-3 sm:col-span-2">
+        <input
+          id={fieldId("siteVisit")}
+          type="checkbox"
+          {...field("siteVisit")}
+          className="mt-0.5 size-5 shrink-0 rounded accent-primary-600"
+        />
+        <span className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium text-foreground">{t("siteVisit.label")}</span>
+          <span className="text-xs text-muted-foreground">{t("siteVisit.help")}</span>
+        </span>
+      </label>
     </div>
   );
 }
@@ -412,12 +460,14 @@ export function ReviewStep({
   activities,
   onEdit,
   privacyHref,
-}: StepProps & { activities: DevisChoice[]; onEdit: (step: number) => void; privacyHref: string }) {
+  files,
+}: StepProps & { activities: DevisChoice[]; onEdit: (step: number) => void; privacyHref: string; files: File[] }) {
   const t = useTranslations("devis");
   const consentId = fieldId("consent");
   const consentError = errorOf("consent");
   const values = form.getValues();
   const choice = activities.find((a) => a.id === values.service);
+  const filesLabel = useAttachmentsLabel(choice?.form, locale);
   // Previous steps are valid here; parse for display (normalized numbers, labels).
   const parsed = choice ? answersSchema(choice.form).safeParse(values.answers ?? {}) : null;
   const contact = stepSchema(2, activities, values.service).safeParse(values);
@@ -425,7 +475,17 @@ export function ReviewStep({
 
   const sections = [
     { title: t("review.activity"), step: 0, rows: [{ label: contactLabels.activity[locale], value: choice.title }] },
-    { title: t("review.technical"), step: 1, rows: answersSummary(choice.form, parsed.data, locale), empty: t("review.empty") },
+    {
+      title: t("review.technical"),
+      step: 1,
+      rows: [
+        ...answersSummary(choice.form, parsed.data, locale),
+        ...(files.length > 0 && attachmentsMode(choice.form) !== "off"
+          ? [{ label: filesLabel, value: files.map((f) => f.name).join("\n") }]
+          : []),
+      ],
+      empty: t("review.empty"),
+    },
     { title: t("review.contact"), step: 2, rows: contactSummary(contact.data as typeof values, locale) },
   ];
 

@@ -54,9 +54,16 @@ export interface QuestionDef {
   showIf?: { field?: string | null; equals?: string | null } | null;
 }
 
+export type AttachmentsMode = "optional" | "required" | "off";
+
 export interface FormDef {
   questions: QuestionDef[];
+  /** Files the client may attach after the questions (default: optional, generic label). */
+  attachments?: { mode?: AttachmentsMode | null; label?: L10n; help?: L10n } | null;
 }
+
+/** Whether (and how) a form asks for files. */
+export const attachmentsMode = (def: FormDef): AttachmentsMode => def.attachments?.mode ?? "optional";
 
 /** What a request keeps: the service chosen and the questions as they were. */
 export interface FormSnapshot extends FormDef {
@@ -65,6 +72,34 @@ export interface FormSnapshot extends FormDef {
 
 export type AnswerValue = string | number | boolean | string[];
 export type Answers = Record<string, AnswerValue | null | undefined>;
+
+// --- Structure ---------------------------------------------------------------------
+
+type QuestionRow = {
+  name?: string | null;
+  options?: { value?: string | null }[] | null;
+  showIf?: { field?: string | null } | null;
+};
+
+/**
+ * The first structural problem of a form's questions (admin validation):
+ * keys unique, conditions pointing at an earlier question, choice values unique.
+ */
+export function questionsProblem(rows: readonly QuestionRow[]): string | null {
+  const seen = new Set<string>();
+  for (const [i, row] of rows.entries()) {
+    const name = row.name ?? "";
+    if (seen.has(name)) return `Question ${i + 1}: the key "${name}" is already used in this form.`;
+    const condition = row.showIf?.field;
+    if (condition && !seen.has(condition)) {
+      return `Question ${i + 1}: "Afficher si" must name an earlier question's key (not "${condition}").`;
+    }
+    seen.add(name);
+    const values = (row.options ?? []).map((o) => o.value ?? "");
+    if (new Set(values).size !== values.length) return `Question ${i + 1}: two choices have the same value.`;
+  }
+  return null;
+}
 
 // --- Visibility --------------------------------------------------------------------
 
@@ -225,6 +260,12 @@ function formatAnswer(
       const formatted = new Intl.NumberFormat(locale === "ar" ? "ar-TN" : `${locale}-TN`).format(n);
       const unit = pick(q.unit, locale);
       return unit ? `${formatted} ${unit}` : formatted;
+    }
+    case "date": {
+      const date = new Date(`${String(raw)}T00:00:00Z`);
+      if (Number.isNaN(date.getTime())) return String(raw);
+      const tag = { fr: "fr-TN", en: "en-GB", ar: "ar-TN" }[locale]; // en-TN would give 12/31/26
+      return new Intl.DateTimeFormat(tag, { dateStyle: "short", timeZone: "UTC" }).format(date);
     }
     default:
       return String(raw).trim() || null;

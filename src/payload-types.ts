@@ -76,6 +76,7 @@ export interface Config {
     'devis-requests': DevisRequest;
     'devis-forms': DevisForm;
     'quote-documents': QuoteDocument;
+    'devis-attachments': DevisAttachment;
     media: Media;
     sites: Site;
     redirects: Redirect;
@@ -96,6 +97,7 @@ export interface Config {
     'devis-requests': DevisRequestsSelect<false> | DevisRequestsSelect<true>;
     'devis-forms': DevisFormsSelect<false> | DevisFormsSelect<true>;
     'quote-documents': QuoteDocumentsSelect<false> | QuoteDocumentsSelect<true>;
+    'devis-attachments': DevisAttachmentsSelect<false> | DevisAttachmentsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     sites: SitesSelect<false> | SitesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
@@ -807,6 +809,17 @@ export interface DevisForm {
    */
   site: number | Site;
   /**
+   * The client can attach up to 5 files (PDF, photos, Word, Excel, DWG; 10 MB each) after the questions.
+   */
+  attachments: {
+    mode: 'optional' | 'required' | 'off';
+    /**
+     * Empty = “Documents (plans, photos…)”. E.g. “Tender specifications”.
+     */
+    label?: string | null;
+    help?: string | null;
+  };
+  /**
    * In display order. Contact details (name, phone, governorate…) and consent are added automatically.
    */
   questions?:
@@ -1000,6 +1013,10 @@ export interface DevisRequest {
     | number
     | boolean
     | null;
+  /**
+   * Plans, photos or specifications sent with the request.
+   */
+  attachments?: (number | DevisAttachment)[] | null;
   raccorde?: {
     monthlyBillTnd?: number | null;
     monthlyConsumptionKwh?: number | null;
@@ -1057,6 +1074,7 @@ export interface DevisRequest {
     | 'zaghouan';
   preferredChannel?: ('call' | 'whatsapp' | 'telegram') | null;
   address?: string | null;
+  siteVisit?: boolean | null;
   consent: boolean;
   updatedAt: string;
   createdAt: string;
@@ -1069,6 +1087,30 @@ export interface DevisRequest {
  */
 export interface QuoteDocument {
   id: number;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * Files sent by clients with their quote request. Visible to the team only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "devis-attachments".
+ */
+export interface DevisAttachment {
+  id: number;
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1197,6 +1239,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'quote-documents';
         value: number | QuoteDocument;
+      } | null)
+    | ({
+        relationTo: 'devis-attachments';
+        value: number | DevisAttachment;
       } | null)
     | ({
         relationTo: 'media';
@@ -1579,6 +1625,7 @@ export interface DevisRequestsSelect<T extends boolean = true> {
   activity?: T;
   technicalDetails?: T;
   formSnapshot?: T;
+  attachments?: T;
   raccorde?:
     | T
     | {
@@ -1620,6 +1667,7 @@ export interface DevisRequestsSelect<T extends boolean = true> {
   region?: T;
   preferredChannel?: T;
   address?: T;
+  siteVisit?: T;
   consent?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1631,6 +1679,13 @@ export interface DevisRequestsSelect<T extends boolean = true> {
 export interface DevisFormsSelect<T extends boolean = true> {
   title?: T;
   site?: T;
+  attachments?:
+    | T
+    | {
+        mode?: T;
+        label?: T;
+        help?: T;
+      };
   questions?:
     | T
     | {
@@ -1667,6 +1722,24 @@ export interface DevisFormsSelect<T extends boolean = true> {
  * via the `definition` "quote-documents_select".
  */
 export interface QuoteDocumentsSelect<T extends boolean = true> {
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "devis-attachments_select".
+ */
+export interface DevisAttachmentsSelect<T extends boolean = true> {
+  site?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
