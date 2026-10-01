@@ -370,7 +370,8 @@ function hikviewHomeLayout(l: Locale) {
       badge: h.heroBadge[l],
       title: h.heroTitle[l],
       subtitle: h.heroSubtitle[l],
-      primaryCta: { label: msg(l, "nav.contact"), href: "/contact" },
+      // Hikview's services have quote forms (Phase 5b).
+      primaryCta: { label: msg(l, "common.requestQuote"), href: "/devis" },
       secondaryCta: { label: msg(l, "common.discoverServices"), href: "/services" },
     },
     { blockType: "activityGrid", title: h.activitiesTitle[l], subtitle: h.activitiesSubtitle[l] },
@@ -387,7 +388,7 @@ function hikviewHomeLayout(l: Locale) {
       blockType: "cta",
       title: h.ctaTitle[l],
       subtitle: h.ctaSubtitle[l],
-      button: { label: msg(l, "nav.contact"), href: "/contact" },
+      button: { label: msg(l, "common.requestQuote"), href: "/devis" },
     },
   ];
 }

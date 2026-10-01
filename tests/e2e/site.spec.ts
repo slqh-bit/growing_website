@@ -327,3 +327,33 @@ test.describe("Coming soon (Phase 9)", () => {
   });
 });
 
+test.describe("Header layout", () => {
+  // French labels are the longest; the header must fit from tablet to wide desktop on both sites.
+  for (const host of ["localhost", "hikview.localhost"]) {
+    test(`${host}: the header never overflows the page`, async ({ page, baseURL }) => {
+      const url = new URL("/fr/contact", baseURL);
+      url.hostname = host;
+      await page.goto(url.toString());
+      for (const width of [768, 1024, 1180, 1280, 1440]) {
+        await page.setViewportSize({ width, height: 800 });
+        const overflow = await page.evaluate(() => {
+          const bar = document.querySelector("header > div")!;
+          return {
+            header: bar.scrollWidth - bar.clientWidth,
+            page: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          };
+        });
+        expect(overflow, `at ${width}px`).toEqual({ header: 0, page: 0 });
+      }
+    });
+  }
+
+  test("Hikview's home page leads to the quote form", async ({ page, baseURL }) => {
+    const url = new URL("/fr", baseURL);
+    url.hostname = "hikview.localhost";
+    await page.goto(url.toString());
+    // Hero and closing call to action (the header's own button is outside main).
+    await expect(page.locator('main a[href="/fr/devis"]')).toHaveCount(2);
+  });
+});
+

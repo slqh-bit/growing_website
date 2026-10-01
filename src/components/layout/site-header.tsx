@@ -47,19 +47,20 @@ export function SiteHeader({ items, brand }: { items: HeaderNavItem[]; brand: Br
           : "border-transparent bg-background/60 backdrop-blur-sm",
       )}
     >
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6 lg:px-8">
         <Link href="/" className="shrink-0">
           <Logo brand={brand} />
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+        {/* Desktop nav — from xl only: the French labels plus the actions need the
+            whole max-w-6xl container (at lg, a 1024px window leaves ~960px). */}
+        <nav className="hidden items-center gap-0.5 xl:flex" aria-label="Primary">
           {items.map((item) => (
             <Link
               key={`${item.href}-${item.label}`}
               href={item.href}
               className={cn(
-                "relative whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "relative whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium transition-colors",
                 isActive(item.href)
                   ? "text-brand"
                   : "text-foreground/80 hover:text-foreground",
@@ -74,7 +75,7 @@ export function SiteHeader({ items, brand }: { items: HeaderNavItem[]; brand: Br
                 )}
               </span>
               {isActive(item.href) && (
-                <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-primary-600" />
+                <span className="absolute inset-x-2.5 -bottom-px h-0.5 rounded-full bg-primary-600" />
               )}
             </Link>
           ))}
@@ -85,11 +86,11 @@ export function SiteHeader({ items, brand }: { items: HeaderNavItem[]; brand: Br
             <ThemeToggle />
           </div>
           <LanguageSwitcher />
-          {/* Icon-only until xl, where the full label fits next to the menu. */}
+          {/* Labelled while the menu is collapsed; icon-only next to it (xl), where the label doesn't fit in French. */}
           <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
             <Link href="/suivi" aria-label={tc("trackRequest")} title={tc("trackRequest")}>
               <ListChecks className="size-4" aria-hidden />
-              <span className="hidden xl:inline">{tc("trackRequest")}</span>
+              <span className="xl:hidden">{tc("trackRequest")}</span>
             </Link>
           </Button>
           <Button asChild variant="solar" size="sm" className="hidden md:inline-flex">
@@ -102,7 +103,7 @@ export function SiteHeader({ items, brand }: { items: HeaderNavItem[]; brand: Br
           {/* Mobile toggle */}
           <button
             type="button"
-            className="inline-flex size-10 items-center justify-center rounded-lg text-foreground hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+            className="inline-flex size-10 items-center justify-center rounded-lg text-foreground hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring xl:hidden"
             aria-label={open ? t("closeMenu") : t("openMenu")}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
@@ -115,7 +116,7 @@ export function SiteHeader({ items, brand }: { items: HeaderNavItem[]; brand: Br
       {/* Mobile menu */}
       <div
         className={cn(
-          "overflow-hidden border-t border-border bg-background transition-[max-height] duration-300 lg:hidden",
+          "overflow-hidden border-t border-border bg-background transition-[max-height] duration-300 xl:hidden",
           open ? "max-h-[32rem]" : "max-h-0 border-t-0",
         )}
       >

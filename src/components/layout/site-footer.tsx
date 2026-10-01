@@ -87,7 +87,8 @@ export async function SiteFooter({ locale, site }: { locale: Locale; site: SiteK
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="size-4 shrink-0 text-brand" aria-hidden />
-                <a href={`mailto:${settings.email}`} className="hover:text-brand">
+                {/* Long addresses wrap instead of widening the 4-column grid at lg. */}
+                <a href={`mailto:${settings.email}`} className="min-w-0 wrap-anywhere hover:text-brand">
                   {settings.email}
                 </a>
               </li>
