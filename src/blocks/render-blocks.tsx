@@ -12,6 +12,7 @@ import {
   ProjectsBlockView,
   RichTextBlockView,
   StatsBlockView,
+  UpcomingBlockView,
 } from "./renderers";
 
 type LayoutBlock = NonNullable<Page["layout"]>[number];
@@ -50,6 +51,8 @@ function BlockView({ block, locale, site }: { block: LayoutBlock; locale: Locale
       return <PartnersBlockView block={block} locale={locale} site={site} />;
     case "faq":
       return <FaqBlockView block={block} locale={locale} site={site} />;
+    case "upcoming":
+      return <UpcomingBlockView block={block} locale={locale} site={site} />;
     default: {
       // Compile-time exhaustiveness: a new block type must get a renderer.
       const unknown: never = block;

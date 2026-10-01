@@ -49,6 +49,9 @@ export const featureIconNames = [
   "Award",
   "Heart",
   "Eye",
+  "UserRound",
+  "Briefcase",
+  "Newspaper",
 ] as const;
 export type IconName = (typeof featureIconNames)[number];
 

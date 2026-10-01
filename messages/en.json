@@ -30,7 +30,9 @@
     "switchLanguage": "Switch language",
     "toggleTheme": "Toggle light/dark theme",
     "group": "Our group",
-    "documents": "Company documents"
+    "documents": "Company documents",
+    "clientArea": "Client area",
+    "careers": "Careers"
   },
   "home": {
     "heroBadge": "ANME-certified solar installer",
@@ -311,5 +313,25 @@
     "empty": "Our company documents will soon be available here. Contact us to receive them.",
     "contactCta": "Contact us",
     "note": "Expired documents are removed automatically. Need a document that isn't listed? Write to us."
+  },
+  "upcoming": {
+    "title": "Coming soon to our website",
+    "subtitle": "New online services are on their way for our clients and future colleagues.",
+    "clientArea": {
+      "card": "Your quotes, invoices, warranties and installation follow-up, all in one place.",
+      "body": "Soon you'll find your quotes, invoices, warranty certificates and installation follow-up in a secure area. Meanwhile, track your quote request with its reference.",
+      "cta": "Track my request"
+    },
+    "careers": {
+      "card": "Our job and internship offers. Open applications are already welcome.",
+      "body": "Our job and internship offers will be published here. Technicians, engineers, sales staff: send us your open application with your CV now.",
+      "cta": "Send an open application",
+      "subject": "Open application"
+    },
+    "news": {
+      "card": "Our projects, news and advice.",
+      "body": "Our news, projects and advice are coming soon. Meanwhile, take a look at our projects.",
+      "cta": "See our projects"
+    }
   }
 }

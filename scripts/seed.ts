@@ -258,6 +258,26 @@ async function seedFaq(payload: Payload, site: Id) {
   report(payload, "Growing FAQ", results);
 }
 
+/** "Bientôt disponible" cards (plan Phase 9): client area, careers, news. */
+function upcomingBlock(l: Locale) {
+  const items = [
+    ["UserRound", "nav.clientArea", "upcoming.clientArea.card", "/espace-client"],
+    ["Briefcase", "nav.careers", "upcoming.careers.card", "/carrieres"],
+    ["Newspaper", "nav.blog", "upcoming.news.card", "/blog"],
+  ] as const;
+  return {
+    blockType: "upcoming",
+    title: msg(l, "upcoming.title"),
+    subtitle: msg(l, "upcoming.subtitle"),
+    items: items.map(([icon, title, description, href]) => ({
+      icon,
+      title: msg(l, title),
+      description: msg(l, description),
+      href,
+    })),
+  };
+}
+
 function growingHome(l: Locale) {
   const why = [
     ["ShieldCheck", "certified"],
@@ -297,6 +317,7 @@ function growingHome(l: Locale) {
       subtitle: msg(l, "home.projectsSubtitle"),
       limit: 3,
     },
+    upcomingBlock(l),
     {
       blockType: "cta",
       title: msg(l, "home.ctaTitle"),
@@ -361,6 +382,7 @@ function hikviewHomeLayout(l: Locale) {
     // Both hidden until references / partners are added in the admin.
     { blockType: "projects", title: h.projectsTitle[l], subtitle: h.projectsSubtitle[l], limit: 3 },
     { blockType: "partners", title: h.partnersTitle[l] },
+    upcomingBlock(l),
     {
       blockType: "cta",
       title: h.ctaTitle[l],

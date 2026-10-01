@@ -267,6 +267,19 @@ entering a new date starts over. The admin dashboard lists the documents to
 renew, and the list shows a validity badge. Files are private uploads stored
 in `quotes/company-documents/` (same volume and backup as quote PDFs).
 
+## Coming soon
+
+Features still to come are shown, never as dead links:
+
+- **"Bientôt disponible" cards** — page block *Bientôt disponible* (Pages →
+  layout): title, subtitle and cards (icon, title, description, optional
+  link). Seeded on both home pages (client area, careers, news); remove a card
+  once its feature is live.
+- **Placeholder pages** (noindex, out of the sitemap), each offering what
+  already works: `/espace-client` → track a request (`/suivi`), `/carrieres` →
+  open application by email to the site's address, `/blog` → the projects.
+- Menu items can carry the **Bientôt disponible** badge (Sites → Menu).
+
 ## SEO, performance & analytics
 
 - **Each site is indexed on its own:** canonical URLs, `hreflang` alternates
@@ -378,6 +391,9 @@ Group platform (multi-site):
       `subOrganization`), `WebSite`, default share image per site (uploaded or
       generated in its colours), robots open to images and public documents,
       Plausible per domain; Lighthouse ≥ 90 on both sites.
+- [x] **Phase 9** — Coming soon: "Bientôt disponible" cards block (seeded on
+      both home pages), client area / careers / news placeholder pages with a
+      useful action each, noindex and out of the sitemap.
 
 ## Structure
 

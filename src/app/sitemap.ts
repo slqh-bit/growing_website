@@ -32,7 +32,9 @@ const SHADOWED_SLUGS = new Set([
   ...RESERVED_PAGE_SLUGS,
   ...STATIC_ROUTES.map((r) => r.path.slice(1)),
   "team",
-  "blog",
+  "blog", // "coming soon" stubs (noindex) until they have content
+  "espace-client",
+  "carrieres",
   "suivi", // client tracking page: noindex, not in the sitemap
   "og", // generated share images (og/route.tsx)
 ]);

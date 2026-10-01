@@ -1,5 +1,5 @@
 import type { Block, Field } from "payload";
-import { linkFields } from "../cms/fields";
+import { linkFields, validateHref } from "../cms/fields";
 import { t3 } from "../cms/labels";
 import { featureIconOptions } from "../cms/options";
 
@@ -290,6 +290,79 @@ export const FaqBlock: Block = {
   ],
 };
 
+/**
+ * Features still to come (plan Phase 9: client area, careers, news), shown as
+ * "Bientôt disponible" cards, each optionally linking to its placeholder page.
+ */
+export const UpcomingBlock: Block = {
+  slug: "upcoming",
+  interfaceName: "UpcomingBlock",
+  labels: {
+    singular: t3("Bientôt disponible", "Coming soon", "قريباً"),
+    plural: t3("Bientôt disponible", "Coming soon", "قريباً"),
+  },
+  fields: [
+    titleField,
+    subtitleField,
+    {
+      name: "items",
+      type: "array",
+      minRows: 1,
+      maxRows: 6,
+      label: t3("Fonctionnalités à venir", "Upcoming features", "الميزات القادمة"),
+      admin: {
+        description: t3(
+          "Retirez une carte quand la fonctionnalité est en ligne.",
+          "Remove a card once the feature is live.",
+          "احذف البطاقة عند إطلاق الميزة.",
+        ),
+      },
+      fields: [
+        {
+          type: "row",
+          fields: [
+            {
+              name: "icon",
+              type: "select",
+              defaultValue: "Sun",
+              options: featureIconOptions,
+              label: t3("Icône", "Icon", "الأيقونة"),
+              admin: { width: "30%" },
+            },
+            {
+              name: "title",
+              type: "text",
+              localized: true,
+              required: true,
+              label: t3("Titre", "Title", "العنوان"),
+              admin: { width: "70%" },
+            },
+          ],
+        },
+        {
+          name: "description",
+          type: "textarea",
+          localized: true,
+          label: t3("Description", "Description", "الوصف"),
+        },
+        {
+          name: "href",
+          type: "text",
+          validate: validateHref,
+          label: t3("Lien (optionnel)", "Link (optional)", "الرابط (اختياري)"),
+          admin: {
+            description: t3(
+              "Ex. /espace-client, /carrieres, /blog.",
+              "E.g. /espace-client, /carrieres, /blog.",
+              "مثال: ‎/espace-client، ‎/carrieres، ‎/blog.",
+            ),
+          },
+        },
+      ],
+    },
+  ],
+};
+
 export const pageBlocks: Block[] = [
   HeroBlock,
   StatsBlock,
@@ -301,4 +374,5 @@ export const pageBlocks: Block[] = [
   LogosBlock,
   PartnersBlock,
   FaqBlock,
+  UpcomingBlock,
 ];

@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Clock } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -14,11 +14,13 @@ import type {
   ProjectsBlock,
   RichTextBlock,
   StatsBlock,
+  UpcomingBlock,
 } from "@/payload-types";
 import type { SiteKey } from "@/sites/config";
 import { getFaq, getFeaturedProjects, getPartners, getServices, getSite } from "@/lib/cms/queries";
 import { populated } from "@/lib/cms/media";
 import { Container } from "@/components/ui/container";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Accordion } from "@/components/ui/accordion";
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
@@ -246,6 +248,54 @@ export async function FaqBlockView({ block, locale, site }: BlockProps<FaqBlock>
         <Accordion
           items={items.map((f) => ({ id: String(f.id), question: f.question, answer: f.answer }))}
         />
+      </Container>
+    </section>
+  );
+}
+
+/** "Bientôt disponible" cards (plan Phase 9): features still to come, each linking to its placeholder page. */
+export async function UpcomingBlockView({ block, locale }: BlockProps<UpcomingBlock>) {
+  const items = block.items ?? [];
+  if (items.length === 0) return null;
+  const tc = await getTranslations({ locale, namespace: "common" });
+
+  return (
+    <section className="py-20 sm:py-24">
+      <Container>
+        {block.title && <SectionHeading title={block.title} subtitle={block.subtitle ?? undefined} />}
+        <RevealGroup className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item, i) => {
+            const card = (
+              <div className="flex h-full flex-col gap-3 rounded-2xl border border-dashed border-border bg-surface p-6 transition-colors group-hover:border-primary-300">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="inline-flex size-11 items-center justify-center rounded-xl bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-200">
+                    <DynamicIcon name={item.icon} className="size-5" />
+                  </span>
+                  <Badge variant="accent" className="gap-1">
+                    <Clock className="size-3" aria-hidden />
+                    {tc("comingSoon")}
+                  </Badge>
+                </div>
+                <h3 className="font-semibold text-foreground">{item.title}</h3>
+                {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
+              </div>
+            );
+            return (
+              <Reveal key={item.id ?? i} className="h-full">
+                {item.href ? (
+                  <SmartLink
+                    href={item.href}
+                    className="group block h-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {card}
+                  </SmartLink>
+                ) : (
+                  card
+                )}
+              </Reveal>
+            );
+          })}
+        </RevealGroup>
       </Container>
     </section>
   );

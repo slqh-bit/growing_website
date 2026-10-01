@@ -184,6 +184,7 @@ export interface Page {
         | LogosBlock
         | PartnersBlock
         | FaqBlock
+        | UpcomingBlock
       )[]
     | null;
   /**
@@ -512,6 +513,9 @@ export interface FeaturesBlock {
               | 'Award'
               | 'Heart'
               | 'Eye'
+              | 'UserRound'
+              | 'Briefcase'
+              | 'Newspaper'
             )
           | null;
         title: string;
@@ -646,6 +650,75 @@ export interface Faq {
   order: number;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "UpcomingBlock".
+ */
+export interface UpcomingBlock {
+  title?: string | null;
+  subtitle?: string | null;
+  /**
+   * Remove a card once the feature is live.
+   */
+  items?:
+    | {
+        icon?:
+          | (
+              | 'PlugZap'
+              | 'Droplets'
+              | 'BatteryCharging'
+              | 'Cable'
+              | 'Zap'
+              | 'Sun'
+              | 'House'
+              | 'Building2'
+              | 'Factory'
+              | 'Tractor'
+              | 'Lightbulb'
+              | 'RadioTower'
+              | 'Cctv'
+              | 'Siren'
+              | 'Fingerprint'
+              | 'Flame'
+              | 'Network'
+              | 'Router'
+              | 'Wifi'
+              | 'Server'
+              | 'Phone'
+              | 'ScanBarcode'
+              | 'Store'
+              | 'Monitor'
+              | 'Presentation'
+              | 'Tv'
+              | 'ListOrdered'
+              | 'Video'
+              | 'Cpu'
+              | 'Landmark'
+              | 'ShieldCheck'
+              | 'MapPin'
+              | 'Wrench'
+              | 'Headphones'
+              | 'Award'
+              | 'Heart'
+              | 'Eye'
+              | 'UserRound'
+              | 'Briefcase'
+              | 'Newspaper'
+            )
+          | null;
+        title: string;
+        description?: string | null;
+        /**
+         * E.g. /espace-client, /carrieres, /blog.
+         */
+        href?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'upcoming';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1498,6 +1571,7 @@ export interface PagesSelect<T extends boolean = true> {
         logos?: T | LogosBlockSelect<T>;
         partners?: T | PartnersBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
+        upcoming?: T | UpcomingBlockSelect<T>;
       };
   seo?:
     | T
@@ -1650,6 +1724,25 @@ export interface PartnersBlockSelect<T extends boolean = true> {
 export interface FaqBlockSelect<T extends boolean = true> {
   title?: T;
   items?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "UpcomingBlock_select".
+ */
+export interface UpcomingBlockSelect<T extends boolean = true> {
+  title?: T;
+  subtitle?: T;
+  items?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        description?: T;
+        href?: T;
+        id?: T;
+      };
   id?: T;
   blockName?: T;
 }

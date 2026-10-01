@@ -300,3 +300,30 @@ test.describe("Tender documents (Phase 6)", () => {
   });
 });
 
+test.describe("Coming soon (Phase 9)", () => {
+  test("the home page shows the upcoming features, each leading to its placeholder", async ({ page }) => {
+    await page.goto("/fr");
+    const section = page.locator("section", { hasText: "Bientôt sur notre site" });
+    await expect(section.getByText("Bientôt disponible")).toHaveCount(3);
+    await section.locator('a[href="/fr/espace-client"]').click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Espace client");
+    // Meanwhile, clients can already track their request.
+    await expect(page.locator('main a[href="/fr/suivi"]')).toBeVisible();
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  });
+
+  test("careers invite an open application by email to the site's own address", async ({ page, baseURL }) => {
+    const url = new URL("/fr/carrieres", baseURL);
+    url.hostname = "hikview.localhost";
+    await page.goto(url.toString());
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Carrières");
+    const mail = await page.locator('main a[href^="mailto:"]').getAttribute("href");
+    expect(mail).toContain("Hikview%20Engineering");
+  });
+
+  test("placeholder pages stay out of the sitemap", async ({ request }) => {
+    const xml = await (await request.get("/sitemap.xml")).text();
+    for (const path of ["/espace-client", "/carrieres", "/blog"]) expect(xml).not.toContain(`/fr${path}<`);
+  });
+});
+

@@ -30,7 +30,9 @@
     "switchLanguage": "Changer de langue",
     "toggleTheme": "Basculer le thème clair/sombre",
     "group": "Le groupe",
-    "documents": "Documents administratifs"
+    "documents": "Documents administratifs",
+    "clientArea": "Espace client",
+    "careers": "Carrières"
   },
   "home": {
     "heroBadge": "Installateur solaire certifié ANME",
@@ -311,5 +313,25 @@
     "empty": "Nos documents administratifs seront bientôt disponibles ici. Contactez-nous pour les recevoir.",
     "contactCta": "Nous contacter",
     "note": "Les documents expirés sont retirés automatiquement. Besoin d'une pièce qui n'est pas listée ? Écrivez-nous."
+  },
+  "upcoming": {
+    "title": "Bientôt sur notre site",
+    "subtitle": "De nouveaux services en ligne arrivent pour nos clients et nos futurs collaborateurs.",
+    "clientArea": {
+      "card": "Vos devis, factures, garanties et le suivi de vos installations, réunis au même endroit.",
+      "body": "Bientôt, retrouvez vos devis, factures, certificats de garantie et le suivi de vos installations dans un espace sécurisé. En attendant, suivez votre demande de devis avec sa référence.",
+      "cta": "Suivre ma demande"
+    },
+    "careers": {
+      "card": "Nos offres d'emploi et de stage. Les candidatures spontanées sont déjà les bienvenues.",
+      "body": "Nos offres d'emploi et de stage seront publiées ici. Techniciens, ingénieurs, commerciaux : envoyez dès maintenant votre candidature spontanée avec votre CV.",
+      "cta": "Envoyer une candidature spontanée",
+      "subject": "Candidature spontanée"
+    },
+    "news": {
+      "card": "Nos chantiers, nos nouveautés et nos conseils.",
+      "body": "Nos actualités, nos chantiers et nos conseils arrivent bientôt. En attendant, découvrez nos réalisations.",
+      "cta": "Voir nos réalisations"
+    }
   }
 }
