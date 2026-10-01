@@ -15,10 +15,13 @@ export function isSiteKey(value: string): value is SiteKey {
   return (siteKeys as readonly string[]).includes(value);
 }
 
+/** What a malformed Host header becomes: resolved to the default site. */
+export const UNKNOWN_HOST = "unknown.invalid";
+
 /**
  * Hostname sent by the middleware as the `[domain]` route segment: lowercase,
  * no port, no trailing dot. Anything that isn't a plain hostname becomes
- * `localhost` (resolved to the default site).
+ * UNKNOWN_HOST (resolved to the default site).
  */
 export function normalizeHost(host: string | null | undefined): string {
   const hostname = (host ?? "")
@@ -26,7 +29,7 @@ export function normalizeHost(host: string | null | undefined): string {
     .toLowerCase()
     .replace(/:\d+$/, "")
     .replace(/\.$/, "");
-  return /^[a-z0-9-]+(\.[a-z0-9-]+)*$/.test(hostname) ? hostname : "localhost";
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)*$/.test(hostname) ? hostname : UNKNOWN_HOST;
 }
 
 export interface SiteDomains {
@@ -38,8 +41,9 @@ export interface SiteDomains {
 /**
  * Which site a hostname belongs to:
  *   1. a domain listed on a site in the admin (www. is matched too);
- *   2. `<key>.localhost` (development: growing.localhost, hikview.localhost);
- *   3. the site marked "default", else the first one.
+ *   2. development: `<key>.localhost` (growing.localhost, hikview.localhost),
+ *      and plain `localhost` for the group site when it exists;
+ *   3. the site marked "default", else the first one (unknown domains).
  * Returns null only when no site exists at all.
  */
 export function matchSite(hostname: string, sites: readonly SiteDomains[]): SiteKey | null {
@@ -52,7 +56,7 @@ export function matchSite(hostname: string, sites: readonly SiteDomains[]): Site
   );
   if (listed) return listed.key;
 
-  const local = /^([a-z0-9-]+)\.localhost$/.exec(hostname)?.[1];
+  const local = hostname === "localhost" ? "group" : /^([a-z0-9-]+)\.localhost$/.exec(hostname)?.[1];
   const byKey = local ? sites.find((site) => site.key === local) : undefined;
   if (byKey) return byKey.key;
 

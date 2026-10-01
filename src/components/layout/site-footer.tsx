@@ -7,6 +7,7 @@ import { getServices, getSite } from "@/lib/cms/queries";
 import { brandOf, Logo } from "@/components/brand/logo";
 import { SmartLink } from "@/components/cms/smart-link";
 import { GroupBand } from "@/components/layout/group-band";
+import { GroupFooter } from "@/components/layout/group-footer";
 import { telHref } from "@/lib/contact-links";
 import { topLevel } from "@/lib/services";
 
@@ -17,6 +18,7 @@ export async function SiteFooter({ locale, site }: { locale: Locale; site: SiteK
     getServices(site, locale),
     getSite(site, locale),
   ]);
+  if (site === "group") return <GroupFooter locale={locale} settings={settings} />;
   const footer = settings.footer ?? {};
   const year = new Date().getFullYear();
   const quickLinks = footer.quickLinks ?? [];

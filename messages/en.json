@@ -32,7 +32,9 @@
     "group": "Our group",
     "documents": "Company documents",
     "clientArea": "Client area",
-    "careers": "Careers"
+    "careers": "Careers",
+    "companies": "Our companies",
+    "references": "References"
   },
   "home": {
     "heroBadge": "ANME-certified solar installer",
@@ -227,6 +229,11 @@
     "siteVisit": {
       "label": "I'd like a technical visit on site",
       "help": "A technician comes to take measurements and note the site's constraints before the quote."
+    },
+    "company": {
+      "label": "Company",
+      "question": "Which company would you like to contact?",
+      "pickFirst": "Choose a company first to see its services."
     }
   },
   "notFound": {

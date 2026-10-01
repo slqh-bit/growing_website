@@ -14,7 +14,7 @@ import { siteOrigin } from "@/lib/metadata";
 import { resolveSiteKey } from "@/lib/site";
 import { themeVars } from "@/lib/theme";
 import { getGroupMembers } from "@/lib/group";
-import { JsonLd, organizationLd, websiteLd, type GroupRef } from "@/lib/seo/json-ld";
+import { groupLd, JsonLd, organizationLd, websiteLd, type GroupRef } from "@/lib/seo/json-ld";
 import "@/styles/globals.css";
 
 /**
@@ -124,7 +124,14 @@ export default async function LocaleLayout({
                 {children}
               </main>
               <SiteFooter locale={locale} site={site} />
-              <JsonLd data={organizationLd(settings, locale, groupRef)} />
+              {/* The group site describes the group and its companies; a company site, itself within the group. */}
+              <JsonLd
+                data={
+                  site === "group"
+                    ? groupLd(settings, locale, group, members.map((m) => m.site))
+                    : organizationLd(settings, locale, groupRef)
+                }
+              />
               <JsonLd data={websiteLd(settings, locale)} />
             </div>
           </NextIntlClientProvider>

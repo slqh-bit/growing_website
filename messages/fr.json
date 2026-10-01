@@ -32,7 +32,9 @@
     "group": "Le groupe",
     "documents": "Documents administratifs",
     "clientArea": "Espace client",
-    "careers": "Carrières"
+    "careers": "Carrières",
+    "companies": "Nos sociétés",
+    "references": "Références"
   },
   "home": {
     "heroBadge": "Installateur solaire certifié ANME",
@@ -227,6 +229,11 @@
     "siteVisit": {
       "label": "Je souhaite une visite technique sur site",
       "help": "Un technicien se déplace pour relever les mesures et les contraintes avant le devis."
+    },
+    "company": {
+      "label": "Société",
+      "question": "Quelle société souhaitez-vous contacter ?",
+      "pickFirst": "Choisissez d'abord une société pour voir ses services."
     }
   },
   "notFound": {

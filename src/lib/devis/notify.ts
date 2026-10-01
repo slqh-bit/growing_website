@@ -171,7 +171,7 @@ async function sendClientEmail(payload: Payload, lead: DevisRequest, site: Site)
 <p style="margin:0 0 12px">Votre référence : <strong style="font-family:monospace;font-size:16px">${escapeHtml(ref)}</strong></p>
 <p style="margin:0 0 16px">${buttonHtml(track, "Suivre ma demande", brand)}</p>
 <p style="margin:0">Pour toute question : ${escapeHtml(site.phone)} · ${escapeHtml(site.email)}</p>`,
-    `${escapeHtml(site.legalName)} — ${escapeHtml(site.address)}<br>Matricule fiscal : ${escapeHtml(site.matriculeFiscal)}<br>Ce message est envoyé automatiquement suite à votre demande sur notre site.`,
+    `${escapeHtml(site.legalName)} — ${escapeHtml(site.address)}<br>${site.matriculeFiscal ? `Matricule fiscal : ${escapeHtml(site.matriculeFiscal)}<br>` : ""}Ce message est envoyé automatiquement suite à votre demande sur notre site.`,
     "fr",
     brand,
   );

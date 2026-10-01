@@ -29,7 +29,9 @@ export function otherSiteOrigin(site: Pick<Site, "url" | "domains" | "key">): st
   if (domain) return `https://${domain}`;
   const own = new URL(siteUrl);
   if (own.hostname === "localhost" || own.hostname.endsWith(".localhost")) {
-    return `${own.protocol}//${site.key}.localhost${own.port ? `:${own.port}` : ""}`;
+    // Plain localhost is the group site (src/sites/config.ts).
+    const host = site.key === "group" ? "localhost" : `${site.key}.localhost`;
+    return `${own.protocol}//${host}${own.port ? `:${own.port}` : ""}`;
   }
   return null;
 }

@@ -2,6 +2,7 @@ import type { Block, Field } from "payload";
 import { linkFields, validateHref } from "../cms/fields";
 import { t3 } from "../cms/labels";
 import { featureIconOptions } from "../cms/options";
+import { groupBlocks } from "./group-config";
 
 /**
  * Page-builder blocks for the Pages collection (devplan §4.3). All editor text
@@ -81,6 +82,16 @@ export const StatsBlock: Block = {
   labels: { singular: t3("Chiffres clés", "Stats", "أرقام"), plural: t3("Chiffres clés", "Stats", "أرقام") },
   fields: [
     titleField,
+    {
+      name: "style",
+      type: "select",
+      defaultValue: "band",
+      options: [
+        { value: "band", label: t3("Bandeau", "Band", "شريط") },
+        { value: "card", label: t3("Carte sous une grande bannière", "Card under a large banner", "بطاقة تحت بانر كبير") },
+      ],
+      label: t3("Style", "Style", "النمط"),
+    },
     {
       name: "useSiteStats",
       type: "checkbox",
@@ -375,4 +386,5 @@ export const pageBlocks: Block[] = [
   PartnersBlock,
   FaqBlock,
   UpcomingBlock,
+  ...groupBlocks,
 ];

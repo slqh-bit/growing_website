@@ -14,6 +14,7 @@ import * as migration_20260930_143138_company_documents from './20260930_143138_
 import * as migration_20260930_150249_seo_business_type from './20260930_150249_seo_business_type';
 import * as migration_20261001_085746_upcoming_block from './20261001_085746_upcoming_block';
 import * as migration_20261001_100000_hikview_home_quote_buttons from './20261001_100000_hikview_home_quote_buttons';
+import * as migration_20261001_142539_group_site from './20261001_142539_group_site';
 
 export const migrations = [
   {
@@ -95,5 +96,10 @@ export const migrations = [
     up: migration_20261001_100000_hikview_home_quote_buttons.up,
     down: migration_20261001_100000_hikview_home_quote_buttons.down,
     name: '20261001_100000_hikview_home_quote_buttons',
+  },
+  {
+    up: migration_20261001_142539_group_site.up,
+    down: migration_20261001_142539_group_site.down,
+    name: '20261001_142539_group_site'
   },
 ];

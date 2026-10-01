@@ -27,6 +27,7 @@ import { rich, serviceData } from "./seed-data/build";
 import { faqItems } from "./seed-data/faq";
 import { crossSell, group } from "./seed-data/group";
 import { devisForms, type SeedForm } from "./seed-data/devis-forms";
+import { groupHome } from "./seed-data/group-home";
 import { hikviewAbout, hikviewFooterTagline, hikviewHome } from "./seed-data/hikview";
 import { hikviewServices } from "./seed-data/hikview-services";
 import { footerNav, legalNav, mainNav, type NavItem } from "./seed-data/navigation";
@@ -125,7 +126,7 @@ async function seedSites(payload: Payload): Promise<Record<SiteKey, Id | undefin
       isDefault: s.isDefault,
       companyName: s.companyName,
       legalName: s.legalName,
-      matriculeFiscal: s.matriculeFiscal,
+      matriculeFiscal: s.matriculeFiscal || null,
       certification: s.certification || null,
       businessType: s.businessType,
       tagline: s.tagline[l],
@@ -146,14 +147,15 @@ async function seedSites(payload: Payload): Promise<Record<SiteKey, Id | undefin
         linkedin: s.socials.linkedin || null,
       },
       stats: s.stats.map((stat) => ({ value: stat.value, label: stat.label[l] })),
-      navItems: mainNav.map((item) => ({
+      logoSubline: s.logoSubline?.[l] ?? null,
+      navItems: (s.nav ?? mainNav).map((item) => ({
         label: msg(l, `nav.${item.labelKey}`),
         href: item.href,
         comingSoon: Boolean(item.comingSoon),
       })),
       footer: {
         tagline: footerTagline ? footerTagline[l] : msg(l, "footer.tagline"),
-        quickLinks: navLinks(l, footerNav),
+        quickLinks: navLinks(l, s.footerLinks ?? footerNav),
         legalLinks: navLinks(l, legalNav),
       },
     }));
@@ -393,6 +395,46 @@ function hikviewHomeLayout(l: Locale) {
   ];
 }
 
+/** The group site's home (plan §3.3): its blocks read the companies' own content. */
+function groupHomeLayout(l: Locale) {
+  const g = groupHome;
+  return [
+    {
+      blockType: "groupHero",
+      badge: g.hero.badge[l],
+      title: g.hero.title[l],
+      highlight: g.hero.highlight[l],
+      subtitle: g.hero.subtitle[l],
+      primaryCta: { label: g.hero.discover[l], href: "/#filiales" },
+      secondaryCta: { label: msg(l, "common.requestQuote"), href: "/#contact" },
+    },
+    { blockType: "stats", style: "card", useSiteStats: true },
+    {
+      blockType: "companies",
+      eyebrow: g.companies.eyebrow[l],
+      title: g.companies.title[l],
+      subtitle: g.companies.subtitle[l],
+      linkLabel: g.companies.link[l],
+    },
+    { blockType: "groupServices", eyebrow: g.services.eyebrow[l], title: g.services.title[l] },
+    {
+      blockType: "steps",
+      eyebrow: g.steps.eyebrow[l],
+      title: g.steps.title[l],
+      items: g.steps.items.map((item) => ({ title: item.title[l], description: item.description[l] })),
+    },
+    {
+      blockType: "groupProjects",
+      eyebrow: g.projects.eyebrow[l],
+      title: g.projects.title[l],
+      subtitle: g.projects.subtitle[l],
+      limit: 6,
+    },
+    upcomingBlock(l),
+    { blockType: "quoteForm", eyebrow: g.quote.eyebrow[l], title: g.quote.title[l], subtitle: g.quote.subtitle[l] },
+  ];
+}
+
 function hikviewAboutLayout(l: Locale) {
   const a = hikviewAbout;
   return [
@@ -413,6 +455,7 @@ async function seedPages(payload: Payload, siteIds: Record<SiteKey, Id | undefin
     { site: siteIds.growing, slug: "about", title: (l: Locale) => msg(l, "nav.about"), layout: growingAbout },
     { site: siteIds.hikview, slug: "home", title: (l: Locale) => msg(l, "nav.home"), layout: hikviewHomeLayout },
     { site: siteIds.hikview, slug: "about", title: (l: Locale) => msg(l, "nav.about"), layout: hikviewAboutLayout },
+    { site: siteIds.group, slug: "home", title: (l: Locale) => msg(l, "nav.home"), layout: groupHomeLayout },
   ];
   const results = [];
   for (const page of pages) {

@@ -11,7 +11,7 @@ import { Container } from "@/components/ui/container";
 import { PageHeader } from "@/components/sections/page-header";
 import { Reveal } from "@/components/motion/reveal";
 import { DevisForm } from "@/components/devis/devis-form";
-import { getDevisChoices } from "@/lib/devis/choices";
+import { getDevisChoices, getDevisCompanies } from "@/lib/devis/choices";
 import { telHref, whatsappHref } from "@/lib/contact-links";
 
 export async function generateMetadata({
@@ -28,10 +28,12 @@ export async function generateMetadata({
 export default async function DevisPage({ params }: { params: Promise<{ domain: string; locale: Locale }> }) {
   const { site, locale } = await routeContext(params);
   setRequestLocale(locale);
-  const [t, activities, settings] = await Promise.all([
+  const [t, activities, companies, settings] = await Promise.all([
     getTranslations({ locale, namespace: "devis" }),
-    // The site's services linked to a quote form (Services → Formulaire de devis).
+    // The site's services linked to a quote form (Services → Formulaire de devis);
+    // on the group site, every company's, after choosing the company.
     getDevisChoices(site, locale),
+    getDevisCompanies(site, locale),
     getSite(site, locale),
   ]);
 
@@ -55,7 +57,12 @@ export default async function DevisPage({ params }: { params: Promise<{ domain: 
         <Container className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
             {activities.length > 0 ? (
-              <DevisForm activities={activities} locale={locale} privacyHref={`/${locale}/politique-confidentialite`} />
+              <DevisForm
+                activities={activities}
+                companies={companies}
+                locale={locale}
+                privacyHref={`/${locale}/politique-confidentialite`}
+              />
             ) : (
               // No service of this site is linked to the form yet (plan Phase 5).
               <Reveal className="rounded-3xl border border-border bg-surface p-8 shadow-sm">

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, onHost, test } from "./fixtures";
 
 test.describe("locales and layout", () => {
   for (const { browserLanguage, expected } of [
@@ -72,17 +72,12 @@ test.describe("content pages", () => {
 });
 
 test.describe("Multi-site (one site per domain)", () => {
-  // Chromium resolves *.localhost to the loopback address, like the dev setup.
-  const onHost = (baseURL: string | undefined, host: string, path: string) => {
-    const url = new URL(path, baseURL);
-    url.hostname = host;
-    return url.toString();
-  };
-
-  test("the default site answers on localhost", async ({ page }) => {
+  test("growing.localhost shows Growing; plain localhost, the group", async ({ page, baseURL }) => {
     await page.goto("/fr");
     await expect(page.locator("html")).toHaveAttribute("data-site", "growing");
     await expect(page).toHaveTitle(/Growing Technologies/);
+    await page.goto(onHost(baseURL, "localhost", "/fr"));
+    await expect(page.locator("html")).toHaveAttribute("data-site", "group");
   });
 
   test("hikview.localhost shows the Hikview site with its own brand colours", async ({ page, baseURL }) => {
@@ -329,7 +324,7 @@ test.describe("Coming soon (Phase 9)", () => {
 
 test.describe("Header layout", () => {
   // French labels are the longest; the header must fit from tablet to wide desktop on both sites.
-  for (const host of ["localhost", "hikview.localhost"]) {
+  for (const host of ["growing.localhost", "hikview.localhost", "localhost"]) {
     test(`${host}: the header never overflows the page`, async ({ page, baseURL }) => {
       const url = new URL("/fr/contact", baseURL);
       url.hostname = host;
@@ -354,6 +349,36 @@ test.describe("Header layout", () => {
     await page.goto(url.toString());
     // Hero and closing call to action (the header's own button is outside main).
     await expect(page.locator('main a[href="/fr/devis"]')).toHaveCount(2);
+  });
+});
+
+test.describe("Group site (plain localhost)", () => {
+  test("the home presents both companies, linking to their own sites", async ({ page, baseURL }) => {
+    await page.goto(onHost(baseURL, "localhost", "/fr"));
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Sécuriser, connecter");
+    const companies = page.locator("#filiales");
+    await expect(companies.getByRole("heading", { level: 3 })).toHaveText(["Growing Technologies", "Hikview Engineering"]);
+    await expect(companies.locator('a[href*="growing.localhost"][href$="/fr"]')).toBeVisible();
+    await expect(companies.locator('a[href*="hikview.localhost"][href$="/fr"]')).toBeVisible();
+    // The footer carries each company's legal identity.
+    await expect(page.locator("footer")).toContainText("1667878K");
+  });
+
+  test("services are shown per company, in tabs", async ({ page, baseURL }) => {
+    await page.goto(onHost(baseURL, "localhost", "/fr"));
+    const services = page.locator("#services");
+    await expect(services.getByRole("tab", { name: "Growing Technologies" })).toHaveAttribute("aria-selected", "true");
+    await expect(services.getByRole("tabpanel")).toContainText("Pompage solaire");
+    await services.getByRole("tab", { name: "Hikview Engineering" }).click();
+    await expect(services.getByRole("tabpanel")).toContainText("Sécurité électronique");
+    await expect(services.locator('a[href*="hikview.localhost"]').first()).toBeVisible();
+  });
+
+  test("the group's structured data lists both companies", async ({ page, baseURL }) => {
+    await page.goto(onHost(baseURL, "localhost", "/fr"));
+    const blocks = (await page.locator('script[type="application/ld+json"]').allTextContents()).map((t) => JSON.parse(t));
+    const group = blocks.find((b) => b["@type"] === "Organization");
+    expect(group?.subOrganization?.map((o: { name: string }) => o.name)).toEqual(["Growing Technologies", "Hikview Engineering"]);
   });
 });
 

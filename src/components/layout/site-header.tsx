@@ -86,11 +86,12 @@ export function SiteHeader({ items, brand }: { items: HeaderNavItem[]; brand: Br
             <ThemeToggle />
           </div>
           <LanguageSwitcher />
-          {/* Labelled while the menu is collapsed; icon-only next to it (xl), where the label doesn't fit in French. */}
+          {/* Labelled at lg while the menu is collapsed; icon-only on tablets (long wordmarks,
+              e.g. the group's) and next to the menu (xl), where the French label doesn't fit. */}
           <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
             <Link href="/suivi" aria-label={tc("trackRequest")} title={tc("trackRequest")}>
               <ListChecks className="size-4" aria-hidden />
-              <span className="xl:hidden">{tc("trackRequest")}</span>
+              <span className="hidden lg:inline xl:hidden">{tc("trackRequest")}</span>
             </Link>
           </Button>
           <Button asChild variant="solar" size="sm" className="hidden md:inline-flex">
