@@ -8,14 +8,16 @@ import { cn } from "@/lib/utils";
  * Accessible help tooltip for technical terms (HMT, autonomy…).
  * Opens on hover, keyboard focus and tap; Escape or blur closes it.
  * The text is always in the DOM and linked via aria-describedby, so screen
- * readers announce it when the button is focused.
+ * readers announce it when the button is focused. The bubble is anchored to
+ * the nearest positioned ancestor (e.g. the field's label row) and never gets
+ * wider than it, so it can't push the page sideways.
  */
 export function InfoTip({ content, label, className }: { content: string; label: string; className?: string }) {
   const [open, setOpen] = React.useState(false);
   const id = React.useId();
 
   return (
-    <span className={cn("relative inline-flex align-middle", className)}>
+    <span className={cn("inline-flex align-middle", className)}>
       <button
         type="button"
         aria-label={label}
@@ -35,7 +37,7 @@ export function InfoTip({ content, label, className }: { content: string; label:
         id={id}
         role="tooltip"
         className={cn(
-          "pointer-events-none absolute bottom-full start-0 z-30 mb-2 w-64 max-w-[80vw] rounded-lg bg-foreground px-3 py-2 text-xs font-normal leading-relaxed text-background shadow-lg transition-all duration-150",
+          "pointer-events-none absolute bottom-full start-0 z-30 mb-2 w-64 max-w-full rounded-lg bg-foreground px-3 py-2 text-xs font-normal leading-relaxed text-background shadow-lg transition-all duration-150",
           open ? "visible translate-y-0 opacity-100" : "invisible translate-y-1 opacity-0",
         )}
       >

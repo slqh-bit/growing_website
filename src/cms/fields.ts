@@ -1,4 +1,5 @@
-import type { Field, GroupField, TextField } from "payload";
+import type { Field, GroupField, RelationshipField, TextField } from "payload";
+import { managedSiteIds } from "./access";
 import { t3 } from "./labels";
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -16,15 +17,16 @@ export function slugify(value: string): string {
 
 /**
  * URL slug shared by all locales (devplan §4: "slugs shared across locales").
- * Auto-derived from `sourceField` when left empty.
+ * Auto-derived from `sourceField` when left empty. Per-site collections make
+ * it unique per site instead (`unique: false` + a compound index).
  */
-export function slugField(sourceField = "title"): TextField {
+export function slugField(sourceField = "title", { unique = true }: { unique?: boolean } = {}): TextField {
   return {
     name: "slug",
     type: "text",
     label: t3("Slug (URL)", "Slug (URL)", "المعرّف (الرابط)"),
     required: true,
-    unique: true,
+    unique,
     index: true,
     admin: {
       position: "sidebar",
@@ -48,6 +50,37 @@ export function slugField(sourceField = "title"): TextField {
       "Lowercase letters, digits and hyphens only (e.g. pompage-solaire).",
   };
 }
+
+/**
+ * The website a document belongs to (plan §5). Editors can only pick the
+ * sites they manage (Users → Sites gérés), and get their first one by default.
+ */
+export function siteField(): RelationshipField {
+  return {
+    name: "site",
+    type: "relationship",
+    relationTo: "sites",
+    required: true,
+    index: true,
+    label: t3("Site", "Site", "الموقع"),
+    defaultValue: ({ user }: { user?: unknown }) => managedSiteIds(user)?.[0],
+    filterOptions: ({ user }) => {
+      const ids = managedSiteIds(user);
+      return ids ? { id: { in: ids } } : true;
+    },
+    admin: {
+      position: "sidebar",
+      description: t3(
+        "Le site web qui publie ce contenu.",
+        "The website that publishes this content.",
+        "الموقع الذي ينشر هذا المحتوى.",
+      ),
+    },
+  };
+}
+
+/** One slug per site: `[{ fields: ["site", "slug"], unique: true }]`. */
+export const uniqueSlugPerSite = [{ fields: ["site", "slug"], unique: true }];
 
 /** Per-document SEO overrides (localized). Falls back to title/summary. */
 export const seoField: GroupField = {

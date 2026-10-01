@@ -17,7 +17,7 @@ export function toProjectView(project: Project, t: ProjectsTranslator): ProjectV
     region: project.region,
     clientType: project.clientType,
     clientTypeLabel: t(`clientType.${project.clientType}`),
-    activityKey: service?.activityKey ?? "",
+    activitySlug: service?.slug ?? "",
     activityLabel: service?.title ?? "",
     icon: service?.icon ?? "Sun",
     powerKwc: project.powerKwc ?? null,

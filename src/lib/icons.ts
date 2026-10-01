@@ -4,8 +4,39 @@
  * without an icon (or vice versa) is a type error.
  */
 
-/** Icons offered for Services. */
-export const serviceIconNames = ["PlugZap", "Droplets", "BatteryCharging", "Cable", "Zap", "Sun"] as const;
+/** Icons offered for Services and their page sections (solar, security, networks, AV, IoT, B2G). */
+export const serviceIconNames = [
+  "PlugZap",
+  "Droplets",
+  "BatteryCharging",
+  "Cable",
+  "Zap",
+  "Sun",
+  "House",
+  "Building2",
+  "Factory",
+  "Tractor",
+  "Lightbulb",
+  "RadioTower",
+  "Cctv",
+  "Siren",
+  "Fingerprint",
+  "Flame",
+  "Network",
+  "Router",
+  "Wifi",
+  "Server",
+  "Phone",
+  "ScanBarcode",
+  "Store",
+  "Monitor",
+  "Presentation",
+  "Tv",
+  "ListOrdered",
+  "Video",
+  "Cpu",
+  "Landmark",
+] as const;
 export type ServiceIconName = (typeof serviceIconNames)[number];
 
 /** Icons offered for Features block items (a superset of the service icons). */
@@ -18,6 +49,9 @@ export const featureIconNames = [
   "Award",
   "Heart",
   "Eye",
+  "UserRound",
+  "Briefcase",
+  "Newspaper",
 ] as const;
 export type IconName = (typeof featureIconNames)[number];
 

@@ -1,6 +1,5 @@
 {
   "common": {
-    "companyTagline": "Énergie solaire & électricité — installateur certifié ANME",
     "requestQuote": "Demander un devis",
     "trackRequest": "Suivre ma demande",
     "learnMore": "En savoir plus",
@@ -29,13 +28,17 @@
     "openMenu": "Ouvrir le menu",
     "closeMenu": "Fermer le menu",
     "switchLanguage": "Changer de langue",
-    "toggleTheme": "Basculer le thème clair/sombre"
+    "toggleTheme": "Basculer le thème clair/sombre",
+    "group": "Le groupe",
+    "documents": "Documents administratifs",
+    "clientArea": "Espace client",
+    "careers": "Carrières"
   },
   "home": {
     "heroBadge": "Installateur solaire certifié ANME",
     "heroTitle": "L'énergie solaire, au service de votre avenir",
     "heroSubtitle": "Growing Technologies conçoit et installe des solutions solaires et électriques fiables à Sbeitla et dans toute la Tunisie du centre.",
-    "activitiesTitle": "Nos cinq activités",
+    "activitiesTitle": "Nos quatre activités",
     "activitiesSubtitle": "Une expertise complète, du photovoltaïque à la moyenne tension.",
     "statsTitle": "Notre expérience en chiffres",
     "projectsTitle": "Réalisations récentes",
@@ -57,11 +60,19 @@
   },
   "services": {
     "title": "Nos services",
-    "subtitle": "Cinq domaines d'expertise pour l'énergie et l'électricité.",
+    "subtitle": "Découvrez nos domaines d'expertise.",
     "benefitsTitle": "Bénéfices",
     "processTitle": "Notre démarche",
     "requestForActivity": "Demander un devis pour ce service",
-    "allServices": "Tous les services"
+    "allServices": "Tous les services",
+    "onThisPage": "Sur cette page",
+    "partnersTitle": "Marques & partenaires",
+    "subServicesTitle": "Nos solutions",
+    "publicReferences": "Références institutionnelles",
+    "sameArea": "Dans le même domaine : {area}",
+    "documentsTitle": "Dossier administratif",
+    "documentsBody": "Attestations fiscale et CNSS, RNE, certificats : nos documents à jour pour vos appels d'offres.",
+    "documentsCta": "Voir les documents"
   },
   "projects": {
     "title": "Nos réalisations",
@@ -170,9 +181,13 @@
       "tooLarge": "Valeur trop élevée.",
       "tooLong": "Texte trop long.",
       "invalidOption": "Choix invalide.",
+      "tooSmall": "Valeur trop petite.",
+      "invalidDate": "Date invalide.",
+      "requireOne": "Renseignez au moins l'un de ces champs.",
+      "fileType": "Format non accepté : PDF, JPG, PNG, WebP, HEIC, Word (.docx), Excel (.xlsx) ou DWG.",
+      "fileTooLarge": "Fichier trop lourd : 10 Mo maximum par fichier, 20 Mo au total.",
+      "tooManyFiles": "5 fichiers maximum.",
       "consent": "Votre accord est nécessaire pour traiter la demande.",
-      "billOrConsumption": "Indiquez votre facture mensuelle ou votre consommation.",
-      "describeWork": "Décrivez les travaux en quelques mots (10 caractères minimum).",
       "fixErrors": "Veuillez corriger les champs signalés.",
       "rateLimited": "Trop de demandes envoyées depuis votre connexion. Réessayez dans quelques minutes ou appelez-nous.",
       "server": "Votre demande n'a pas pu être enregistrée. Réessayez ou appelez-nous.",
@@ -198,6 +213,20 @@
       "certified": "Installateur certifié ANME",
       "subsidies": "Accompagnement subventions et démarches STEG",
       "preferCall": "Vous préférez nous parler ?"
+    },
+    "unavailable": "Le formulaire de devis en ligne arrive bientôt pour ces activités. En attendant, décrivez-nous votre projet : nous vous répondons sous 48 h ouvrées.",
+    "unavailableCta": "Nous contacter",
+    "attachments": {
+      "label": "Documents (plans, photos…)",
+      "help": "Plans, photos du site, factures ou cahier des charges nous aident à chiffrer plus vite.",
+      "add": "Ajouter des fichiers",
+      "limits": "PDF, photos, Word, Excel ou DWG · {max} fichiers, 10 Mo chacun",
+      "selected": "Fichiers ajoutés",
+      "remove": "Retirer {name}"
+    },
+    "siteVisit": {
+      "label": "Je souhaite une visite technique sur site",
+      "help": "Un technicien se déplace pour relever les mesures et les contraintes avant le devis."
     }
   },
   "notFound": {
@@ -217,14 +246,14 @@
     "title": "Suivre ma demande",
     "subtitle": "Consultez l'avancement de votre demande de devis avec votre référence et votre numéro de téléphone.",
     "reference": "Référence",
-    "referencePlaceholder": "GT-260928-A1B2",
+    "referencePlaceholder": "{prefix}-260928-A1B2",
     "referenceHint": "Indiquée après l'envoi du formulaire et dans l'e-mail de confirmation.",
     "phone": "Téléphone",
     "phoneHint": "Le numéro indiqué dans votre demande.",
     "submit": "Voir l'avancement",
     "submitting": "Recherche…",
     "errors": {
-      "invalidReference": "Référence invalide. Format attendu : GT-AAMMJJ-XXXX.",
+      "invalidReference": "Référence invalide. Format attendu : {prefix}-AAMMJJ-XXXX.",
       "invalidPhone": "Numéro invalide : 8 chiffres, ex. 98 123 456.",
       "notFound": "Aucune demande ne correspond à cette référence et ce numéro. Vérifiez les deux champs.",
       "rateLimited": "Trop de recherches. Réessayez dans quelques minutes.",
@@ -253,6 +282,56 @@
       "pending": "À venir",
       "questions": "Une question sur votre dossier ?",
       "another": "Rechercher une autre demande"
+    }
+  },
+  "group": {
+    "title": "Le groupe",
+    "memberOf": "Membre du {group}",
+    "visitSite": "Visiter le site de {company}",
+    "discover": "Découvrir le groupe",
+    "companies": "Nos sociétés",
+    "youAreHere": "Vous êtes ici",
+    "visit": "Visiter le site",
+    "sisterCompany": "Chez notre société sœur {company}",
+    "sisterSubtitle": "Des solutions complémentaires, avec le même suivi de proximité."
+  },
+  "documents": {
+    "title": "Documents administratifs",
+    "subtitle": "Pour vos appels d'offres et consultations : nos attestations et certificats à jour, à télécharger.",
+    "identity": "Identité de l'entreprise",
+    "legalName": "Raison sociale",
+    "taxId": "Matricule fiscal",
+    "rne": "Identifiant unique (RNE)",
+    "address": "Siège",
+    "certification": "Certification",
+    "validUntil": "Valide jusqu'au {date}",
+    "noExpiry": "Sans date d'expiration",
+    "download": "Télécharger",
+    "downloadLabel": "Télécharger {title}",
+    "onRequest": "Sur demande",
+    "requestCta": "Demander ce document",
+    "empty": "Nos documents administratifs seront bientôt disponibles ici. Contactez-nous pour les recevoir.",
+    "contactCta": "Nous contacter",
+    "note": "Les documents expirés sont retirés automatiquement. Besoin d'une pièce qui n'est pas listée ? Écrivez-nous."
+  },
+  "upcoming": {
+    "title": "Bientôt sur notre site",
+    "subtitle": "De nouveaux services en ligne arrivent pour nos clients et nos futurs collaborateurs.",
+    "clientArea": {
+      "card": "Vos devis, factures, garanties et le suivi de vos installations, réunis au même endroit.",
+      "body": "Bientôt, retrouvez vos devis, factures, certificats de garantie et le suivi de vos installations dans un espace sécurisé. En attendant, suivez votre demande de devis avec sa référence.",
+      "cta": "Suivre ma demande"
+    },
+    "careers": {
+      "card": "Nos offres d'emploi et de stage. Les candidatures spontanées sont déjà les bienvenues.",
+      "body": "Nos offres d'emploi et de stage seront publiées ici. Techniciens, ingénieurs, commerciaux : envoyez dès maintenant votre candidature spontanée avec votre CV.",
+      "cta": "Envoyer une candidature spontanée",
+      "subject": "Candidature spontanée"
+    },
+    "news": {
+      "card": "Nos chantiers, nos nouveautés et nos conseils.",
+      "body": "Nos actualités, nos chantiers et nos conseils arrivent bientôt. En attendant, découvrez nos réalisations.",
+      "cta": "Voir nos réalisations"
     }
   }
 }

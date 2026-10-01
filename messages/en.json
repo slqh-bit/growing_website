@@ -1,6 +1,5 @@
 {
   "common": {
-    "companyTagline": "Solar energy & electrical works — ANME-certified installer",
     "requestQuote": "Request a quote",
     "trackRequest": "Track my request",
     "learnMore": "Learn more",
@@ -29,13 +28,17 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "switchLanguage": "Switch language",
-    "toggleTheme": "Toggle light/dark theme"
+    "toggleTheme": "Toggle light/dark theme",
+    "group": "Our group",
+    "documents": "Company documents",
+    "clientArea": "Client area",
+    "careers": "Careers"
   },
   "home": {
     "heroBadge": "ANME-certified solar installer",
     "heroTitle": "Solar energy, working for your future",
     "heroSubtitle": "Growing Technologies designs and installs reliable solar and electrical solutions in Sbeitla and across central Tunisia.",
-    "activitiesTitle": "Our five activities",
+    "activitiesTitle": "Our four activities",
     "activitiesSubtitle": "End-to-end expertise, from photovoltaics to medium voltage.",
     "statsTitle": "Our experience in numbers",
     "projectsTitle": "Recent projects",
@@ -57,11 +60,19 @@
   },
   "services": {
     "title": "Our services",
-    "subtitle": "Five areas of expertise in energy and electrical works.",
+    "subtitle": "Discover our areas of expertise.",
     "benefitsTitle": "Benefits",
     "processTitle": "Our process",
     "requestForActivity": "Request a quote for this service",
-    "allServices": "All services"
+    "allServices": "All services",
+    "onThisPage": "On this page",
+    "partnersTitle": "Brands & partners",
+    "subServicesTitle": "Our solutions",
+    "publicReferences": "Public-sector references",
+    "sameArea": "Also in {area}",
+    "documentsTitle": "Company documents",
+    "documentsBody": "Tax and social-security certificates, business register, certifications: our up-to-date documents for your tenders.",
+    "documentsCta": "See the documents"
   },
   "projects": {
     "title": "Our projects",
@@ -170,9 +181,13 @@
       "tooLarge": "Value too large.",
       "tooLong": "Text too long.",
       "invalidOption": "Invalid choice.",
+      "tooSmall": "Value too small.",
+      "invalidDate": "Invalid date.",
+      "requireOne": "Fill in at least one of these fields.",
+      "fileType": "Format not accepted: PDF, JPG, PNG, WebP, HEIC, Word (.docx), Excel (.xlsx) or DWG.",
+      "fileTooLarge": "File too large: 10 MB per file, 20 MB in total.",
+      "tooManyFiles": "5 files at most.",
       "consent": "Your consent is needed to process the request.",
-      "billOrConsumption": "Enter your monthly bill or your consumption.",
-      "describeWork": "Describe the work in a few words (at least 10 characters).",
       "fixErrors": "Please fix the highlighted fields.",
       "rateLimited": "Too many requests from your connection. Try again in a few minutes or call us.",
       "server": "Your request could not be saved. Please try again or call us.",
@@ -198,6 +213,20 @@
       "certified": "ANME-certified installer",
       "subsidies": "Help with subsidies and STEG paperwork",
       "preferCall": "Prefer to talk to us?"
+    },
+    "unavailable": "The online quote form for these activities is coming soon. Meanwhile, tell us about your project: we reply within 48 working hours.",
+    "unavailableCta": "Contact us",
+    "attachments": {
+      "label": "Documents (plans, photos…)",
+      "help": "Plans, site photos, bills or specifications help us price your project faster.",
+      "add": "Add files",
+      "limits": "PDF, photos, Word, Excel or DWG · {max} files, 10 MB each",
+      "selected": "Files added",
+      "remove": "Remove {name}"
+    },
+    "siteVisit": {
+      "label": "I'd like a technical visit on site",
+      "help": "A technician comes to take measurements and note the site's constraints before the quote."
     }
   },
   "notFound": {
@@ -217,14 +246,14 @@
     "title": "Track my request",
     "subtitle": "Check the progress of your quote request with your reference and phone number.",
     "reference": "Reference",
-    "referencePlaceholder": "GT-260928-A1B2",
+    "referencePlaceholder": "{prefix}-260928-A1B2",
     "referenceHint": "Shown after sending the form and in the confirmation email.",
     "phone": "Phone",
     "phoneHint": "The number given in your request.",
     "submit": "See progress",
     "submitting": "Searching…",
     "errors": {
-      "invalidReference": "Invalid reference. Expected format: GT-YYMMDD-XXXX.",
+      "invalidReference": "Invalid reference. Expected format: {prefix}-YYMMDD-XXXX.",
       "invalidPhone": "Invalid number: 8 digits, e.g. 98 123 456.",
       "notFound": "No request matches this reference and number. Please check both fields.",
       "rateLimited": "Too many searches. Please try again in a few minutes.",
@@ -253,6 +282,56 @@
       "pending": "Upcoming",
       "questions": "A question about your file?",
       "another": "Look up another request"
+    }
+  },
+  "group": {
+    "title": "Our group",
+    "memberOf": "Member of {group}",
+    "visitSite": "Visit the {company} website",
+    "discover": "Discover the group",
+    "companies": "Our companies",
+    "youAreHere": "You are here",
+    "visit": "Visit the website",
+    "sisterCompany": "At our sister company {company}",
+    "sisterSubtitle": "Complementary solutions, with the same local support."
+  },
+  "documents": {
+    "title": "Company documents",
+    "subtitle": "For your tenders and requests for quotations: our up-to-date certificates, ready to download.",
+    "identity": "Company details",
+    "legalName": "Legal name",
+    "taxId": "Tax ID",
+    "rne": "Company ID (RNE)",
+    "address": "Registered office",
+    "certification": "Certification",
+    "validUntil": "Valid until {date}",
+    "noExpiry": "No expiry date",
+    "download": "Download",
+    "downloadLabel": "Download {title}",
+    "onRequest": "On request",
+    "requestCta": "Request this document",
+    "empty": "Our company documents will soon be available here. Contact us to receive them.",
+    "contactCta": "Contact us",
+    "note": "Expired documents are removed automatically. Need a document that isn't listed? Write to us."
+  },
+  "upcoming": {
+    "title": "Coming soon to our website",
+    "subtitle": "New online services are on their way for our clients and future colleagues.",
+    "clientArea": {
+      "card": "Your quotes, invoices, warranties and installation follow-up, all in one place.",
+      "body": "Soon you'll find your quotes, invoices, warranty certificates and installation follow-up in a secure area. Meanwhile, track your quote request with its reference.",
+      "cta": "Track my request"
+    },
+    "careers": {
+      "card": "Our job and internship offers. Open applications are already welcome.",
+      "body": "Our job and internship offers will be published here. Technicians, engineers, sales staff: send us your open application with your CV now.",
+      "cta": "Send an open application",
+      "subject": "Open application"
+    },
+    "news": {
+      "card": "Our projects, news and advice.",
+      "body": "Our news, projects and advice are coming soon. Meanwhile, take a look at our projects.",
+      "cta": "See our projects"
     }
   }
 }

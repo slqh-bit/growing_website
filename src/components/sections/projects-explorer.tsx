@@ -13,7 +13,7 @@ interface Labels {
   noResults: string;
 }
 
-type FilterKey = "activityKey" | "region" | "clientType";
+type FilterKey = "activitySlug" | "region" | "clientType";
 
 export function ProjectsExplorer({
   projects,
@@ -27,12 +27,12 @@ export function ProjectsExplorer({
   const [clientType, setClientType] = React.useState<string>("all");
 
   const regions = unique(projects.map((p) => p.region));
-  const activities = uniqueBy(projects, "activityKey", "activityLabel");
+  const activities = uniqueBy(projects, "activitySlug", "activityLabel");
   const clientTypes = uniqueBy(projects, "clientType", "clientTypeLabel");
 
   const filtered = projects.filter(
     (p) =>
-      (activity === "all" || p.activityKey === activity) &&
+      (activity === "all" || p.activitySlug === activity) &&
       (region === "all" || p.region === region) &&
       (clientType === "all" || p.clientType === clientType),
   );

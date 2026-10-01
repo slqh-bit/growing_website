@@ -71,6 +71,141 @@ test.describe("content pages", () => {
   });
 });
 
+test.describe("Multi-site (one site per domain)", () => {
+  // Chromium resolves *.localhost to the loopback address, like the dev setup.
+  const onHost = (baseURL: string | undefined, host: string, path: string) => {
+    const url = new URL(path, baseURL);
+    url.hostname = host;
+    return url.toString();
+  };
+
+  test("the default site answers on localhost", async ({ page }) => {
+    await page.goto("/fr");
+    await expect(page.locator("html")).toHaveAttribute("data-site", "growing");
+    await expect(page).toHaveTitle(/Growing Technologies/);
+  });
+
+  test("hikview.localhost shows the Hikview site with its own brand colours", async ({ page, baseURL }) => {
+    await page.goto(onHost(baseURL, "hikview.localhost", "/fr/contact"));
+    const html = page.locator("html");
+    await expect(html).toHaveAttribute("data-site", "hikview");
+    await expect(html).toHaveAttribute("style", /--primary-h:\s*256/);
+    await expect(page).toHaveTitle(/Hikview Engineering/);
+    await expect(page.locator("header")).toContainText(/Hikview/i);
+  });
+
+  test("an unknown domain falls back to the default site", async ({ request }) => {
+    const response = await request.get("/fr", { headers: { host: "unknown.example.com" } });
+    expect(response.ok()).toBeTruthy();
+    expect(await response.text()).toContain('data-site="growing"');
+  });
+
+  test("each site only shows its own content", async ({ page, baseURL }) => {
+    await page.goto(onHost(baseURL, "hikview.localhost", "/fr/services/pompage-solaire"));
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Page introuvable");
+    await page.goto(onHost(baseURL, "hikview.localhost", "/fr"));
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Sécurité");
+  });
+});
+
+test.describe("Hikview catalogue (6 areas, sub-services)", () => {
+  const hikview = (baseURL: string | undefined, path: string) => {
+    const url = new URL(path, baseURL);
+    url.hostname = "hikview.localhost";
+    return url.toString();
+  };
+
+  test("the services page lists the six areas with their sub-services", async ({ page, baseURL }) => {
+    await page.goto(hikview(baseURL, "/fr/services"));
+    for (const area of [
+      "securite-electronique",
+      "reseaux-infrastructures",
+      "gestion-point-de-vente",
+      "solutions-audiovisuelles",
+      "iot-smart-city",
+      "integration-b2g",
+    ]) {
+      await expect(page.locator(`main a[href="/fr/services/${area}"]`).first()).toBeVisible();
+    }
+    await expect(page.locator('main a[href="/fr/services/securite-electronique/videosurveillance"]')).toBeVisible();
+  });
+
+  test("a sub-service lives under its area, and its old top-level URL redirects there", async ({ page, request, baseURL }) => {
+    // Node's HTTP client doesn't resolve *.localhost: pick the site with the Host header.
+    const response = await request.get("/fr/services/videosurveillance", {
+      headers: { host: "hikview.localhost" },
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(308);
+    expect(response.headers()["location"]).toMatch(/\/fr\/services\/securite-electronique\/videosurveillance$/);
+
+    await page.goto(hikview(baseURL, "/ar/services/securite-electronique/videosurveillance"));
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("المراقبة بالفيديو");
+    // Back to the area, and the other solutions of the same area.
+    await expect(page.locator('main a[href="/ar/services/securite-electronique"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/ar/services/securite-electronique/securite-incendie"]')).toBeVisible();
+  });
+
+  test("the B2G page explains public procurement and has its own quote form", async ({ page, baseURL }) => {
+    await page.goto(hikview(baseURL, "/fr/services/integration-b2g"));
+    await expect(page.locator("#marches-publics")).toBeAttached();
+    await expect(page.locator('main a[href="/fr/devis?service=integration-b2g"]').first()).toBeVisible();
+  });
+});
+
+test.describe("Group layer", () => {
+  test("the group page presents both companies and links to the other site", async ({ page }) => {
+    await page.goto("/fr/groupe");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Growing");
+    await expect(page.locator("main")).toContainText("Hikview Engineering");
+    await expect(page.locator("main")).toContainText("Vous êtes ici");
+    await expect(page.locator('main a[href*="hikview.localhost"]').first()).toBeVisible();
+  });
+
+  test("every footer shows the group band with the sister company", async ({ page }) => {
+    await page.goto("/fr/contact");
+    const footer = page.locator("footer");
+    await expect(footer).toContainText("Membre du");
+    await expect(footer.locator('a[href*="hikview.localhost"]').first()).toBeVisible();
+    await expect(footer.locator('a[href="/fr/groupe"]').first()).toBeVisible();
+  });
+
+  test("a service suggests the sister company's related services", async ({ page }) => {
+    await page.goto("/fr/services/pompage-solaire");
+    await expect(page.locator("main")).toContainText("Chez notre société sœur Hikview Engineering");
+    await expect(
+      page.locator('main a[href$="/fr/services/securite-electronique/videosurveillance"]').first(),
+    ).toBeVisible();
+  });
+});
+
+test.describe("Growing catalogue (4 activities)", () => {
+  test("the services page lists the four activities", async ({ page }) => {
+    await page.goto("/fr/services");
+    for (const slug of ["pompage-solaire", "site-isole", "installation-raccordee", "centrale-photovoltaique"]) {
+      await expect(page.locator(`main a[href="/fr/services/${slug}"]`).first()).toBeVisible();
+    }
+    await expect(page.locator('main a[href="/fr/services/basse-tension"]')).toHaveCount(0);
+  });
+
+  test("retired BT/MT pages redirect permanently to their section", async ({ page, request }) => {
+    const response = await request.get("/fr/services/basse-tension", { maxRedirects: 0 });
+    expect(response.status()).toBe(308);
+    expect(response.headers()["location"]).toMatch(/\/fr\/services\/installation-raccordee#commercial$/);
+
+    await page.goto("/ar/services/moyenne-tension");
+    await expect(page).toHaveURL(/\/ar\/services\/installation-raccordee#industriel$/);
+    await expect(page.locator("#industriel")).toBeInViewport();
+  });
+
+  test("the PV plant page has its sections and its own quote form", async ({ page }) => {
+    await page.goto("/fr/services/centrale-photovoltaique");
+    await expect(page.locator("#autoproduction")).toBeAttached();
+    await expect(page.locator('main a[href="/fr/devis?service=centrale-photovoltaique"]').first()).toBeVisible();
+  });
+});
+
 test.describe("SEO and platform endpoints", () => {
   test("home page carries LocalBusiness JSON-LD", async ({ page }) => {
     await page.goto("/fr");
@@ -88,10 +223,32 @@ test.describe("SEO and platform endpoints", () => {
     expect(xml).not.toContain("/admin");
   });
 
+  test("each company announces its own business type, within the group", async ({ page, baseURL }) => {
+    const url = new URL("/fr", baseURL);
+    url.hostname = "hikview.localhost";
+    await page.goto(url.toString());
+    const blocks = (await page.locator('script[type="application/ld+json"]').allTextContents()).map((t) => JSON.parse(t));
+    const company = blocks.find((b) => b["@type"] === "ProfessionalService");
+    expect(company?.name).toBe("Hikview Engineering");
+    expect(company?.parentOrganization?.["@type"]).toBe("Organization");
+    expect(blocks.map((b) => b["@type"])).toContain("WebSite");
+  });
+
+  test("pages without their own image share one generated in the site's colours", async ({ page, request }) => {
+    await page.goto("/fr/about");
+    const image = await page.locator('meta[property="og:image"]').getAttribute("content");
+    expect(image).toMatch(/\/fr\/og\?title=/);
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
+    const response = await request.get(new URL(image!).pathname + new URL(image!).search);
+    expect(response.headers()["content-type"]).toBe("image/png");
+  });
+
   test("robots.txt blocks the admin and points to the sitemap", async ({ request }) => {
     const text = await (await request.get("/robots.txt")).text();
     expect(text).toContain("Disallow: /admin");
     expect(text).toMatch(/Sitemap: .*\/sitemap\.xml/);
+    // Images and public documents stay crawlable although /api/ is not.
+    expect(text).toContain("Allow: /api/media/file/");
   });
 
   test("health endpoint reports the database", async ({ request }) => {
@@ -109,3 +266,94 @@ test.describe("SEO and platform endpoints", () => {
     expect(headers["critical-ch"]).toBeUndefined();
   });
 });
+
+test.describe("Tender documents (Phase 6)", () => {
+  const onHikview = (baseURL: string | undefined, path: string) => {
+    const url = new URL(path, baseURL);
+    url.hostname = "hikview.localhost";
+    return url.toString();
+  };
+
+  test("each company has a documents page with its legal identity, linked from the footer", async ({ page, baseURL }) => {
+    await page.goto(onHikview(baseURL, "/fr/documents"));
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Documents administratifs");
+    await expect(page.locator("aside")).toContainText("1667878K");
+    await page.goto("/fr/documents");
+    await expect(page.locator("aside")).toContainText("Growing Technologies");
+    await expect(page.locator('footer a[href="/fr/documents"]')).toBeVisible();
+  });
+
+  test("the B2G page links to the documents", async ({ page, baseURL }) => {
+    await page.goto(onHikview(baseURL, "/fr/services/integration-b2g"));
+    await page.locator('main a[href="/fr/documents"]').click();
+    await expect(page).toHaveURL(/\/fr\/documents$/);
+  });
+
+  test("visitors only get public documents through the API", async ({ request }) => {
+    const response = await request.get("/api/company-documents?depth=0&limit=100");
+    expect(response.ok()).toBeTruthy();
+    const { docs } = (await response.json()) as { docs: { visibility: string; validUntil?: string | null }[] };
+    for (const doc of docs) {
+      expect(doc.visibility).toBe("public");
+      if (doc.validUntil) expect(new Date(doc.validUntil).getTime()).toBeGreaterThan(Date.now() - 2 * 86_400_000);
+    }
+  });
+});
+
+test.describe("Coming soon (Phase 9)", () => {
+  test("the home page shows the upcoming features, each leading to its placeholder", async ({ page }) => {
+    await page.goto("/fr");
+    const section = page.locator("section", { hasText: "Bientôt sur notre site" });
+    await expect(section.getByText("Bientôt disponible")).toHaveCount(3);
+    await section.locator('a[href="/fr/espace-client"]').click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Espace client");
+    // Meanwhile, clients can already track their request.
+    await expect(page.locator('main a[href="/fr/suivi"]')).toBeVisible();
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  });
+
+  test("careers invite an open application by email to the site's own address", async ({ page, baseURL }) => {
+    const url = new URL("/fr/carrieres", baseURL);
+    url.hostname = "hikview.localhost";
+    await page.goto(url.toString());
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Carrières");
+    const mail = await page.locator('main a[href^="mailto:"]').getAttribute("href");
+    expect(mail).toContain("Hikview%20Engineering");
+  });
+
+  test("placeholder pages stay out of the sitemap", async ({ request }) => {
+    const xml = await (await request.get("/sitemap.xml")).text();
+    for (const path of ["/espace-client", "/carrieres", "/blog"]) expect(xml).not.toContain(`/fr${path}<`);
+  });
+});
+
+test.describe("Header layout", () => {
+  // French labels are the longest; the header must fit from tablet to wide desktop on both sites.
+  for (const host of ["localhost", "hikview.localhost"]) {
+    test(`${host}: the header never overflows the page`, async ({ page, baseURL }) => {
+      const url = new URL("/fr/contact", baseURL);
+      url.hostname = host;
+      await page.goto(url.toString());
+      for (const width of [768, 1024, 1180, 1280, 1440]) {
+        await page.setViewportSize({ width, height: 800 });
+        const overflow = await page.evaluate(() => {
+          const bar = document.querySelector("header > div")!;
+          return {
+            header: bar.scrollWidth - bar.clientWidth,
+            page: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          };
+        });
+        expect(overflow, `at ${width}px`).toEqual({ header: 0, page: 0 });
+      }
+    });
+  }
+
+  test("Hikview's home page leads to the quote form", async ({ page, baseURL }) => {
+    const url = new URL("/fr", baseURL);
+    url.hostname = "hikview.localhost";
+    await page.goto(url.toString());
+    // Hero and closing call to action (the header's own button is outside main).
+    await expect(page.locator('main a[href="/fr/devis"]')).toHaveCount(2);
+  });
+});
+

@@ -1,5 +1,6 @@
 import type { CollectionConfig } from "payload";
-import { admins, anyone, authenticated } from "../cms/access";
+import { siteContentAccess } from "../cms/access";
+import { siteField } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
 
@@ -12,18 +13,14 @@ export const Team: CollectionConfig = {
   },
   admin: {
     useAsTitle: "name",
-    defaultColumns: ["name", "role", "order"],
+    defaultColumns: ["name", "role", "order", "site"],
     group: groups.content,
   },
   defaultSort: "order",
-  access: {
-    read: anyone,
-    create: authenticated,
-    update: authenticated,
-    delete: admins,
-  },
+  access: siteContentAccess(),
   hooks: revalidateCollection("team"),
   fields: [
+    siteField(),
     {
       name: "name",
       type: "text",

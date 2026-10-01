@@ -2,19 +2,22 @@ import { getTranslations } from "next-intl/server";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { getFooter, getServices, getSiteSettings } from "@/lib/cms/queries";
-import { Logo } from "@/components/brand/logo";
+import type { SiteKey } from "@/sites/config";
+import { getServices, getSite } from "@/lib/cms/queries";
+import { brandOf, Logo } from "@/components/brand/logo";
 import { SmartLink } from "@/components/cms/smart-link";
+import { GroupBand } from "@/components/layout/group-band";
 import { telHref } from "@/lib/contact-links";
+import { topLevel } from "@/lib/services";
 
-/** Footer: links from the Footer global, activities from Services, contacts from Site settings. */
-export async function SiteFooter({ locale }: { locale: Locale }) {
-  const [t, footer, services, settings] = await Promise.all([
+/** Footer: links and tagline (Sites → Pied de page), activities from Services, contacts from the site. */
+export async function SiteFooter({ locale, site }: { locale: Locale; site: SiteKey }) {
+  const [t, services, settings] = await Promise.all([
     getTranslations({ locale, namespace: "footer" }),
-    getFooter(locale),
-    getServices(locale),
-    getSiteSettings(locale),
+    getServices(site, locale),
+    getSite(site, locale),
   ]);
+  const footer = settings.footer ?? {};
   const year = new Date().getFullYear();
   const quickLinks = footer.quickLinks ?? [];
   const legalLinks = footer.legalLinks ?? [];
@@ -25,7 +28,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Logo name={settings.companyName} />
+            <Logo brand={brandOf(settings)} />
             {footer.tagline && <p className="mt-4 max-w-xs text-sm text-muted-foreground">{footer.tagline}</p>}
             <p className="mt-4 text-xs text-muted-foreground">
               {t("matricule")}: <span dir="ltr">{settings.matriculeFiscal}</span>
@@ -55,7 +58,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
           <div>
             <h3 className="text-sm font-semibold text-foreground">{t("activities")}</h3>
             <ul className="mt-4 space-y-2.5">
-              {services.map((s) => (
+              {topLevel(services).map((s) => (
                 <li key={s.slug}>
                   <Link
                     href={`/services/${s.slug}`}
@@ -84,7 +87,8 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="size-4 shrink-0 text-brand" aria-hidden />
-                <a href={`mailto:${settings.email}`} className="hover:text-brand">
+                {/* Long addresses wrap instead of widening the 4-column grid at lg. */}
+                <a href={`mailto:${settings.email}`} className="min-w-0 wrap-anywhere hover:text-brand">
                   {settings.email}
                 </a>
               </li>
@@ -97,6 +101,8 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
             </ul>
           </div>
         </div>
+
+        <GroupBand locale={locale} site={site} />
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
           <p>

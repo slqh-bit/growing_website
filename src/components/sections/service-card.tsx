@@ -10,11 +10,14 @@ export type ServiceSummary = Pick<Service, "slug" | "icon" | "title" | "shortDes
 
 export async function ServiceCard({
   service,
+  href = `/services/${service.slug}`,
   locale,
   className,
   headingLevel = 3,
 }: {
   service: ServiceSummary;
+  /** Locale-less path; defaults to /services/<slug> (see servicePath for sub-services). */
+  href?: string;
   locale: Locale;
   className?: string;
   /** 2 when the card list sits directly under the page's h1 (keeps heading order valid). */
@@ -25,7 +28,7 @@ export async function ServiceCard({
 
   return (
     <Link
-      href={`/services/${service.slug}`}
+      href={href}
       className={cn(
         "group relative flex flex-col gap-4 rounded-2xl border border-border bg-surface p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary-300 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className,

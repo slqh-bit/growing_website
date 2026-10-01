@@ -1,10 +1,12 @@
 /**
- * Seed the CMS with the site's initial content (devplan Phase 1.3).
+ * Seed the CMS with each site's initial content (plan §2: seed data only).
  *
  *   npm run seed
  *
- * Idempotent: documents are matched by a stable key (slug, activity, question,
- * email) and updated in place, so re-running never duplicates anything.
+ * Create-only and idempotent: documents are matched by a stable key (site +
+ * slug, question, email, redirect path) and only created when missing, so
+ * re-running never duplicates anything and never overwrites what was edited
+ * in the admin. A site's missing logo is filled in.
  *
  * Content source: the typed modules in scripts/seed-data/ and the UI message
  * catalogs in messages/*.json. After seeding, the CMS is the source of truth:
@@ -19,13 +21,20 @@ import { fileURLToPath } from "url";
 import { getPayload, type CollectionSlug, type Payload, type Where } from "payload";
 
 import config from "../src/payload.config";
-import { lexicalFromText } from "../src/cms/lexical";
+import { createLocalized } from "../src/cms/localized-write";
+import type { SiteKey } from "../src/sites/config";
+import { rich, serviceData } from "./seed-data/build";
 import { faqItems } from "./seed-data/faq";
-import { footerNav, legalNav, mainNav } from "./seed-data/navigation";
+import { crossSell, group } from "./seed-data/group";
+import { devisForms, type SeedForm } from "./seed-data/devis-forms";
+import { hikviewAbout, hikviewFooterTagline, hikviewHome } from "./seed-data/hikview";
+import { hikviewServices } from "./seed-data/hikview-services";
+import { footerNav, legalNav, mainNav, type NavItem } from "./seed-data/navigation";
 import { projects } from "./seed-data/projects";
+import { redirects } from "./seed-data/redirects";
 import { services } from "./seed-data/services";
-import { siteSettings } from "./seed-data/site";
-import { defaultLocale, locales, rtlLocales, type Locale } from "../src/i18n/config";
+import { sites } from "./seed-data/site";
+import { defaultLocale, locales, type Locale } from "../src/i18n/config";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const otherLocales = locales.filter((l) => l !== defaultLocale);
@@ -47,86 +56,29 @@ function msg(locale: Locale, key: string): string {
   return value;
 }
 
-const dirOf = (locale: Locale) => (rtlLocales.includes(locale) ? "rtl" : "ltr");
-const rich = (text: string, locale: Locale) => lexicalFromText(text, dirOf(locale));
-
-// ---------------------------------------------------------------------------
-// Localized upsert helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Keys whose arrays are `localized: true` (each locale owns its rows) or that
- * hold rich text. Their row ids must NOT be copied across locales.
- */
-const SKIP_ID_KEYS = new Set(["benefits", "body", "content"]);
-
-const isObject = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null && !Array.isArray(v);
-
-/**
- * Non-localized arrays/blocks share their rows across locales; only the
- * localized sub-fields differ. When writing ar/en we must therefore re-use the
- * row ids created for fr, otherwise Payload would treat them as new rows and
- * drop the French values.
- */
-function withRowIds<T>(data: T, existing: unknown): T {
-  if (Array.isArray(data) && Array.isArray(existing)) {
-    return data.map((row, i) => {
-      const prev = existing[i];
-      if (!isObject(row) || !isObject(prev)) return row;
-      const merged = withRowIds(row, prev) as Record<string, unknown>;
-      return prev.id !== undefined ? { ...merged, id: prev.id } : merged;
-    }) as T;
-  }
-  if (isObject(data) && isObject(existing)) {
-    return Object.fromEntries(
-      Object.entries(data).map(([k, v]) => [k, SKIP_ID_KEYS.has(k) ? v : withRowIds(v, existing[k])]),
-    ) as T;
-  }
-  return data;
-}
-
 /** Seed writes skip cache revalidation: the CLI process has no page cache. */
 const context = { disableRevalidate: true };
 
-/* The Local API's per-collection generics don't narrow inside a generic helper,
-   so these helpers take plain objects. Payload still validates every field at
-   runtime (required, select options, custom validators) and throws on bad data. */
+type Id = number | string;
 type AnyData = Record<string, unknown>;
-type LooseApi = {
-  find(args: object): Promise<{ docs: { id: number | string }[] }>;
-  create(args: object): Promise<{ id: number | string } & AnyData>;
-  update(args: object): Promise<{ id: number | string } & AnyData>;
-  updateGlobal(args: object): Promise<AnyData>;
-};
 
-async function upsert(
+/** Creates the document (all locales) unless one matches `where`. Returns its id and whether it was created. */
+async function ensure(
   payload: Payload,
   collection: CollectionSlug,
   where: Where,
   build: (locale: Locale) => AnyData,
-): Promise<number | string> {
-  const api = payload as unknown as LooseApi;
-  const found = await api.find({ collection, where, limit: 1, depth: 0, locale: defaultLocale });
-  const existingId = found.docs[0]?.id;
-
-  let doc =
-    existingId !== undefined
-      ? await api.update({ collection, id: existingId, data: build(defaultLocale), locale: defaultLocale, depth: 0, context })
-      : await api.create({ collection, data: build(defaultLocale), locale: defaultLocale, depth: 0, context });
-
-  for (const locale of otherLocales) {
-    doc = await api.update({ collection, id: doc.id, data: withRowIds(build(locale), doc), locale, depth: 0, context });
-  }
-  return doc.id;
+): Promise<{ id: Id; created: boolean }> {
+  const found = await payload.find({ collection, where, limit: 1, depth: 0 });
+  if (found.docs[0]) return { id: found.docs[0].id, created: false };
+  return { id: await createLocalized(payload, collection, build), created: true };
 }
 
-async function upsertGlobal(payload: Payload, slug: string, build: (locale: Locale) => AnyData) {
-  const api = payload as unknown as LooseApi;
-  let doc = await api.updateGlobal({ slug, data: build(defaultLocale), locale: defaultLocale, depth: 0, context });
-  for (const locale of otherLocales) {
-    doc = await api.updateGlobal({ slug, data: withRowIds(build(locale), doc), locale, depth: 0, context });
-  }
+const bySiteAnd = (site: Id, where: Where): Where => ({ and: [{ site: { equals: site } }, where] });
+
+function report(payload: Payload, label: string, results: { created: boolean }[]) {
+  const created = results.filter((r) => r.created).length;
+  payload.logger.info(`${label}: ${created} created, ${results.length - created} already there`);
 }
 
 // ---------------------------------------------------------------------------
@@ -160,58 +112,173 @@ async function seedAdmin(payload: Payload) {
   payload.logger.info(`Admin ${email} created.`);
 }
 
-async function seedServices(payload: Payload) {
-  const ids = {} as Record<string, number | string>;
-  for (const s of services) {
-    ids[s.activityKey] = await upsert(payload, "services", { slug: { equals: s.slug } }, (l) => ({
-      title: s.title[l],
-      slug: s.slug,
-      activityKey: s.activityKey,
-      icon: s.icon,
-      order: s.order,
-      shortDescription: s.shortDescription[l],
-      body: rich(s.body[l], l),
-      benefits: s.benefits[l].map((text) => ({ text })),
-      process: s.process.map((step) => ({ title: step.title[l], description: step.description[l] })),
+const navLinks = (l: Locale, items: NavItem[]) =>
+  items.map((item) => ({ label: msg(l, `nav.${item.labelKey}`), href: item.href }));
+
+async function seedSites(payload: Payload): Promise<Record<SiteKey, Id | undefined>> {
+  const ids: Record<SiteKey, Id | undefined> = { growing: undefined, hikview: undefined, group: undefined };
+  const results = [];
+  for (const s of sites) {
+    const footerTagline = s.key === "hikview" ? hikviewFooterTagline : null;
+    const result = await ensure(payload, "sites", { key: { equals: s.key } }, (l) => ({
+      key: s.key,
+      isDefault: s.isDefault,
+      companyName: s.companyName,
+      legalName: s.legalName,
+      matriculeFiscal: s.matriculeFiscal,
+      certification: s.certification || null,
+      businessType: s.businessType,
+      tagline: s.tagline[l],
+      servicesIntro: s.servicesIntro[l],
+      monogram: s.monogram,
+      theme: s.theme,
+      email: s.email,
+      phone: s.phone,
+      whatsapp: s.whatsapp || null,
+      telegram: s.telegram || null,
+      address: s.address[l],
+      city: s.city[l],
+      hours: msg(l, "contact.hoursValue"),
+      coords: s.coords,
+      socials: {
+        facebook: s.socials.facebook || null,
+        instagram: s.socials.instagram || null,
+        linkedin: s.socials.linkedin || null,
+      },
+      stats: s.stats.map((stat) => ({ value: stat.value, label: stat.label[l] })),
+      navItems: mainNav.map((item) => ({
+        label: msg(l, `nav.${item.labelKey}`),
+        href: item.href,
+        comingSoon: Boolean(item.comingSoon),
+      })),
+      footer: {
+        tagline: footerTagline ? footerTagline[l] : msg(l, "footer.tagline"),
+        quickLinks: navLinks(l, footerNav),
+        legalLinks: navLinks(l, legalNav),
+      },
     }));
+    results.push(result);
+    ids[s.key] = result.id;
+
+    const site = await payload.findByID({ collection: "sites", id: result.id, depth: 0 });
+    if (s.logoFile && !site.logo) {
+      const logo = await uploadImage(payload, s.logoFile, () => `${s.companyName} — logo`);
+      await payload.update({ collection: "sites", id: site.id, data: { logo }, depth: 0, context });
+      payload.logger.info(`Site ${s.key}: logo uploaded.`);
+    }
   }
-  payload.logger.info(`Services: ${services.length}`);
+  report(payload, "Sites", results);
   return ids;
 }
 
-async function seedProjects(payload: Payload, serviceIds: Record<string, number | string>) {
+/** Uploads an image from the repo into Media (alt text in every locale). */
+async function uploadImage(payload: Payload, file: string, alt: (l: Locale) => string): Promise<number> {
+  const media = await payload.create({
+    collection: "media",
+    data: { alt: alt(defaultLocale) },
+    filePath: path.resolve(dirname, "..", file),
+    locale: defaultLocale,
+    depth: 0,
+    context,
+  });
+  for (const locale of otherLocales) {
+    await payload.update({ collection: "media", id: media.id, data: { alt: alt(locale) }, locale, depth: 0, context });
+  }
+  return media.id;
+}
+
+async function seedServices(payload: Payload, site: Id) {
+  const ids: Record<string, Id> = {};
+  const results = [];
+  for (const s of services) {
+    const result = await ensure(payload, "services", bySiteAnd(site, { slug: { equals: s.slug } }), (l) =>
+      serviceData(s, l, site),
+    );
+    results.push(result);
+    if (s.activityKey) ids[s.activityKey] = result.id;
+  }
+  report(payload, "Growing services", results);
+  return ids;
+}
+
+/** Hikview's areas first, then their sub-services (parent = the area). */
+async function seedHikviewServices(payload: Payload, site: Id) {
+  const ids: Record<string, Id> = {};
+  const results = [];
+  const ordered = [...hikviewServices.filter((s) => !s.parent), ...hikviewServices.filter((s) => s.parent)];
+  for (const s of ordered) {
+    const parent = s.parent ? ids[s.parent] : null;
+    if (s.parent && parent === undefined) throw new Error(`Unknown area "${s.parent}" for "${s.slug}"`);
+    const result = await ensure(payload, "services", bySiteAnd(site, { slug: { equals: s.slug } }), (l) =>
+      serviceData(s, l, site, { parent, showPublicReferences: s.showPublicReferences }),
+    );
+    ids[s.slug] = result.id;
+    results.push(result);
+  }
+  report(payload, "Hikview services", results);
+}
+
+async function seedProjects(payload: Payload, site: Id, serviceIds: Record<string, Id>) {
+  const results = [];
   for (const p of projects) {
     const activity = serviceIds[p.activityKey];
     if (activity === undefined) throw new Error(`No service for activity "${p.activityKey}"`);
-    await upsert(payload, "projects", { slug: { equals: p.slug } }, (l) => ({
-      title: p.title[l],
-      slug: p.slug,
-      activity,
-      clientType: p.clientType,
-      region: p.region[l],
-      powerKwc: p.powerKwc,
-      summary: p.summary[l],
-      body: rich(p.body[l], l),
-      date: new Date(p.date).toISOString(),
-      featured: p.featured,
-    }));
+    results.push(
+      await ensure(payload, "projects", bySiteAnd(site, { slug: { equals: p.slug } }), (l) => ({
+        site,
+        title: p.title[l],
+        slug: p.slug,
+        activity,
+        clientType: p.clientType,
+        region: p.region[l],
+        powerKwc: p.powerKwc,
+        summary: p.summary[l],
+        body: rich(p.body[l], l),
+        date: new Date(p.date).toISOString(),
+        featured: p.featured,
+      })),
+    );
   }
-  payload.logger.info(`Projects: ${projects.length}`);
+  report(payload, "Growing projects", results);
 }
 
-async function seedFaq(payload: Payload) {
+async function seedFaq(payload: Payload, site: Id) {
+  const results = [];
   for (const f of faqItems) {
-    await upsert(payload, "faq", { question: { equals: f.question[defaultLocale] } }, (l) => ({
-      question: f.question[l],
-      answer: f.answer[l],
-      category: f.category[l],
-      order: f.order,
-    }));
+    results.push(
+      await ensure(payload, "faq", bySiteAnd(site, { question: { equals: f.question[defaultLocale] } }), (l) => ({
+        site,
+        question: f.question[l],
+        answer: f.answer[l],
+        category: f.category[l],
+        order: f.order,
+      })),
+    );
   }
-  payload.logger.info(`FAQ: ${faqItems.length}`);
+  report(payload, "Growing FAQ", results);
 }
 
-function homeLayout(l: Locale) {
+/** "Bientôt disponible" cards (plan Phase 9): client area, careers, news. */
+function upcomingBlock(l: Locale) {
+  const items = [
+    ["UserRound", "nav.clientArea", "upcoming.clientArea.card", "/espace-client"],
+    ["Briefcase", "nav.careers", "upcoming.careers.card", "/carrieres"],
+    ["Newspaper", "nav.blog", "upcoming.news.card", "/blog"],
+  ] as const;
+  return {
+    blockType: "upcoming",
+    title: msg(l, "upcoming.title"),
+    subtitle: msg(l, "upcoming.subtitle"),
+    items: items.map(([icon, title, description, href]) => ({
+      icon,
+      title: msg(l, title),
+      description: msg(l, description),
+      href,
+    })),
+  };
+}
+
+function growingHome(l: Locale) {
   const why = [
     ["ShieldCheck", "certified"],
     ["MapPin", "local"],
@@ -250,6 +317,7 @@ function homeLayout(l: Locale) {
       subtitle: msg(l, "home.projectsSubtitle"),
       limit: 3,
     },
+    upcomingBlock(l),
     {
       blockType: "cta",
       title: msg(l, "home.ctaTitle"),
@@ -259,7 +327,7 @@ function homeLayout(l: Locale) {
   ];
 }
 
-function aboutLayout(l: Locale) {
+function growingAbout(l: Locale) {
   const values = [
     ["Award", "quality"],
     ["Heart", "proximity"],
@@ -269,7 +337,7 @@ function aboutLayout(l: Locale) {
     {
       blockType: "hero",
       style: "compact",
-      badge: siteSettings.certification,
+      badge: sites[0]!.certification,
       title: msg(l, "about.title"),
       subtitle: msg(l, "about.subtitle"),
     },
@@ -293,60 +361,192 @@ function aboutLayout(l: Locale) {
   ];
 }
 
-async function seedPages(payload: Payload) {
-  const pages = [
-    { slug: "home", titleKey: "nav.home", layout: homeLayout },
-    { slug: "about", titleKey: "nav.about", layout: aboutLayout },
+function hikviewHomeLayout(l: Locale) {
+  const h = hikviewHome;
+  return [
+    {
+      blockType: "hero",
+      style: "full",
+      badge: h.heroBadge[l],
+      title: h.heroTitle[l],
+      subtitle: h.heroSubtitle[l],
+      // Hikview's services have quote forms (Phase 5b).
+      primaryCta: { label: msg(l, "common.requestQuote"), href: "/devis" },
+      secondaryCta: { label: msg(l, "common.discoverServices"), href: "/services" },
+    },
+    { blockType: "activityGrid", title: h.activitiesTitle[l], subtitle: h.activitiesSubtitle[l] },
+    {
+      blockType: "features",
+      title: h.whyTitle[l],
+      items: h.why.map((item) => ({ icon: item.icon, title: item.title[l], description: item.description[l] })),
+    },
+    // Both hidden until references / partners are added in the admin.
+    { blockType: "projects", title: h.projectsTitle[l], subtitle: h.projectsSubtitle[l], limit: 3 },
+    { blockType: "partners", title: h.partnersTitle[l] },
+    upcomingBlock(l),
+    {
+      blockType: "cta",
+      title: h.ctaTitle[l],
+      subtitle: h.ctaSubtitle[l],
+      button: { label: msg(l, "common.requestQuote"), href: "/devis" },
+    },
   ];
-  for (const page of pages) {
-    await upsert(payload, "pages", { slug: { equals: page.slug } }, (l) => ({
-      title: msg(l, page.titleKey),
-      slug: page.slug,
-      layout: page.layout(l),
-    }));
-  }
-  payload.logger.info(`Pages: ${pages.map((p) => p.slug).join(", ")}`);
 }
 
-async function seedGlobals(payload: Payload) {
-  const s = siteSettings;
-  await upsertGlobal(payload, "site-settings", (l) => ({
-    companyName: s.companyName,
-    legalName: s.legalName,
-    matriculeFiscal: s.matriculeFiscal,
-    certification: s.certification,
-    email: s.email,
-    phone: s.phone,
-    whatsapp: s.whatsapp,
-    telegram: s.telegram,
-    address: s.address[l],
-    city: s.city[l],
-    hours: msg(l, "contact.hoursValue"),
-    coords: { lat: s.coords.lat, lng: s.coords.lng },
-    socials: {
-      facebook: s.socials.facebook || null,
-      instagram: s.socials.instagram || null,
-      linkedin: s.socials.linkedin || null,
+function hikviewAboutLayout(l: Locale) {
+  const a = hikviewAbout;
+  return [
+    { blockType: "hero", style: "compact", title: a.title[l], subtitle: a.subtitle[l] },
+    { blockType: "richText", title: a.storyTitle[l], content: rich(a.story[l], l) },
+    {
+      blockType: "cta",
+      title: hikviewHome.ctaTitle[l],
+      subtitle: hikviewHome.ctaSubtitle[l],
+      button: { label: msg(l, "nav.contact"), href: "/contact" },
     },
-    stats: s.stats.map((stat) => ({ value: stat.value, label: stat.label[l] })),
-  }));
+  ];
+}
 
-  await upsertGlobal(payload, "navigation", (l) => ({
-    items: mainNav.map((item) => ({
-      label: msg(l, `nav.${item.labelKey}`),
-      href: item.href,
-      comingSoon: Boolean(item.comingSoon),
+async function seedPages(payload: Payload, siteIds: Record<SiteKey, Id | undefined>) {
+  const pages = [
+    { site: siteIds.growing, slug: "home", title: (l: Locale) => msg(l, "nav.home"), layout: growingHome },
+    { site: siteIds.growing, slug: "about", title: (l: Locale) => msg(l, "nav.about"), layout: growingAbout },
+    { site: siteIds.hikview, slug: "home", title: (l: Locale) => msg(l, "nav.home"), layout: hikviewHomeLayout },
+    { site: siteIds.hikview, slug: "about", title: (l: Locale) => msg(l, "nav.about"), layout: hikviewAboutLayout },
+  ];
+  const results = [];
+  for (const page of pages) {
+    if (page.site === undefined) continue;
+    const site = page.site;
+    results.push(
+      await ensure(payload, "pages", bySiteAnd(site, { slug: { equals: page.slug } }), (l) => ({
+        site,
+        title: page.title(l),
+        slug: page.slug,
+        layout: page.layout(l),
+      })),
+    );
+  }
+  report(payload, "Pages", results);
+}
+
+async function seedRedirects(payload: Payload, siteIds: Record<SiteKey, Id | undefined>) {
+  const results = [];
+  for (const r of redirects) {
+    const site = siteIds[r.site];
+    if (site === undefined) continue;
+    const found = await payload.find({ collection: "redirects", where: { from: { equals: r.from } }, limit: 1, depth: 0 });
+    if (found.docs[0]) {
+      results.push({ created: false });
+      continue;
+    }
+    await payload.create({
+      collection: "redirects",
+      data: { from: r.from, to: r.to, sites: [Number(site)], permanent: true },
+      depth: 0,
+      context,
+    });
+    results.push({ created: true });
+  }
+  report(payload, "Redirects", results);
+}
+
+/** One locale of a seeded quote form. */
+function formData(form: SeedForm, l: Locale, site: Id) {
+  const text = (v: unknown) => (v && typeof v === "object" ? ((v as Record<Locale, string>)[l] ?? null) : null);
+  return {
+    site,
+    title: form.title,
+    attachments: {
+      mode: form.attachments?.mode ?? "optional",
+      label: text(form.attachments?.label),
+      help: text(form.attachments?.help),
+    },
+    questions: form.questions.map((q) => ({
+      name: q.name,
+      type: q.type,
+      label: text(q.label),
+      help: text(q.help),
+      unit: text(q.unit),
+      required: Boolean(q.required),
+      requiredGroup: q.requiredGroup ?? null,
+      min: q.min ?? null,
+      max: q.max ?? null,
+      width: q.width ?? "half",
+      options: (q.options ?? []).map((o) => ({ value: o.value, label: text(o.label) })),
+      showIf: { field: q.showIf?.field ?? null, equals: q.showIf?.equals ?? null },
     })),
-  }));
+  };
+}
 
-  const toLinks = (l: Locale, items: typeof footerNav) =>
-    items.map((item) => ({ label: msg(l, `nav.${item.labelKey}`), href: item.href }));
-  await upsertGlobal(payload, "footer", (l) => ({
-    tagline: msg(l, "footer.tagline"),
-    quickLinks: toLinks(l, footerNav),
-    legalLinks: toLinks(l, legalNav),
-  }));
-  payload.logger.info("Globals: site-settings, navigation, footer");
+/** Quote forms, and each service's form when it has none yet. */
+async function seedDevisForms(payload: Payload, siteIds: Record<SiteKey, Id | undefined>) {
+  const results = [];
+  let linked = 0;
+  for (const form of devisForms) {
+    const site = siteIds[form.site];
+    if (site === undefined) continue;
+    const result = await ensure(payload, "devis-forms", bySiteAnd(site, { title: { equals: form.title } }), (l) =>
+      formData(form, l, site),
+    );
+    results.push(result);
+    for (const slug of form.services) {
+      const service = (
+        await payload.find({ collection: "services", where: bySiteAnd(site, { slug: { equals: slug } }), limit: 1, depth: 0 })
+      ).docs[0];
+      if (!service || service.devisForm) continue;
+      await payload.update({ collection: "services", id: service.id, data: { devisForm: Number(result.id) }, depth: 0, context });
+      linked++;
+    }
+  }
+  report(payload, "Quote forms", results);
+  payload.logger.info(`Quote forms: ${linked} services linked`);
+}
+
+/** The group global, unless it was already filled in the admin. */
+async function seedGroup(payload: Payload, siteIds: Record<SiteKey, Id | undefined>) {
+  const current = await payload.findGlobal({ slug: "group", depth: 0 });
+  if ((current.members ?? []).length > 0) {
+    payload.logger.info("Group: already configured");
+    return;
+  }
+  const members = group.members.filter((m) => siteIds[m.site] !== undefined);
+  let doc: AnyData | undefined;
+  for (const l of locales) {
+    const data = {
+      name: group.name[l],
+      tagline: group.tagline[l],
+      story: rich(group.story[l], l),
+      footerBand: true,
+      members: members.map((m, i) => ({
+        ...(doc ? { id: ((doc.members as { id?: string }[] | undefined) ?? [])[i]?.id } : {}),
+        site: Number(siteIds[m.site]),
+        summary: m.summary[l],
+      })),
+    };
+    doc = (await payload.updateGlobal({ slug: "group", data, locale: l, depth: 0, context })) as unknown as AnyData;
+  }
+  payload.logger.info("Group: created");
+}
+
+/** Default cross-selling, only on services that have none yet. */
+async function seedCrossSell(payload: Payload, siteIds: Record<SiteKey, Id | undefined>) {
+  const find = async (site: SiteKey, slug: string) => {
+    const siteId = siteIds[site];
+    if (siteId === undefined) return undefined;
+    return (await payload.find({ collection: "services", where: bySiteAnd(siteId, { slug: { equals: slug } }), limit: 1, depth: 0 }))
+      .docs[0];
+  };
+  let filled = 0;
+  for (const rule of crossSell) {
+    const from = await find(...rule.from);
+    if (!from || (from.crossSell ?? []).length > 0) continue;
+    const targets = (await Promise.all(rule.to.map(([site, slug]) => find(site, slug)))).filter((s) => s !== undefined);
+    if (targets.length === 0) continue;
+    await payload.update({ collection: "services", id: from.id, data: { crossSell: targets.map((t) => t.id) }, depth: 0, context });
+    filled++;
+  }
+  payload.logger.info(`Cross-selling: ${filled} services filled`);
 }
 
 // ---------------------------------------------------------------------------
@@ -356,11 +556,19 @@ async function main() {
   payload.logger.info(`Seeding locales: ${locales.join(", ")} (base: ${defaultLocale})`);
 
   await seedAdmin(payload);
-  const serviceIds = await seedServices(payload);
-  await seedProjects(payload, serviceIds);
-  await seedFaq(payload);
-  await seedPages(payload);
-  await seedGlobals(payload);
+  const siteIds = await seedSites(payload);
+  const growing = siteIds.growing;
+  if (growing !== undefined) {
+    const serviceIds = await seedServices(payload, growing);
+    await seedProjects(payload, growing, serviceIds);
+    await seedFaq(payload, growing);
+  }
+  if (siteIds.hikview !== undefined) await seedHikviewServices(payload, siteIds.hikview);
+  await seedPages(payload, siteIds);
+  await seedRedirects(payload, siteIds);
+  await seedDevisForms(payload, siteIds);
+  await seedGroup(payload, siteIds);
+  await seedCrossSell(payload, siteIds);
 
   payload.logger.info("Seed complete.");
 }

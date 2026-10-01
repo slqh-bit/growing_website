@@ -1,11 +1,34 @@
-import type { CollectionConfig } from "payload";
-import { admins, anyone, authenticated } from "../cms/access";
-import { seoField, slugField } from "../cms/fields";
+import type { CollectionConfig, Validate, Where } from "payload";
+import { siteContentAccess } from "../cms/access";
+import { seoField, siteField, slugField, uniqueSlugPerSite } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
 import { activityOptions, serviceIconOptions } from "../cms/options";
 
-/** The five activities (devplan §4.1). */
+const idOf = (v: unknown): number | null =>
+  v === null || v === undefined ? null : typeof v === "object" ? ((v as { id?: number }).id ?? null) : Number(v);
+
+/** Two levels only (area → sub-service), both on the same site. */
+const validateParent: Validate = async (value, { req, id, siblingData }) => {
+  const parent = idOf(value);
+  if (parent === null) return true;
+  if (id !== undefined && parent === Number(id)) return "A service can't be its own parent.";
+  const doc = await req.payload.findByID({ collection: "services", id: parent, depth: 0, req }).catch(() => null);
+  if (!doc) return "Unknown parent service.";
+  if (idOf(doc.parent) !== null) return "Choose a top-level service (area): sub-services can't have sub-services.";
+  if (idOf((siblingData as { site?: unknown }).site) !== idOf(doc.site)) return "The parent must belong to the same site.";
+  if (id !== undefined) {
+    const { totalDocs } = await req.payload.count({ collection: "services", where: { parent: { equals: id } }, req });
+    if (totalDocs > 0) return "This service has sub-services: it can't become a sub-service itself.";
+  }
+  return true;
+};
+
+/**
+ * Activities / service pages of each site (plan §4): Growing's 4 activities,
+ * Hikview's 6 areas and their sub-services (`parent` → /services/<area>/<sub>).
+ * `sections` become in-page anchors (/services/installation-raccordee#commercial).
+ */
 export const Services: CollectionConfig = {
   slug: "services",
   labels: {
@@ -14,16 +37,12 @@ export const Services: CollectionConfig = {
   },
   admin: {
     useAsTitle: "title",
-    defaultColumns: ["title", "activityKey", "order", "updatedAt"],
+    defaultColumns: ["title", "site", "parent", "devisForm", "order", "updatedAt"],
     group: groups.content,
   },
   defaultSort: "order",
-  access: {
-    read: anyone,
-    create: authenticated,
-    update: authenticated,
-    delete: admins,
-  },
+  access: siteContentAccess(),
+  indexes: [...uniqueSlugPerSite, { fields: ["site", "activityKey"], unique: true }],
   hooks: revalidateCollection("services"),
   fields: [
     {
@@ -33,23 +52,102 @@ export const Services: CollectionConfig = {
       required: true,
       label: t3("Titre", "Title", "العنوان"),
     },
-    slugField(),
+    slugField("title", { unique: false }),
+    siteField(),
+    {
+      name: "parent",
+      type: "relationship",
+      relationTo: "services",
+      index: true,
+      label: t3("Domaine parent", "Parent area", "المجال الأب"),
+      validate: validateParent,
+      // Top-level services of the same site, not this one.
+      filterOptions: ({ id, siblingData }) => {
+        const site = idOf((siblingData as { site?: unknown }).site);
+        const and: Where[] = [{ parent: { exists: false } }];
+        if (site !== null) and.push({ site: { equals: site } });
+        if (id !== undefined) and.push({ id: { not_equals: id } });
+        return { and };
+      },
+      admin: {
+        position: "sidebar",
+        description: t3(
+          "Vide = service principal (/services/…). Sinon sous-service de ce domaine (/services/domaine/…).",
+          "Empty = main service (/services/…). Otherwise a sub-service of this area (/services/area/…).",
+          "فارغ = خدمة رئيسية. وإلا خدمة فرعية لهذا المجال.",
+        ),
+      },
+    },
+    {
+      name: "devisForm",
+      type: "relationship",
+      relationTo: "devis-forms",
+      label: t3("Formulaire de devis", "Quote form", "استمارة التسعيرة"),
+      filterOptions: ({ siblingData }) => {
+        const site = idOf((siblingData as { site?: unknown }).site);
+        return site !== null ? { site: { equals: site } } : true;
+      },
+      admin: {
+        position: "sidebar",
+        description: t3(
+          "Le service apparaît dans le formulaire de devis avec ces questions. Vide = le bouton « Devis » mène à la page Contact.",
+          "The service appears in the quote form with these questions. Empty = the quote button leads to the Contact page.",
+          "تظهر الخدمة في استمارة التسعيرة بهذه الأسئلة. فارغ = يؤدي زر التسعيرة إلى صفحة الاتصال.",
+        ),
+      },
+    },
+    {
+      name: "showPublicReferences",
+      type: "checkbox",
+      defaultValue: false,
+      label: t3(
+        "Afficher toutes les références institutionnelles",
+        "Show all public-sector references",
+        "عرض كل المراجع العمومية",
+      ),
+      admin: {
+        position: "sidebar",
+        description: t3(
+          "Liste sur cette page toutes les réalisations « Public / B2G » du site (ex. page Intégrateur B2G).",
+          "Lists every “Public / B2G” project of the site on this page (e.g. the B2G integrator page).",
+          "يعرض في هذه الصفحة كل إنجازات «القطاع العمومي» للموقع.",
+        ),
+      },
+    },
+    {
+      name: "showDocuments",
+      type: "checkbox",
+      defaultValue: false,
+      label: t3(
+        "Lien vers les documents administratifs",
+        "Link to the company documents",
+        "رابط إلى الوثائق الإدارية",
+      ),
+      admin: {
+        position: "sidebar",
+        description: t3(
+          "Ajoute un encart « Dossier administratif » menant à la page /documents (ex. pages B2G et centrales PV).",
+          "Adds a “Company documents” box linking to the /documents page (e.g. B2G and PV plant pages).",
+          "يضيف إطار « الملف الإداري » يؤدي إلى صفحة ‎/documents.",
+        ),
+      },
+    },
     {
       type: "row",
       fields: [
         {
+          // Legacy (typed quote form, before Phase 5a): kept for old requests and ?activite= links.
           name: "activityKey",
           type: "select",
-          required: true,
-          unique: true,
           options: [...activityOptions],
           label: t3("Activité", "Activity", "النشاط"),
           admin: {
+            hidden: true,
             width: "50%",
             description: t3(
-              "Relie le service au formulaire de devis.",
-              "Links the service to the quote form.",
-              "يربط الخدمة باستمارة التسعيرة.",
+              "Relie le service au formulaire de devis. Vide = le bouton « Devis » mène à la page Contact.",
+              "Links the service to the quote form. Empty = the quote button leads to the Contact page.",
+              "يربط الخدمة باستمارة التسعيرة. فارغ = يؤدي زر التسعيرة إلى صفحة الاتصال.",
             ),
           },
         },
@@ -92,6 +190,66 @@ export const Services: CollectionConfig = {
       type: "richText",
       localized: true,
       label: t3("Contenu", "Body", "المحتوى"),
+    },
+    {
+      // Shared rows (same anchors in every language), translated text.
+      name: "sections",
+      type: "array",
+      label: t3("Sections de la page", "Page sections", "أقسام الصفحة"),
+      labels: {
+        singular: t3("Section", "Section", "قسم"),
+        plural: t3("Sections", "Sections", "الأقسام"),
+      },
+      admin: {
+        description: t3(
+          "Parties de la page avec leur propre ancre, ex. #commercial → /fr/services/installation-raccordee#commercial.",
+          "Parts of the page with their own anchor, e.g. #commercial → /fr/services/installation-raccordee#commercial.",
+          "أجزاء من الصفحة لكلّ منها مرساة، مثل ‎#commercial.",
+        ),
+      },
+      fields: [
+        {
+          type: "row",
+          fields: [
+            {
+              name: "anchor",
+              type: "text",
+              required: true,
+              label: t3("Ancre", "Anchor", "المرساة"),
+              validate: (value: string | null | undefined) =>
+                (typeof value === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) ||
+                "Lowercase letters, digits and hyphens only (e.g. commercial).",
+              admin: { width: "50%" },
+            },
+            {
+              name: "icon",
+              type: "select",
+              options: serviceIconOptions,
+              label: t3("Icône", "Icon", "الأيقونة"),
+              admin: { width: "50%" },
+            },
+          ],
+        },
+        {
+          name: "title",
+          type: "text",
+          localized: true,
+          required: true,
+          label: t3("Titre", "Title", "العنوان"),
+        },
+        {
+          name: "body",
+          type: "richText",
+          localized: true,
+          label: t3("Contenu", "Body", "المحتوى"),
+        },
+        {
+          name: "image",
+          type: "upload",
+          relationTo: "media",
+          label: t3("Image", "Image", "صورة"),
+        },
+      ],
     },
     {
       name: "heroImage",
@@ -142,6 +300,25 @@ export const Services: CollectionConfig = {
           label: t3("Description", "Description", "الوصف"),
         },
       ],
+    },
+    {
+      name: "crossSell",
+      type: "relationship",
+      relationTo: "services",
+      hasMany: true,
+      label: t3("Chez notre société sœur", "At our sister company", "لدى شركتنا الشقيقة"),
+      // Services of the other sites of the group.
+      filterOptions: ({ siblingData }) => {
+        const site = idOf((siblingData as { site?: unknown }).site);
+        return site !== null ? { site: { not_equals: site } } : true;
+      },
+      admin: {
+        description: t3(
+          "Services complémentaires d'une autre société du groupe, proposés en bas de cette page (ex. vidéosurveillance pour une centrale solaire).",
+          "Complementary services of another group company, suggested at the bottom of this page (e.g. video surveillance for a solar plant).",
+          "خدمات مكمّلة لدى شركة أخرى من المجموعة تُقترح أسفل هذه الصفحة.",
+        ),
+      },
     },
     {
       name: "faqRefs",

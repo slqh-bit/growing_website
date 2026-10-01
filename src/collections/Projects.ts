@@ -1,6 +1,6 @@
 import type { CollectionConfig } from "payload";
-import { admins, anyone, authenticated } from "../cms/access";
-import { seoField, slugField } from "../cms/fields";
+import { siteContentAccess } from "../cms/access";
+import { seoField, siteField, slugField, uniqueSlugPerSite } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
 import { clientTypeOptions } from "../cms/options";
@@ -14,16 +14,12 @@ export const Projects: CollectionConfig = {
   },
   admin: {
     useAsTitle: "title",
-    defaultColumns: ["title", "activity", "clientType", "featured", "date"],
+    defaultColumns: ["title", "site", "activity", "clientType", "featured", "date"],
     group: groups.content,
   },
   defaultSort: "-date",
-  access: {
-    read: anyone,
-    create: authenticated,
-    update: authenticated,
-    delete: admins,
-  },
+  access: siteContentAccess(),
+  indexes: uniqueSlugPerSite,
   hooks: revalidateCollection("projects"),
   fields: [
     {
@@ -33,7 +29,8 @@ export const Projects: CollectionConfig = {
       required: true,
       label: t3("Titre", "Title", "العنوان"),
     },
-    slugField(),
+    slugField("title", { unique: false }),
+    siteField(),
     {
       type: "row",
       fields: [
@@ -42,6 +39,11 @@ export const Projects: CollectionConfig = {
           type: "relationship",
           relationTo: "services",
           required: true,
+          // Only the activities of the project's own site.
+          filterOptions: ({ siblingData }) => {
+            const site = (siblingData as { site?: unknown }).site;
+            return site ? { site: { equals: typeof site === "object" ? (site as { id: unknown }).id : site } } : true;
+          },
           label: t3("Activité", "Activity", "النشاط"),
           admin: { width: "50%" },
         },
@@ -52,6 +54,31 @@ export const Projects: CollectionConfig = {
           options: clientTypeOptions,
           label: t3("Type de client", "Client type", "نوع العميل"),
           admin: { width: "50%" },
+        },
+      ],
+    },
+    {
+      type: "row",
+      fields: [
+        {
+          name: "client",
+          type: "text",
+          label: t3("Client", "Client", "العميل"),
+          admin: {
+            width: "70%",
+            description: t3(
+              "Ex. « Commune de Sbeitla ». Laissez vide pour un client anonyme.",
+              "E.g. “Sbeitla municipality”. Leave empty for an anonymous client.",
+              "مثال «بلدية سبيطلة». اتركه فارغاً لعميل مجهول.",
+            ),
+          },
+        },
+        {
+          name: "clientNamePublic",
+          type: "checkbox",
+          defaultValue: true,
+          label: t3("Nom du client public", "Client name is public", "اسم العميل علني"),
+          admin: { width: "30%", style: { alignSelf: "center" } },
         },
       ],
     },

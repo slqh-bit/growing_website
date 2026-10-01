@@ -14,7 +14,8 @@ export interface ProjectView {
   region: string;
   clientType: string;
   clientTypeLabel: string;
-  activityKey: string;
+  /** Filter key: the project's service. */
+  activitySlug: string;
   activityLabel: string;
   icon: string;
   powerKwc: number | null;

@@ -70,13 +70,20 @@ export interface Config {
     pages: Page;
     services: Service;
     projects: Project;
+    partners: Partner;
     faq: Faq;
     team: Team;
     'devis-requests': DevisRequest;
+    'devis-forms': DevisForm;
     'quote-documents': QuoteDocument;
+    'devis-attachments': DevisAttachment;
+    'company-documents': CompanyDocument;
     media: Media;
+    sites: Site;
+    redirects: Redirect;
     users: User;
     'payload-kv': PayloadKv;
+    'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -86,13 +93,20 @@ export interface Config {
     pages: PagesSelect<false> | PagesSelect<true>;
     services: ServicesSelect<false> | ServicesSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
+    partners: PartnersSelect<false> | PartnersSelect<true>;
     faq: FaqSelect<false> | FaqSelect<true>;
     team: TeamSelect<false> | TeamSelect<true>;
     'devis-requests': DevisRequestsSelect<false> | DevisRequestsSelect<true>;
+    'devis-forms': DevisFormsSelect<false> | DevisFormsSelect<true>;
     'quote-documents': QuoteDocumentsSelect<false> | QuoteDocumentsSelect<true>;
+    'devis-attachments': DevisAttachmentsSelect<false> | DevisAttachmentsSelect<true>;
+    'company-documents': CompanyDocumentsSelect<false> | CompanyDocumentsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    sites: SitesSelect<false> | SitesSelect<true>;
+    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
+    'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -102,14 +116,12 @@ export interface Config {
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('fr' | 'ar' | 'en') | ('fr' | 'ar' | 'en')[];
   globals: {
-    'site-settings': SiteSetting;
-    navigation: Navigation;
-    footer: Footer;
+    group: Group;
+    'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
-    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
-    navigation: NavigationSelect<false> | NavigationSelect<true>;
-    footer: FooterSelect<false> | FooterSelect<true>;
+    group: GroupSelect<false> | GroupSelect<true>;
+    'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: 'fr' | 'ar' | 'en';
   widgets: {
@@ -117,7 +129,13 @@ export interface Config {
   };
   user: User;
   jobs: {
-    tasks: unknown;
+    tasks: {
+      documentExpiryAlerts: TaskDocumentExpiryAlerts;
+      inline: {
+        input: unknown;
+        output: unknown;
+      };
+    };
     workflows: unknown;
   };
 }
@@ -150,6 +168,10 @@ export interface Page {
    * URL segment shared by all 3 languages, e.g. pompage-solaire. Generated from the title if empty.
    */
   slug: string;
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
   layout?:
     | (
         | HeroBlock
@@ -160,7 +182,9 @@ export interface Page {
         | CtaBlock
         | RichTextBlock
         | LogosBlock
+        | PartnersBlock
         | FaqBlock
+        | UpcomingBlock
       )[]
     | null;
   /**
@@ -176,31 +200,165 @@ export interface Page {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "HeroBlock".
+ * via the `definition` "sites".
  */
-export interface HeroBlock {
-  style: 'full' | 'compact';
-  badge?: string | null;
-  title: string;
-  subtitle?: string | null;
-  primaryCta?: {
-    label?: string | null;
-    /**
-     * Path without locale, e.g. /services — the locale is added automatically.
-     */
-    href?: string | null;
+export interface Site {
+  id: number;
+  /**
+   * Technical id of the site (don't change it once live).
+   */
+  key: 'growing' | 'hikview' | 'group';
+  /**
+   * Shown for an unknown domain (and locally on localhost).
+   */
+  isDefault?: boolean | null;
+  /**
+   * E.g. https://growing-technologies.tn — used for canonical links, sharing and SEO. Empty = NEXT_PUBLIC_SITE_URL.
+   */
+  url?: string | null;
+  /**
+   * Domains that show this site (www. is matched automatically). Locally: <site>.localhost:3000.
+   */
+  domains?:
+    | {
+        domain: string;
+        id?: string | null;
+      }[]
+    | null;
+  companyName: string;
+  legalName: string;
+  /**
+   * Format : 1234567/A/B/M/000
+   */
+  matriculeFiscal: string;
+  certification?: string | null;
+  /**
+   * The schema.org category announced to Google for the company.
+   */
+  businessType: 'Electrician' | 'HomeAndConstructionBusiness' | 'ProfessionalService' | 'Store' | 'LocalBusiness';
+  /**
+   * Shown on the company documents page.
+   */
+  rne?: string | null;
+  /**
+   * Subtitle of /services, e.g. “Four activities, from solar pumping to PV plants.”
+   */
+  servicesIntro?: string | null;
+  /**
+   * One sentence: browser tab title, search engines, home visual.
+   */
+  tagline: string;
+  /**
+   * PNG/WebP, transparent background. Empty = badge with the initials below.
+   */
+  logo?: (number | null) | Media;
+  /**
+   * Optional.
+   */
+  logoDark?: (number | null) | Media;
+  /**
+   * Checked: the company name isn't written next to the logo.
+   */
+  logoIncludesName?: boolean | null;
+  /**
+   * E.g. GT — used when no logo is uploaded.
+   */
+  monogram?: string | null;
+  /**
+   * Shown on Facebook, WhatsApp, LinkedIn… when a page has none of its own (1200 × 630 px). Empty = an image generated in the site's colours.
+   */
+  ogImage?: (number | null) | Media;
+  /**
+   * Square PNG, 512×512 recommended.
+   */
+  favicon?: (number | null) | Media;
+  /**
+   * Hex code (#1f6fd1). Hue and intensity are used; lightness is adjusted automatically to keep text readable. Empty = default palette (solar green / gold).
+   */
+  theme?: {
+    primary?: string | null;
+    accent?: string | null;
   };
-  secondaryCta?: {
-    label?: string | null;
-    /**
-     * Path without locale, e.g. /services — the locale is added automatically.
-     */
-    href?: string | null;
+  email: string;
+  phone: string;
+  whatsapp?: string | null;
+  /**
+   * @username
+   */
+  telegram?: string | null;
+  address: string;
+  city: string;
+  hours?: string | null;
+  coords: {
+    lat: number;
+    lng: number;
   };
-  image?: (number | null) | Media;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'hero';
+  /**
+   * Header menu. The “Request a quote” button is added automatically.
+   */
+  navItems?:
+    | {
+        label: string;
+        /**
+         * Path without locale, e.g. /services — the locale is added automatically.
+         */
+        href: string;
+        comingSoon?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  footer?: {
+    tagline?: string | null;
+    quickLinks?:
+      | {
+          label: string;
+          /**
+           * Path without locale, e.g. /services — the locale is added automatically.
+           */
+          href: string;
+          id?: string | null;
+        }[]
+      | null;
+    legalLinks?:
+      | {
+          label: string;
+          /**
+           * Path without locale, e.g. /services — the locale is added automatically.
+           */
+          href: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * Each new request on this site is sent to these addresses and this Telegram group. Empty = the site's email (and, for the default site, DEVIS_NOTIFY_EMAIL / TELEGRAM_CHAT_ID).
+   */
+  notify?: {
+    emails?:
+      | {
+          email: string;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * E.g. -5544656539 (the TELEGRAM_BOT_TOKEN bot must be a member of the group).
+     */
+    telegramChatId?: string | null;
+  };
+  socials?: {
+    facebook?: string | null;
+    instagram?: string | null;
+    linkedin?: string | null;
+  };
+  stats?:
+    | {
+        value: string;
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -252,6 +410,34 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeroBlock".
+ */
+export interface HeroBlock {
+  style: 'full' | 'compact';
+  badge?: string | null;
+  title: string;
+  subtitle?: string | null;
+  primaryCta?: {
+    label?: string | null;
+    /**
+     * Path without locale, e.g. /services — the locale is added automatically.
+     */
+    href?: string | null;
+  };
+  secondaryCta?: {
+    label?: string | null;
+    /**
+     * Path without locale, e.g. /services — the locale is added automatically.
+     */
+    href?: string | null;
+  };
+  image?: (number | null) | Media;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'hero';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "StatsBlock".
  */
 export interface StatsBlock {
@@ -296,6 +482,30 @@ export interface FeaturesBlock {
               | 'Cable'
               | 'Zap'
               | 'Sun'
+              | 'House'
+              | 'Building2'
+              | 'Factory'
+              | 'Tractor'
+              | 'Lightbulb'
+              | 'RadioTower'
+              | 'Cctv'
+              | 'Siren'
+              | 'Fingerprint'
+              | 'Flame'
+              | 'Network'
+              | 'Router'
+              | 'Wifi'
+              | 'Server'
+              | 'Phone'
+              | 'ScanBarcode'
+              | 'Store'
+              | 'Monitor'
+              | 'Presentation'
+              | 'Tv'
+              | 'ListOrdered'
+              | 'Video'
+              | 'Cpu'
+              | 'Landmark'
               | 'ShieldCheck'
               | 'MapPin'
               | 'Wrench'
@@ -303,6 +513,9 @@ export interface FeaturesBlock {
               | 'Award'
               | 'Heart'
               | 'Eye'
+              | 'UserRound'
+              | 'Briefcase'
+              | 'Newspaper'
             )
           | null;
         title: string;
@@ -392,6 +605,20 @@ export interface LogosBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PartnersBlock".
+ */
+export interface PartnersBlock {
+  title?: string | null;
+  /**
+   * Empty = all. Logos are managed in Content → Partners & brands.
+   */
+  kinds?: ('manufacturer' | 'distributor' | 'own-product' | 'certification')[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'partners';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "FaqBlock".
  */
 export interface FaqBlock {
@@ -410,6 +637,10 @@ export interface FaqBlock {
  */
 export interface Faq {
   id: number;
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
   question: string;
   answer: string;
   /**
@@ -419,6 +650,75 @@ export interface Faq {
   order: number;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "UpcomingBlock".
+ */
+export interface UpcomingBlock {
+  title?: string | null;
+  subtitle?: string | null;
+  /**
+   * Remove a card once the feature is live.
+   */
+  items?:
+    | {
+        icon?:
+          | (
+              | 'PlugZap'
+              | 'Droplets'
+              | 'BatteryCharging'
+              | 'Cable'
+              | 'Zap'
+              | 'Sun'
+              | 'House'
+              | 'Building2'
+              | 'Factory'
+              | 'Tractor'
+              | 'Lightbulb'
+              | 'RadioTower'
+              | 'Cctv'
+              | 'Siren'
+              | 'Fingerprint'
+              | 'Flame'
+              | 'Network'
+              | 'Router'
+              | 'Wifi'
+              | 'Server'
+              | 'Phone'
+              | 'ScanBarcode'
+              | 'Store'
+              | 'Monitor'
+              | 'Presentation'
+              | 'Tv'
+              | 'ListOrdered'
+              | 'Video'
+              | 'Cpu'
+              | 'Landmark'
+              | 'ShieldCheck'
+              | 'MapPin'
+              | 'Wrench'
+              | 'Headphones'
+              | 'Award'
+              | 'Heart'
+              | 'Eye'
+              | 'UserRound'
+              | 'Briefcase'
+              | 'Newspaper'
+            )
+          | null;
+        title: string;
+        description?: string | null;
+        /**
+         * E.g. /espace-client, /carrieres, /blog.
+         */
+        href?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'upcoming';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -432,10 +732,60 @@ export interface Service {
    */
   slug: string;
   /**
-   * Links the service to the quote form.
+   * The website that publishes this content.
    */
-  activityKey: 'raccorde' | 'pompage' | 'isole' | 'bt' | 'mt';
-  icon: 'PlugZap' | 'Droplets' | 'BatteryCharging' | 'Cable' | 'Zap' | 'Sun';
+  site: number | Site;
+  /**
+   * Empty = main service (/services/…). Otherwise a sub-service of this area (/services/area/…).
+   */
+  parent?: (number | null) | Service;
+  /**
+   * The service appears in the quote form with these questions. Empty = the quote button leads to the Contact page.
+   */
+  devisForm?: (number | null) | DevisForm;
+  /**
+   * Lists every “Public / B2G” project of the site on this page (e.g. the B2G integrator page).
+   */
+  showPublicReferences?: boolean | null;
+  /**
+   * Adds a “Company documents” box linking to the /documents page (e.g. B2G and PV plant pages).
+   */
+  showDocuments?: boolean | null;
+  /**
+   * Links the service to the quote form. Empty = the quote button leads to the Contact page.
+   */
+  activityKey?: ('raccorde' | 'pompage' | 'isole' | 'bt' | 'mt') | null;
+  icon:
+    | 'PlugZap'
+    | 'Droplets'
+    | 'BatteryCharging'
+    | 'Cable'
+    | 'Zap'
+    | 'Sun'
+    | 'House'
+    | 'Building2'
+    | 'Factory'
+    | 'Tractor'
+    | 'Lightbulb'
+    | 'RadioTower'
+    | 'Cctv'
+    | 'Siren'
+    | 'Fingerprint'
+    | 'Flame'
+    | 'Network'
+    | 'Router'
+    | 'Wifi'
+    | 'Server'
+    | 'Phone'
+    | 'ScanBarcode'
+    | 'Store'
+    | 'Monitor'
+    | 'Presentation'
+    | 'Tv'
+    | 'ListOrdered'
+    | 'Video'
+    | 'Cpu'
+    | 'Landmark';
   order: number;
   /**
    * Shown on cards (≈ 1 sentence).
@@ -456,6 +806,66 @@ export interface Service {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * Parts of the page with their own anchor, e.g. #commercial → /fr/services/installation-raccordee#commercial.
+   */
+  sections?:
+    | {
+        anchor: string;
+        icon?:
+          | (
+              | 'PlugZap'
+              | 'Droplets'
+              | 'BatteryCharging'
+              | 'Cable'
+              | 'Zap'
+              | 'Sun'
+              | 'House'
+              | 'Building2'
+              | 'Factory'
+              | 'Tractor'
+              | 'Lightbulb'
+              | 'RadioTower'
+              | 'Cctv'
+              | 'Siren'
+              | 'Fingerprint'
+              | 'Flame'
+              | 'Network'
+              | 'Router'
+              | 'Wifi'
+              | 'Server'
+              | 'Phone'
+              | 'ScanBarcode'
+              | 'Store'
+              | 'Monitor'
+              | 'Presentation'
+              | 'Tv'
+              | 'ListOrdered'
+              | 'Video'
+              | 'Cpu'
+              | 'Landmark'
+            )
+          | null;
+        title: string;
+        body?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        image?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
   heroImage?: (number | null) | Media;
   benefits?:
     | {
@@ -470,6 +880,10 @@ export interface Service {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Complementary services of another group company, suggested at the bottom of this page (e.g. video surveillance for a solar plant).
+   */
+  crossSell?: (number | Service)[] | null;
   faqRefs?: (number | Faq)[] | null;
   /**
    * Optional — overrides the title and description used by search engines.
@@ -479,6 +893,71 @@ export interface Service {
     metaDescription?: string | null;
     ogImage?: (number | null) | Media;
   };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The technical questions asked for a service. Link a form to a service in Services → Quote form.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "devis-forms".
+ */
+export interface DevisForm {
+  id: number;
+  title: string;
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
+  /**
+   * The client can attach up to 5 files (PDF, photos, Word, Excel, DWG; 10 MB each) after the questions.
+   */
+  attachments: {
+    mode: 'optional' | 'required' | 'off';
+    /**
+     * Empty = “Documents (plans, photos…)”. E.g. “Tender specifications”.
+     */
+    label?: string | null;
+    help?: string | null;
+  };
+  /**
+   * In display order. Contact details (name, phone, governorate…) and consent are added automatically.
+   */
+  questions?:
+    | {
+        label: string;
+        type: 'text' | 'textarea' | 'number' | 'select' | 'radio' | 'multiselect' | 'checkbox' | 'date';
+        /**
+         * Technical id, e.g. flowM3PerDay. Don't change it once used.
+         */
+        name: string;
+        help?: string | null;
+        required?: boolean | null;
+        width?: ('half' | 'full') | null;
+        /**
+         * Same word on several questions = at least one of them must be filled (e.g. “usage” for bill OR consumption).
+         */
+        requiredGroup?: string | null;
+        unit?: string | null;
+        min?: number | null;
+        max?: number | null;
+        options?:
+          | {
+              label: string;
+              value: string;
+              id?: string | null;
+            }[]
+          | null;
+        /**
+         * Optional: the key of an earlier question and the expected value (e.g. subtype = eclairage-public).
+         */
+        showIf?: {
+          field?: string | null;
+          equals?: string | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -493,8 +972,17 @@ export interface Project {
    * URL segment shared by all 3 languages, e.g. pompage-solaire. Generated from the title if empty.
    */
   slug: string;
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
   activity: number | Service;
   clientType: 'residentiel' | 'agricole' | 'industriel' | 'public';
+  /**
+   * E.g. “Sbeitla municipality”. Leave empty for an anonymous client.
+   */
+  client?: string | null;
+  clientNamePublic?: boolean | null;
   region: string;
   /**
    * Empty for LV/MV.
@@ -533,10 +1021,38 @@ export interface Project {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "partners".
+ */
+export interface Partner {
+  id: number;
+  name: string;
+  kind: 'manufacturer' | 'distributor' | 'own-product' | 'certification';
+  logo: number | Media;
+  url?: string | null;
+  /**
+   * Optional — one sentence, mainly for the group's own products.
+   */
+  description?: string | null;
+  sites: (number | Site)[];
+  /**
+   * The logo is also shown on these service pages.
+   */
+  services?: (number | Service)[] | null;
+  showInStrip?: boolean | null;
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "team".
  */
 export interface Team {
   id: number;
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
   name: string;
   role: string;
   photo?: (number | null) | Media;
@@ -574,7 +1090,34 @@ export interface DevisRequest {
         id?: string | null;
       }[]
     | null;
-  activity: 'raccorde' | 'pompage' | 'isole' | 'bt' | 'mt';
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
+  service?: (number | null) | Service;
+  activity?: ('raccorde' | 'pompage' | 'isole' | 'bt' | 'mt') | null;
+  technicalDetails?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  formSnapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Plans, photos or specifications sent with the request.
+   */
+  attachments?: (number | DevisAttachment)[] | null;
   raccorde?: {
     monthlyBillTnd?: number | null;
     monthlyConsumptionKwh?: number | null;
@@ -632,6 +1175,7 @@ export interface DevisRequest {
     | 'zaghouan';
   preferredChannel?: ('call' | 'whatsapp' | 'telegram') | null;
   address?: string | null;
+  siteVisit?: boolean | null;
   consent: boolean;
   updatedAt: string;
   createdAt: string;
@@ -657,6 +1201,97 @@ export interface QuoteDocument {
   focalY?: number | null;
 }
 /**
+ * Files sent by clients with their quote request. Visible to the team only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "devis-attachments".
+ */
+export interface DevisAttachment {
+  id: number;
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * Certificates for tenders. Public, valid documents can be downloaded from the site's /documents page; the team is alerted 30 then 7 days before they expire.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "company-documents".
+ */
+export interface CompanyDocument {
+  id: number;
+  /**
+   * As shown to buyers, e.g. “Tax clearance certificate 2026”.
+   */
+  title: string;
+  type: 'attestation-fiscale' | 'cnss' | 'rne' | 'certificat' | 'bonne-execution' | 'fiche-technique' | 'autre';
+  /**
+   * Empty = never expires (datasheet, permanent certificate).
+   */
+  validUntil?: string | null;
+  /**
+   * Optional, e.g. the issuing body.
+   */
+  description?: string | null;
+  /**
+   * The website that publishes this content.
+   */
+  site: number | Site;
+  /**
+   * An expired document is no longer offered to the public, whatever its visibility.
+   */
+  visibility: 'public' | 'on-request' | 'internal';
+  alertLevel?: ('valid' | 'soon' | 'urgent' | 'expired') | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects".
+ */
+export interface Redirect {
+  id: number;
+  /**
+   * Without the language: /services/basse-tension redirects /fr/…, /ar/… and /en/….
+   */
+  from: string;
+  /**
+   * Path without the language (a #… anchor is allowed) or an external https:// address.
+   */
+  to: string;
+  /**
+   * Empty = every site.
+   */
+  sites?: (number | Site)[] | null;
+  /**
+   * Search engines transfer the ranking to the new address.
+   */
+  permanent?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -664,6 +1299,10 @@ export interface User {
   id: number;
   name?: string | null;
   role: 'admin' | 'editor';
+  /**
+   * Sites whose content and requests this editor manages. Empty = all sites. No effect for an administrator.
+   */
+  sites?: (number | Site)[] | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -703,6 +1342,107 @@ export interface PayloadKv {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs".
+ */
+export interface PayloadJob {
+  id: number;
+  /**
+   * Input data provided to the job
+   */
+  input?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  taskStatus?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  completedAt?: string | null;
+  totalTried?: number | null;
+  /**
+   * If hasError is true this job will not be retried
+   */
+  hasError?: boolean | null;
+  /**
+   * If hasError is true, this is the error that caused it
+   */
+  error?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Task execution log
+   */
+  log?:
+    | {
+        executedAt: string;
+        completedAt: string;
+        taskSlug: 'inline' | 'documentExpiryAlerts';
+        taskID: string;
+        input?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        output?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        state: 'failed' | 'succeeded';
+        error?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  taskSlug?: ('inline' | 'documentExpiryAlerts') | null;
+  queue?: string | null;
+  waitUntil?: string | null;
+  processing?: boolean | null;
+  meta?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -721,6 +1461,10 @@ export interface PayloadLockedDocument {
         value: number | Project;
       } | null)
     | ({
+        relationTo: 'partners';
+        value: number | Partner;
+      } | null)
+    | ({
         relationTo: 'faq';
         value: number | Faq;
       } | null)
@@ -733,12 +1477,32 @@ export interface PayloadLockedDocument {
         value: number | DevisRequest;
       } | null)
     | ({
+        relationTo: 'devis-forms';
+        value: number | DevisForm;
+      } | null)
+    | ({
         relationTo: 'quote-documents';
         value: number | QuoteDocument;
       } | null)
     | ({
+        relationTo: 'devis-attachments';
+        value: number | DevisAttachment;
+      } | null)
+    | ({
+        relationTo: 'company-documents';
+        value: number | CompanyDocument;
+      } | null)
+    | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'sites';
+        value: number | Site;
+      } | null)
+    | ({
+        relationTo: 'redirects';
+        value: number | Redirect;
       } | null)
     | ({
         relationTo: 'users';
@@ -793,6 +1557,7 @@ export interface PayloadMigration {
 export interface PagesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  site?: T;
   layout?:
     | T
     | {
@@ -804,7 +1569,9 @@ export interface PagesSelect<T extends boolean = true> {
         cta?: T | CtaBlockSelect<T>;
         richText?: T | RichTextBlockSelect<T>;
         logos?: T | LogosBlockSelect<T>;
+        partners?: T | PartnersBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
+        upcoming?: T | UpcomingBlockSelect<T>;
       };
   seo?:
     | T
@@ -942,6 +1709,16 @@ export interface LogosBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PartnersBlock_select".
+ */
+export interface PartnersBlockSelect<T extends boolean = true> {
+  title?: T;
+  kinds?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "FaqBlock_select".
  */
 export interface FaqBlockSelect<T extends boolean = true> {
@@ -952,16 +1729,50 @@ export interface FaqBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "UpcomingBlock_select".
+ */
+export interface UpcomingBlockSelect<T extends boolean = true> {
+  title?: T;
+  subtitle?: T;
+  items?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        description?: T;
+        href?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "services_select".
  */
 export interface ServicesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  site?: T;
+  parent?: T;
+  devisForm?: T;
+  showPublicReferences?: T;
+  showDocuments?: T;
   activityKey?: T;
   icon?: T;
   order?: T;
   shortDescription?: T;
   body?: T;
+  sections?:
+    | T
+    | {
+        anchor?: T;
+        icon?: T;
+        title?: T;
+        body?: T;
+        image?: T;
+        id?: T;
+      };
   heroImage?: T;
   benefits?:
     | T
@@ -976,6 +1787,7 @@ export interface ServicesSelect<T extends boolean = true> {
         description?: T;
         id?: T;
       };
+  crossSell?: T;
   faqRefs?: T;
   seo?:
     | T
@@ -994,8 +1806,11 @@ export interface ServicesSelect<T extends boolean = true> {
 export interface ProjectsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  site?: T;
   activity?: T;
   clientType?: T;
+  client?: T;
+  clientNamePublic?: T;
   region?: T;
   powerKwc?: T;
   date?: T;
@@ -1016,9 +1831,27 @@ export interface ProjectsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "partners_select".
+ */
+export interface PartnersSelect<T extends boolean = true> {
+  name?: T;
+  kind?: T;
+  logo?: T;
+  url?: T;
+  description?: T;
+  sites?: T;
+  services?: T;
+  showInStrip?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "faq_select".
  */
 export interface FaqSelect<T extends boolean = true> {
+  site?: T;
   question?: T;
   answer?: T;
   category?: T;
@@ -1031,6 +1864,7 @@ export interface FaqSelect<T extends boolean = true> {
  * via the `definition` "team_select".
  */
 export interface TeamSelect<T extends boolean = true> {
+  site?: T;
   name?: T;
   role?: T;
   photo?: T;
@@ -1055,7 +1889,12 @@ export interface DevisRequestsSelect<T extends boolean = true> {
         changedAt?: T;
         id?: T;
       };
+  site?: T;
+  service?: T;
   activity?: T;
+  technicalDetails?: T;
+  formSnapshot?: T;
+  attachments?: T;
   raccorde?:
     | T
     | {
@@ -1097,7 +1936,53 @@ export interface DevisRequestsSelect<T extends boolean = true> {
   region?: T;
   preferredChannel?: T;
   address?: T;
+  siteVisit?: T;
   consent?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "devis-forms_select".
+ */
+export interface DevisFormsSelect<T extends boolean = true> {
+  title?: T;
+  site?: T;
+  attachments?:
+    | T
+    | {
+        mode?: T;
+        label?: T;
+        help?: T;
+      };
+  questions?:
+    | T
+    | {
+        label?: T;
+        type?: T;
+        name?: T;
+        help?: T;
+        required?: T;
+        width?: T;
+        requiredGroup?: T;
+        unit?: T;
+        min?: T;
+        max?: T;
+        options?:
+          | T
+          | {
+              label?: T;
+              value?: T;
+              id?: T;
+            };
+        showIf?:
+          | T
+          | {
+              field?: T;
+              equals?: T;
+            };
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1106,6 +1991,48 @@ export interface DevisRequestsSelect<T extends boolean = true> {
  * via the `definition` "quote-documents_select".
  */
 export interface QuoteDocumentsSelect<T extends boolean = true> {
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "devis-attachments_select".
+ */
+export interface DevisAttachmentsSelect<T extends boolean = true> {
+  site?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "company-documents_select".
+ */
+export interface CompanyDocumentsSelect<T extends boolean = true> {
+  title?: T;
+  type?: T;
+  validUntil?: T;
+  description?: T;
+  site?: T;
+  visibility?: T;
+  alertLevel?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -1172,11 +2099,126 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sites_select".
+ */
+export interface SitesSelect<T extends boolean = true> {
+  key?: T;
+  isDefault?: T;
+  url?: T;
+  domains?:
+    | T
+    | {
+        domain?: T;
+        id?: T;
+      };
+  companyName?: T;
+  legalName?: T;
+  matriculeFiscal?: T;
+  certification?: T;
+  businessType?: T;
+  rne?: T;
+  servicesIntro?: T;
+  tagline?: T;
+  logo?: T;
+  logoDark?: T;
+  logoIncludesName?: T;
+  monogram?: T;
+  ogImage?: T;
+  favicon?: T;
+  theme?:
+    | T
+    | {
+        primary?: T;
+        accent?: T;
+      };
+  email?: T;
+  phone?: T;
+  whatsapp?: T;
+  telegram?: T;
+  address?: T;
+  city?: T;
+  hours?: T;
+  coords?:
+    | T
+    | {
+        lat?: T;
+        lng?: T;
+      };
+  navItems?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        comingSoon?: T;
+        id?: T;
+      };
+  footer?:
+    | T
+    | {
+        tagline?: T;
+        quickLinks?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+              id?: T;
+            };
+        legalLinks?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+              id?: T;
+            };
+      };
+  notify?:
+    | T
+    | {
+        emails?:
+          | T
+          | {
+              email?: T;
+              id?: T;
+            };
+        telegramChatId?: T;
+      };
+  socials?:
+    | T
+    | {
+        facebook?: T;
+        instagram?: T;
+        linkedin?: T;
+      };
+  stats?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects_select".
+ */
+export interface RedirectsSelect<T extends boolean = true> {
+  from?: T;
+  to?: T;
+  sites?: T;
+  permanent?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
+  sites?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1202,6 +2244,38 @@ export interface UsersSelect<T extends boolean = true> {
 export interface PayloadKvSelect<T extends boolean = true> {
   key?: T;
   data?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs_select".
+ */
+export interface PayloadJobsSelect<T extends boolean = true> {
+  input?: T;
+  taskStatus?: T;
+  completedAt?: T;
+  totalTried?: T;
+  hasError?: T;
+  error?: T;
+  log?:
+    | T
+    | {
+        executedAt?: T;
+        completedAt?: T;
+        taskSlug?: T;
+        taskID?: T;
+        input?: T;
+        output?: T;
+        state?: T;
+        error?: T;
+        id?: T;
+      };
+  taskSlug?: T;
+  queue?: T;
+  waitUntil?: T;
+  processing?: T;
+  meta?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1237,173 +2311,91 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings".
+ * via the `definition` "group".
  */
-export interface SiteSetting {
+export interface Group {
   id: number;
-  companyName: string;
-  legalName: string;
+  name: string;
   /**
-   * Format : 1234567/A/B/M/000
+   * Subtitle of the “Our group” page.
    */
-  matriculeFiscal: string;
-  certification?: string | null;
-  email: string;
-  phone: string;
-  whatsapp?: string | null;
-  /**
-   * @username
-   */
-  telegram?: string | null;
-  address: string;
-  city: string;
-  hours?: string | null;
-  coords: {
-    lat: number;
-    lng: number;
-  };
-  socials?: {
-    facebook?: string | null;
-    instagram?: string | null;
-    linkedin?: string | null;
-  };
-  stats?:
-    | {
-        value: string;
-        label: string;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "navigation".
- */
-export interface Navigation {
-  id: number;
-  items?:
-    | {
-        label: string;
-        /**
-         * Path without locale, e.g. /services — the locale is added automatically.
-         */
-        href: string;
-        comingSoon?: boolean | null;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "footer".
- */
-export interface Footer {
-  id: number;
   tagline?: string | null;
-  quickLinks?:
+  story?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Order and presentation of the companies (logo, name and address come from Sites).
+   */
+  members?:
     | {
-        label: string;
-        /**
-         * Path without locale, e.g. /services — the locale is added automatically.
-         */
-        href: string;
+        site: number | Site;
+        summary?: string | null;
         id?: string | null;
       }[]
     | null;
-  legalLinks?:
+  /**
+   * Shows “Member of … group” and the other companies at the bottom of every page.
+   */
+  footerBand?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats".
+ */
+export interface PayloadJobsStat {
+  id: number;
+  stats?:
     | {
-        label: string;
-        /**
-         * Path without locale, e.g. /services — the locale is added automatically.
-         */
-        href: string;
-        id?: string | null;
-      }[]
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
     | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings_select".
+ * via the `definition` "group_select".
  */
-export interface SiteSettingsSelect<T extends boolean = true> {
-  companyName?: T;
-  legalName?: T;
-  matriculeFiscal?: T;
-  certification?: T;
-  email?: T;
-  phone?: T;
-  whatsapp?: T;
-  telegram?: T;
-  address?: T;
-  city?: T;
-  hours?: T;
-  coords?:
-    | T
-    | {
-        lat?: T;
-        lng?: T;
-      };
-  socials?:
-    | T
-    | {
-        facebook?: T;
-        instagram?: T;
-        linkedin?: T;
-      };
-  stats?:
-    | T
-    | {
-        value?: T;
-        label?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "navigation_select".
- */
-export interface NavigationSelect<T extends boolean = true> {
-  items?:
-    | T
-    | {
-        label?: T;
-        href?: T;
-        comingSoon?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "footer_select".
- */
-export interface FooterSelect<T extends boolean = true> {
+export interface GroupSelect<T extends boolean = true> {
+  name?: T;
   tagline?: T;
-  quickLinks?:
+  story?: T;
+  members?:
     | T
     | {
-        label?: T;
-        href?: T;
+        site?: T;
+        summary?: T;
         id?: T;
       };
-  legalLinks?:
-    | T
-    | {
-        label?: T;
-        href?: T;
-        id?: T;
-      };
+  footerBand?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats_select".
+ */
+export interface PayloadJobsStatsSelect<T extends boolean = true> {
+  stats?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -1417,6 +2409,16 @@ export interface CollectionsWidget {
     [k: string]: unknown;
   };
   width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskDocumentExpiryAlerts".
+ */
+export interface TaskDocumentExpiryAlerts {
+  input?: unknown;
+  output: {
+    alerted: number;
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

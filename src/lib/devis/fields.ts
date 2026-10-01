@@ -1,4 +1,8 @@
 /**
+ * LEGACY: the typed quote form used before the admin form builder (Phase 5a).
+ * Still used to display and notify requests made with it (activity + typed
+ * groups, no form snapshot), and for the contact summary.
+ *
  * Field catalogue of the devis form (devplan §6). Drives:
  *  - step 2 rendering (which inputs per activity, units, tooltips),
  *  - the step 4 review summary (in the visitor's language),
@@ -221,6 +225,7 @@ export const contactLabels = {
   region: t3("Gouvernorat", "Governorate", "الولاية"),
   address: t3("Adresse du site", "Site address", "عنوان الموقع"),
   preferredChannel: t3("Canal préféré", "Preferred channel", "وسيلة الاتصال المفضّلة"),
+  siteVisit: t3("Visite technique sur site", "On-site technical visit", "زيارة تقنية للموقع"),
   activity: t3("Activité", "Activity", "النشاط"),
 } as const;
 
@@ -276,7 +281,14 @@ export function technicalSummary(lead: LeadLike, locale: Locale): SummaryRow[] {
 }
 
 /** Contact rows (empty values omitted). */
-export function contactSummary(lead: LeadLike, locale: Locale): SummaryRow[] {
+const siteVisitRequested = t3("Souhaitée", "Requested", "مطلوبة");
+
+export function contactSummary(
+  lead: Pick<LeadLike, "fullName" | "phone" | "email" | "region" | "address" | "preferredChannel"> & {
+    siteVisit?: boolean | null;
+  },
+  locale: Locale,
+): SummaryRow[] {
   const rows: [keyof typeof contactLabels, string | null | undefined][] = [
     ["fullName", lead.fullName],
     ["phone", lead.phone],
@@ -284,6 +296,7 @@ export function contactSummary(lead: LeadLike, locale: Locale): SummaryRow[] {
     ["region", labelOf(governorateOptions, lead.region, locale)],
     ["address", lead.address],
     ["preferredChannel", labelOf(contactChannelOptions, lead.preferredChannel, locale)],
+    ["siteVisit", lead.siteVisit ? siteVisitRequested[locale] : null],
   ];
   return rows.flatMap(([key, value]) => (value ? [{ label: contactLabels[key][locale], value }] : []));
 }

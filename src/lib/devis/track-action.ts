@@ -4,9 +4,10 @@ import { timingSafeEqual } from "crypto";
 import { headers } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
+import { currentSiteKey } from "@/lib/site";
 import { isValidTnPhone, normalizeTnPhone } from "./phone";
 import { clientIp, takeToken } from "./rate-limit";
-import { buildTrackingView, normalizeReference, type TrackingView } from "./tracking";
+import { buildTrackingView, normalizeReference, type TrackingInput, type TrackingView } from "./tracking";
 
 /**
  * Tracking lookup for /{locale}/suivi. Needs the reference AND the phone given
@@ -50,7 +51,8 @@ export async function trackDevis(input: {
   try {
     const { docs } = await payload.find({
       collection: "devis-requests",
-      where: { reference: { equals: reference } },
+      // Only this site's requests (its own reference prefix and team).
+      where: { and: [{ reference: { equals: reference } }, { "site.key": { equals: await currentSiteKey() } }] },
       limit: 1,
       depth: 0,
       pagination: false,
@@ -62,12 +64,14 @@ export async function trackDevis(input: {
         status: true,
         createdAt: true,
         statusHistory: true,
+        formSnapshot: true,
       },
     });
     const lead = docs[0];
     if (!lead || !samePhone(lead.phone, normalizeTnPhone(phone)))
       return { ok: false, error: "notFound" };
-    return { ok: true, view: buildTrackingView(lead) };
+    const snapshot = lead.formSnapshot as { serviceTitle?: TrackingInput["service"] } | null | undefined;
+    return { ok: true, view: buildTrackingView({ ...lead, service: snapshot?.serviceTitle ?? null }) };
   } catch (error) {
     payload.logger.error({ err: error, msg: "Devis tracking lookup failed" });
     return { ok: false, error: "server" };

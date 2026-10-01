@@ -1,7 +1,7 @@
-import { randomBytes } from "crypto";
 import { after } from "next/server";
 import type { CollectionAfterChangeHook, CollectionConfig, Field } from "payload";
-import { admins, authenticated } from "../cms/access";
+import { admins, authenticated, ownSites } from "../cms/access";
+import { siteField } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { devisStatusOptions } from "../cms/options";
 import {
@@ -16,20 +16,15 @@ import {
 } from "../lib/devis/options";
 import { isValidTnPhone, normalizeTnPhone } from "../lib/devis/phone";
 import { notifyStatusChange } from "../lib/devis/email";
+import { generateReference, referencePrefix } from "../lib/devis/reference";
 import { clientNotifiedStatuses, type DevisStatus } from "../lib/devis/tracking";
 import { locales } from "../i18n/config";
 
-/** Human-friendly lead reference, e.g. GT-260924-7K2Q. */
-function generateReference(date = new Date()): string {
-  const ymd = date.toISOString().slice(2, 10).replace(/-/g, "");
-  const suffix = randomBytes(3).toString("hex").slice(0, 4).toUpperCase();
-  return `GT-${ymd}-${suffix}`;
-}
-
+/** Legacy typed groups: only for requests made with the pre-Phase-5a form. */
 const onlyFor =
   (...activities: string[]) =>
   (data: Record<string, unknown>) =>
-    activities.includes(String(data?.activity));
+    !data?.formSnapshot && activities.includes(String(data?.activity));
 
 /** Step 2 of the devis form — technical needs per activity (devplan §6). */
 const technicalFields: Field[] = [
@@ -178,7 +173,7 @@ export const DevisRequests: CollectionConfig = {
   },
   admin: {
     useAsTitle: "reference",
-    defaultColumns: ["reference", "createdAt", "activity", "region", "fullName", "status"],
+    defaultColumns: ["reference", "createdAt", "site", "service", "region", "fullName", "status"],
     listSearchableFields: ["reference", "fullName", "phone", "email"],
     group: groups.leads,
   },
@@ -186,14 +181,20 @@ export const DevisRequests: CollectionConfig = {
   access: {
     // Team members can log phone/walk-in leads by hand from the admin.
     create: authenticated,
-    read: authenticated,
-    update: authenticated,
+    read: ownSites,
+    update: ownSites,
     delete: admins,
   },
   hooks: {
     beforeChange: [
-      ({ data, operation, originalDoc }) => {
-        if (operation === "create" && !data.reference) data.reference = generateReference();
+      async ({ data, operation, originalDoc, req }) => {
+        if (operation === "create" && !data.reference) {
+          const siteId = typeof data.site === "object" ? data.site?.id : data.site;
+          const site = siteId
+            ? await req.payload.findByID({ collection: "sites", id: siteId, depth: 0, req }).catch(() => null)
+            : null;
+          data.reference = generateReference(referencePrefix(site?.monogram));
+        }
         if (typeof data.phone === "string") data.phone = normalizeTnPhone(data.phone);
 
         // Date each status is reached, for the client tracking page (/suivi).
@@ -303,21 +304,72 @@ export const DevisRequests: CollectionConfig = {
       ],
     },
 
-    // --- Step 1: activity ---
+    siteField(),
+
+    // --- Step 1: service ---
     {
-      name: "activity",
-      type: "select",
-      required: true,
-      options: [...activityOptions],
-      index: true,
-      label: t3("Activité", "Activity", "النشاط"),
+      type: "row",
+      fields: [
+        {
+          name: "service",
+          type: "relationship",
+          relationTo: "services",
+          index: true,
+          label: t3("Service", "Service", "الخدمة"),
+          admin: { width: "60%" },
+        },
+        {
+          // Legacy key (Growing's typed form); still set for services that have one.
+          name: "activity",
+          type: "select",
+          options: [...activityOptions],
+          index: true,
+          label: t3("Activité (ancienne)", "Activity (legacy)", "النشاط (قديم)"),
+          admin: { width: "40%", readOnly: true, condition: (data) => Boolean(data?.activity) },
+        },
+      ],
     },
 
     // --- Step 2: technical needs ---
     {
       type: "collapsible",
       label: t3("Besoins techniques", "Technical needs", "الحاجيات الفنية"),
-      fields: technicalFields,
+      fields: [
+        {
+          // The answers, as a table in the admin's language (from the snapshot below).
+          name: "answersView",
+          type: "ui",
+          admin: { components: { Field: "/components/admin/devis-answers#DevisAnswers" } },
+        },
+        {
+          name: "technicalDetails",
+          type: "json",
+          label: t3("Réponses", "Answers", "الإجابات"),
+          admin: { hidden: true },
+        },
+        {
+          // The questions as they were when the client filled the form.
+          name: "formSnapshot",
+          type: "json",
+          label: t3("Formulaire (copie)", "Form (snapshot)", "الاستمارة (نسخة)"),
+          admin: { hidden: true },
+        },
+        {
+          name: "attachments",
+          type: "upload",
+          relationTo: "devis-attachments",
+          hasMany: true,
+          label: t3("Pièces jointes du client", "Client attachments", "مرفقات العميل"),
+          admin: {
+            description: t3(
+              "Plans, photos ou cahier des charges envoyés avec la demande.",
+              "Plans, photos or specifications sent with the request.",
+              "مخططات أو صور أو كرّاس شروط أُرسلت مع الطلب.",
+            ),
+          },
+        },
+        ...technicalFields,
+      ],
     },
 
     // --- Step 3: site & contact ---
@@ -362,6 +414,12 @@ export const DevisRequests: CollectionConfig = {
           ],
         },
         { name: "address", type: "textarea", maxLength: 500, label: t3("Adresse", "Address", "العنوان") },
+        {
+          name: "siteVisit",
+          type: "checkbox",
+          defaultValue: false,
+          label: t3("Visite technique sur site souhaitée", "On-site technical visit requested", "طلب زيارة تقنية للموقع"),
+        },
       ],
     },
 

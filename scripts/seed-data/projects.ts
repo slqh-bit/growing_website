@@ -79,7 +79,7 @@ export const projects: Project[] = [
   },
   {
     slug: "poste-transformation-industrie",
-    activityKey: "mt",
+    activityKey: "raccorde",
     clientType: "industriel",
     powerKwc: null,
     date: "2024-09-10",

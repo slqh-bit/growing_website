@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Clock } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -10,13 +10,17 @@ import type {
   FeaturesBlock,
   HeroBlock,
   LogosBlock,
+  PartnersBlock,
   ProjectsBlock,
   RichTextBlock,
   StatsBlock,
+  UpcomingBlock,
 } from "@/payload-types";
-import { getFaq, getFeaturedProjects, getServices, getSiteSettings } from "@/lib/cms/queries";
+import type { SiteKey } from "@/sites/config";
+import { getFaq, getFeaturedProjects, getPartners, getServices, getSite } from "@/lib/cms/queries";
 import { populated } from "@/lib/cms/media";
 import { Container } from "@/components/ui/container";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Accordion } from "@/components/ui/accordion";
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
@@ -31,18 +35,19 @@ import { StatsBand } from "@/components/sections/stats-band";
 import { ServiceCard } from "@/components/sections/service-card";
 import { ProjectCard } from "@/components/sections/project-card";
 import { CtaBand } from "@/components/sections/cta-band";
+import { PartnerLogos } from "@/components/sections/partner-logos";
+import { brandOf } from "@/components/brand/logo";
+import { topLevel } from "@/lib/services";
 
 interface BlockProps<B> {
   block: B;
   locale: Locale;
+  site: SiteKey;
 }
 
-export async function HeroBlockView({ block, locale }: BlockProps<HeroBlock>) {
+export async function HeroBlockView({ block, locale, site }: BlockProps<HeroBlock>) {
   if (block.style === "full") {
-    const [settings, tc] = await Promise.all([
-      getSiteSettings(locale),
-      getTranslations({ locale, namespace: "common" }),
-    ]);
+    const settings = await getSite(site, locale);
     return (
       <Hero
         badge={block.badge}
@@ -51,8 +56,8 @@ export async function HeroBlockView({ block, locale }: BlockProps<HeroBlock>) {
         primaryCta={block.primaryCta}
         secondaryCta={block.secondaryCta}
         image={block.image}
-        companyName={settings.companyName}
-        tagline={tc("companyTagline")}
+        brand={brandOf(settings)}
+        tagline={settings.tagline}
         stats={settings.stats ?? []}
       />
     );
@@ -67,14 +72,14 @@ export async function HeroBlockView({ block, locale }: BlockProps<HeroBlock>) {
   );
 }
 
-export async function StatsBlockView({ block, locale }: BlockProps<StatsBlock>) {
-  const items = block.useSiteStats === false ? (block.items ?? []) : ((await getSiteSettings(locale)).stats ?? []);
+export async function StatsBlockView({ block, locale, site }: BlockProps<StatsBlock>) {
+  const items = block.useSiteStats === false ? (block.items ?? []) : ((await getSite(site, locale)).stats ?? []);
   return <StatsBand title={block.title} items={items} />;
 }
 
-export async function ActivityGridBlockView({ block, locale }: BlockProps<ActivityGridBlock>) {
+export async function ActivityGridBlockView({ block, locale, site }: BlockProps<ActivityGridBlock>) {
   const [services, tc] = await Promise.all([
-    getServices(locale),
+    getServices(site, locale),
     getTranslations({ locale, namespace: "common" }),
   ]);
 
@@ -83,7 +88,7 @@ export async function ActivityGridBlockView({ block, locale }: BlockProps<Activi
       <Container>
         {block.title && <SectionHeading title={block.title} subtitle={block.subtitle ?? undefined} />}
         <RevealGroup className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {services.map((service) => (
+          {topLevel(services).map((service) => (
             <Reveal key={service.slug} className="h-full">
               <ServiceCard service={service} locale={locale} className="h-full" />
             </Reveal>
@@ -131,9 +136,9 @@ export function FeaturesBlockView({ block }: BlockProps<FeaturesBlock>) {
   );
 }
 
-export async function ProjectsBlockView({ block, locale }: BlockProps<ProjectsBlock>) {
+export async function ProjectsBlockView({ block, locale, site }: BlockProps<ProjectsBlock>) {
   const [projects, tc] = await Promise.all([
-    getFeaturedProjects(locale, block.limit ?? 3),
+    getFeaturedProjects(site, locale, block.limit ?? 3),
     getTranslations({ locale, namespace: "common" }),
   ]);
   if (projects.length === 0) return null;
@@ -164,8 +169,8 @@ export async function ProjectsBlockView({ block, locale }: BlockProps<ProjectsBl
   );
 }
 
-export function CtaBlockView({ block, locale }: BlockProps<CtaBlock>) {
-  return <CtaBand locale={locale} title={block.title} subtitle={block.subtitle} button={block.button} />;
+export function CtaBlockView({ block, locale, site }: BlockProps<CtaBlock>) {
+  return <CtaBand locale={locale} site={site} title={block.title} subtitle={block.subtitle} button={block.button} />;
 }
 
 export function RichTextBlockView({ block, locale }: BlockProps<RichTextBlock>) {
@@ -223,9 +228,17 @@ export function LogosBlockView({ block }: BlockProps<LogosBlock>) {
   );
 }
 
-export async function FaqBlockView({ block, locale }: BlockProps<FaqBlock>) {
+export async function PartnersBlockView({ block, locale, site }: BlockProps<PartnersBlock>) {
+  const kinds = block.kinds ?? [];
+  const partners = (await getPartners(site, locale, { strip: true })).filter(
+    (p) => kinds.length === 0 || kinds.includes(p.kind),
+  );
+  return <PartnerLogos partners={partners} title={block.title} />;
+}
+
+export async function FaqBlockView({ block, locale, site }: BlockProps<FaqBlock>) {
   const picked = (block.items ?? []).map((item) => populated<Faq>(item)).filter((f): f is Faq => f !== null);
-  const items = picked.length > 0 ? picked : await getFaq(locale);
+  const items = picked.length > 0 ? picked : await getFaq(site, locale);
   if (items.length === 0) return null;
 
   return (
@@ -235,6 +248,54 @@ export async function FaqBlockView({ block, locale }: BlockProps<FaqBlock>) {
         <Accordion
           items={items.map((f) => ({ id: String(f.id), question: f.question, answer: f.answer }))}
         />
+      </Container>
+    </section>
+  );
+}
+
+/** "Bientôt disponible" cards (plan Phase 9): features still to come, each linking to its placeholder page. */
+export async function UpcomingBlockView({ block, locale }: BlockProps<UpcomingBlock>) {
+  const items = block.items ?? [];
+  if (items.length === 0) return null;
+  const tc = await getTranslations({ locale, namespace: "common" });
+
+  return (
+    <section className="py-20 sm:py-24">
+      <Container>
+        {block.title && <SectionHeading title={block.title} subtitle={block.subtitle ?? undefined} />}
+        <RevealGroup className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item, i) => {
+            const card = (
+              <div className="flex h-full flex-col gap-3 rounded-2xl border border-dashed border-border bg-surface p-6 transition-colors group-hover:border-primary-300">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="inline-flex size-11 items-center justify-center rounded-xl bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-200">
+                    <DynamicIcon name={item.icon} className="size-5" />
+                  </span>
+                  <Badge variant="accent" className="gap-1">
+                    <Clock className="size-3" aria-hidden />
+                    {tc("comingSoon")}
+                  </Badge>
+                </div>
+                <h3 className="font-semibold text-foreground">{item.title}</h3>
+                {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
+              </div>
+            );
+            return (
+              <Reveal key={item.id ?? i} className="h-full">
+                {item.href ? (
+                  <SmartLink
+                    href={item.href}
+                    className="group block h-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {card}
+                  </SmartLink>
+                ) : (
+                  card
+                )}
+              </Reveal>
+            );
+          })}
+        </RevealGroup>
       </Container>
     </section>
   );

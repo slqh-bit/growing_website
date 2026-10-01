@@ -66,5 +66,26 @@ export const Users: CollectionConfig = {
       },
       admin: { position: "sidebar" },
     },
+    {
+      name: "sites",
+      type: "relationship",
+      relationTo: "sites",
+      hasMany: true,
+      saveToJWT: true,
+      label: t3("Sites gérés", "Managed sites", "المواقع المُدارة"),
+      // Only admins decide who edits which site.
+      access: {
+        create: adminsFieldLevel,
+        update: adminsFieldLevel,
+      },
+      admin: {
+        position: "sidebar",
+        description: t3(
+          "Sites dont cet éditeur gère le contenu et les demandes. Vide = tous les sites. Sans effet pour un administrateur.",
+          "Sites whose content and requests this editor manages. Empty = all sites. No effect for an administrator.",
+          "المواقع التي يدير هذا المحرّر محتواها وطلباتها. فارغ = كل المواقع. لا تأثير على المسؤول.",
+        ),
+      },
+    },
   ],
 };

@@ -1,5 +1,5 @@
 import type { Block, Field } from "payload";
-import { linkFields } from "../cms/fields";
+import { linkFields, validateHref } from "../cms/fields";
 import { t3 } from "../cms/labels";
 import { featureIconOptions } from "../cms/options";
 
@@ -235,6 +235,38 @@ export const LogosBlock: Block = {
   ],
 };
 
+/** Logos from Contenu → Partenaires & marques (those marked "in the strip"), per site. */
+export const PartnersBlock: Block = {
+  slug: "partners",
+  interfaceName: "PartnersBlock",
+  labels: {
+    singular: t3("Partenaires & marques", "Partners & brands", "الشركاء والعلامات"),
+    plural: t3("Partenaires & marques", "Partners & brands", "الشركاء والعلامات"),
+  },
+  fields: [
+    titleField,
+    {
+      name: "kinds",
+      type: "select",
+      hasMany: true,
+      label: t3("Types affichés", "Types shown", "الأنواع المعروضة"),
+      options: [
+        { value: "manufacturer", label: t3("Fabricants / marques", "Manufacturers / brands", "المصنّعون / العلامات") },
+        { value: "distributor", label: t3("Distributeurs", "Distributors", "الموزّعون") },
+        { value: "own-product", label: t3("Produits du groupe", "Group products", "منتجات المجموعة") },
+        { value: "certification", label: t3("Organismes / certifications", "Bodies / certifications", "الهيئات / الاعتمادات") },
+      ],
+      admin: {
+        description: t3(
+          "Vide = tous. Les logos se gèrent dans Contenu → Partenaires & marques.",
+          "Empty = all. Logos are managed in Content → Partners & brands.",
+          "فارغ = الكل. تُدار الشعارات في المحتوى ← الشركاء والعلامات.",
+        ),
+      },
+    },
+  ],
+};
+
 export const FaqBlock: Block = {
   slug: "faq",
   interfaceName: "FaqBlock",
@@ -258,6 +290,79 @@ export const FaqBlock: Block = {
   ],
 };
 
+/**
+ * Features still to come (plan Phase 9: client area, careers, news), shown as
+ * "Bientôt disponible" cards, each optionally linking to its placeholder page.
+ */
+export const UpcomingBlock: Block = {
+  slug: "upcoming",
+  interfaceName: "UpcomingBlock",
+  labels: {
+    singular: t3("Bientôt disponible", "Coming soon", "قريباً"),
+    plural: t3("Bientôt disponible", "Coming soon", "قريباً"),
+  },
+  fields: [
+    titleField,
+    subtitleField,
+    {
+      name: "items",
+      type: "array",
+      minRows: 1,
+      maxRows: 6,
+      label: t3("Fonctionnalités à venir", "Upcoming features", "الميزات القادمة"),
+      admin: {
+        description: t3(
+          "Retirez une carte quand la fonctionnalité est en ligne.",
+          "Remove a card once the feature is live.",
+          "احذف البطاقة عند إطلاق الميزة.",
+        ),
+      },
+      fields: [
+        {
+          type: "row",
+          fields: [
+            {
+              name: "icon",
+              type: "select",
+              defaultValue: "Sun",
+              options: featureIconOptions,
+              label: t3("Icône", "Icon", "الأيقونة"),
+              admin: { width: "30%" },
+            },
+            {
+              name: "title",
+              type: "text",
+              localized: true,
+              required: true,
+              label: t3("Titre", "Title", "العنوان"),
+              admin: { width: "70%" },
+            },
+          ],
+        },
+        {
+          name: "description",
+          type: "textarea",
+          localized: true,
+          label: t3("Description", "Description", "الوصف"),
+        },
+        {
+          name: "href",
+          type: "text",
+          validate: validateHref,
+          label: t3("Lien (optionnel)", "Link (optional)", "الرابط (اختياري)"),
+          admin: {
+            description: t3(
+              "Ex. /espace-client, /carrieres, /blog.",
+              "E.g. /espace-client, /carrieres, /blog.",
+              "مثال: ‎/espace-client، ‎/carrieres، ‎/blog.",
+            ),
+          },
+        },
+      ],
+    },
+  ],
+};
+
 export const pageBlocks: Block[] = [
   HeroBlock,
   StatsBlock,
@@ -267,5 +372,7 @@ export const pageBlocks: Block[] = [
   CtaBlock,
   RichTextBlock,
   LogosBlock,
+  PartnersBlock,
   FaqBlock,
+  UpcomingBlock,
 ];

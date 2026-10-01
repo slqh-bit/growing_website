@@ -5,10 +5,22 @@ import { useTranslations } from "next-intl";
 import type { Path, UseFormRegisterReturn, UseFormReturn } from "react-hook-form";
 import type { Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
-import { contactLabels, contactSummary, technicalFields, technicalSummary, activityLabel } from "@/lib/devis/fields";
-import { contactChannelOptions, governorateOptions, technicalGroupOf, type Activity } from "@/lib/devis/options";
-import { devisSchema, type DevisFormValues } from "@/lib/devis/schema";
+import { contactLabels, contactSummary } from "@/lib/devis/fields";
+import {
+  answersSchema,
+  answersSummary,
+  attachmentsMode,
+  isVisible,
+  pick,
+  type Answers,
+  type QuestionDef,
+} from "@/lib/devis/form-def";
+import type { AttachmentErrorKey } from "@/lib/devis/attachments";
+import type { DevisChoice } from "@/lib/devis/choices";
+import { contactChannelOptions, governorateOptions } from "@/lib/devis/options";
+import { stepSchema, type DevisFormValues } from "@/lib/devis/schema";
 import { ServiceIcon } from "@/components/ui/service-icon";
+import { AttachmentsField, useAttachmentsLabel } from "./attachments-field";
 import { FieldError, FieldShell, describedBy, fieldId, inputClass } from "./field-shell";
 
 type Form = UseFormReturn<DevisFormValues>;
@@ -22,20 +34,20 @@ interface StepProps {
   errorOf: (name: string) => string | undefined;
 }
 
-export interface ActivityChoice {
-  value: Activity;
-  title: string;
-  description: string;
-  icon: string;
-}
-
 // --- Step 1 ------------------------------------------------------------------------
 
-export function ActivityStep({ form, field, errorOf, activities }: StepProps & { activities: ActivityChoice[] }) {
+export function ActivityStep({ form, field, errorOf, activities }: StepProps & { activities: DevisChoice[] }) {
   const t = useTranslations("devis");
-  const selected = form.watch("activity");
-  const error = errorOf("activity");
-  const id = fieldId("activity");
+  const selected = form.watch("service");
+  const error = errorOf("service");
+  const id = fieldId("service");
+  // Sub-services are grouped under their area (Hikview); top-level services have none.
+  const groups = activities.reduce<{ area: string | null; items: DevisChoice[] }[]>((acc, a) => {
+    const last = acc.at(-1);
+    if (last && last.area === a.area) last.items.push(a);
+    else acc.push({ area: a.area, items: [a] });
+    return acc;
+  }, []);
 
   return (
     <fieldset>
@@ -45,42 +57,46 @@ export function ActivityStep({ form, field, errorOf, activities }: StepProps & {
         aria-label={t("steps.activity")}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
-        className="grid gap-3 sm:grid-cols-2"
+        className="flex flex-col gap-5"
       >
-        {activities.map((a) => {
-          const isSelected = selected === a.value;
-          return (
-            <label
-              key={a.value}
-              className={cn(
-                "relative flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition-all duration-200 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
-                isSelected
-                  ? "border-primary-500 bg-primary-50 shadow-sm ring-1 ring-primary-500/40 dark:bg-primary-950/40"
-                  : "border-border bg-surface hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-sm",
-                error && !selected && "border-red-400",
-              )}
-            >
-              <input
-                type="radio"
-                value={a.value}
-                {...field("activity")}
-                className="sr-only"
-              />
-              <ServiceIcon name={a.icon} className="size-11 shrink-0" iconClassName="size-5" />
-              <span className="flex min-w-0 flex-col gap-1 pe-6">
-                <span className="font-semibold text-foreground">{a.title}</span>
-                <span className="text-sm text-muted-foreground">{a.description}</span>
-              </span>
-              <CheckCircle2
-                aria-hidden
-                className={cn(
-                  "absolute end-3 top-3 size-5 text-brand transition-all duration-200",
-                  isSelected ? "scale-100 opacity-100" : "scale-50 opacity-0",
-                )}
-              />
-            </label>
-          );
-        })}
+        {groups.map((group, gi) => (
+          <div key={group.area ?? `group-${gi}`} className="flex flex-col gap-3">
+            {group.area && (
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group.area}</p>
+            )}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {group.items.map((a) => {
+                const isSelected = selected === a.id;
+                return (
+                  <label
+                    key={a.id}
+                    className={cn(
+                      "relative flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition-all duration-200 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
+                      isSelected
+                        ? "border-primary-500 bg-primary-50 shadow-sm ring-1 ring-primary-500/40 dark:bg-primary-950/40"
+                        : "border-border bg-surface hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-sm",
+                      error && !selected && "border-red-400",
+                    )}
+                  >
+                    <input type="radio" value={a.id} {...field("service")} className="sr-only" />
+                    <ServiceIcon name={a.icon} className="size-11 shrink-0" iconClassName="size-5" />
+                    <span className="flex min-w-0 flex-col gap-1 pe-6">
+                      <span className="font-semibold text-foreground">{a.title}</span>
+                      <span className="text-sm text-muted-foreground">{a.description}</span>
+                    </span>
+                    <CheckCircle2
+                      aria-hidden
+                      className={cn(
+                        "absolute end-3 top-3 size-5 text-brand transition-all duration-200",
+                        isSelected ? "scale-100 opacity-100" : "scale-50 opacity-0",
+                      )}
+                    />
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
       <div className="mt-3">
         <FieldError id={id} message={error} />
@@ -91,90 +107,188 @@ export function ActivityStep({ form, field, errorOf, activities }: StepProps & {
 
 // --- Step 2 ------------------------------------------------------------------------
 
-export function TechnicalStep({ form, field, locale, errorOf }: StepProps) {
+/** Questions that take the whole row. */
+const wideTypes = new Set(["textarea", "checkbox", "radio", "multiselect"]);
+
+/** The attachments picked at step 2 (kept outside react-hook-form: File objects). */
+export interface FilesState {
+  files: File[];
+  setFiles: (files: File[]) => void;
+  error: AttachmentErrorKey | "required" | null;
+  setError: (key: AttachmentErrorKey | "required" | null) => void;
+}
+
+export function TechnicalStep({
+  form,
+  field,
+  locale,
+  errorOf,
+  activities,
+  attachments,
+}: StepProps & { activities: DevisChoice[]; attachments: FilesState }) {
   const t = useTranslations("devis");
-  const activity = form.watch("activity");
-  if (!activity) return null;
-  const group = technicalGroupOf[activity];
+  const service = form.watch("service");
+  const answers = (form.watch("answers") ?? {}) as Answers;
+  const def = activities.find((a) => a.id === service)?.form;
+  if (!def) return null;
 
   return (
     <div className="grid gap-5 sm:grid-cols-2">
-      {technicalFields[group].map((def) => {
-        const name = `${group}.${def.name}` as Path<DevisFormValues>;
-        const id = fieldId(name);
-        const error = errorOf(name);
-        const label = def.label[locale];
-        const help = def.help?.[locale];
-        const wide = def.kind === "textarea" || def.kind === "checkbox";
-
-        if (def.kind === "checkbox") {
-          return (
-            <label key={name} className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 sm:col-span-2">
-              <input type="checkbox" {...field(name)} className="size-5 rounded accent-primary-600" />
-              <span className="text-sm font-medium text-foreground">{label}</span>
-            </label>
-          );
-        }
-
-        return (
-          <FieldShell
-            key={name}
-            id={id}
-            label={label}
-            required={def.required}
-            help={help}
-            helpLabel={t("moreInfo")}
-            error={error}
-            className={wide ? "sm:col-span-2" : undefined}
-          >
-            {def.kind === "select" ? (
-              <select
-                id={id}
-                {...field(name)}
-                aria-invalid={Boolean(error)}
-                aria-describedby={describedBy(id, { error })}
-                className={inputClass(Boolean(error), "appearance-auto")}
-              >
-                <option value="">{t("select")}</option>
-                {def.options?.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label[locale]}
-                  </option>
-                ))}
-              </select>
-            ) : def.kind === "textarea" ? (
-              <textarea
-                id={id}
-                rows={3}
-                {...field(name)}
-                placeholder={t("placeholders.textarea")}
-                aria-invalid={Boolean(error)}
-                aria-describedby={describedBy(id, { error })}
-                className={inputClass(Boolean(error), "resize-y")}
-              />
-            ) : (
-              <div className="relative">
-                <input
-                  id={id}
-                  type="text"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  {...field(name)}
-                  aria-invalid={Boolean(error)}
-                  aria-describedby={describedBy(id, { error })}
-                  className={inputClass(Boolean(error), def.unit ? "pe-24" : undefined)}
-                />
-                {def.unit && (
-                  <span className="pointer-events-none absolute inset-y-0 end-4 flex items-center text-sm text-muted-foreground">
-                    {def.unit[locale]}
-                  </span>
-                )}
-              </div>
-            )}
-          </FieldShell>
-        );
-      })}
+      {def.questions
+        .filter((q) => isVisible(q, answers, def))
+        .map((q) => (
+          <Question
+            key={q.name}
+            q={q}
+            field={field}
+            locale={locale}
+            error={errorOf(`answers.${q.name}`)}
+            labels={{ moreInfo: t("moreInfo"), select: t("select"), placeholder: t("placeholders.textarea") }}
+          />
+        ))}
+      {attachmentsMode(def) !== "off" && (
+        <AttachmentsField
+          def={def}
+          locale={locale}
+          files={attachments.files}
+          onChange={attachments.setFiles}
+          error={attachments.error ? t(`errors.${attachments.error}`) : undefined}
+          onError={attachments.setError}
+        />
+      )}
     </div>
+  );
+}
+
+/** One question of a service's form (Contenu → Formulaires de devis). */
+function Question({
+  q,
+  field,
+  locale,
+  error,
+  labels,
+}: {
+  q: QuestionDef;
+  field: StepProps["field"];
+  locale: Locale;
+  error?: string;
+  labels: { moreInfo: string; select: string; placeholder: string };
+}) {
+  const name = `answers.${q.name}` as Path<DevisFormValues>;
+  const id = fieldId(name);
+  const label = pick(q.label, locale);
+  const help = pick(q.help, locale) || undefined;
+  const unit = pick(q.unit, locale);
+  const wide = q.width === "full" || wideTypes.has(q.type);
+  const options = q.options ?? [];
+  const star = q.required ? <span className="text-red-600"> *</span> : null;
+
+  if (q.type === "checkbox") {
+    return (
+      <div className="flex flex-col gap-2 sm:col-span-2">
+        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3">
+          <input
+            id={id}
+            type="checkbox"
+            {...field(name)}
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? `${id}-error` : undefined}
+            className="size-5 rounded accent-primary-600"
+          />
+          <span className="text-sm font-medium text-foreground">
+            {label}
+            {star}
+          </span>
+        </label>
+        <FieldError id={id} message={error} />
+      </div>
+    );
+  }
+
+  if (q.type === "radio" || q.type === "multiselect") {
+    return (
+      <fieldset
+        id={id}
+        className="flex flex-col gap-2 sm:col-span-2"
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${id}-error` : undefined}
+      >
+        <legend className="mb-2 text-sm font-medium text-foreground">
+          {label}
+          {star}
+        </legend>
+        {help && <p className="-mt-1 mb-1 text-xs text-muted-foreground">{help}</p>}
+        <div className="flex flex-wrap gap-2">
+          {options.map((o) => (
+            <label
+              key={o.value}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground transition-colors has-[:checked]:border-primary-600 has-[:checked]:bg-primary-600 has-[:checked]:text-white has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
+            >
+              <input type={q.type === "radio" ? "radio" : "checkbox"} value={o.value} {...field(name)} className="sr-only" />
+              {pick(o.label, locale)}
+            </label>
+          ))}
+        </div>
+        <FieldError id={id} message={error} />
+      </fieldset>
+    );
+  }
+
+  return (
+    <FieldShell
+      id={id}
+      label={label}
+      required={Boolean(q.required)}
+      help={help}
+      helpLabel={labels.moreInfo}
+      error={error}
+      className={wide ? "sm:col-span-2" : undefined}
+    >
+      {q.type === "select" ? (
+        <select
+          id={id}
+          {...field(name)}
+          aria-invalid={Boolean(error)}
+          aria-describedby={describedBy(id, { error })}
+          className={inputClass(Boolean(error), "appearance-auto")}
+        >
+          <option value="">{labels.select}</option>
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {pick(o.label, locale)}
+            </option>
+          ))}
+        </select>
+      ) : q.type === "textarea" ? (
+        <textarea
+          id={id}
+          rows={3}
+          {...field(name)}
+          placeholder={labels.placeholder}
+          aria-invalid={Boolean(error)}
+          aria-describedby={describedBy(id, { error })}
+          className={inputClass(Boolean(error), "resize-y")}
+        />
+      ) : (
+        <div className="relative">
+          <input
+            id={id}
+            type={q.type === "date" ? "date" : "text"}
+            inputMode={q.type === "number" ? "decimal" : undefined}
+            autoComplete="off"
+            {...field(name)}
+            aria-invalid={Boolean(error)}
+            aria-describedby={describedBy(id, { error })}
+            className={inputClass(Boolean(error), unit ? "pe-24" : undefined)}
+          />
+          {unit && (
+            <span className="pointer-events-none absolute inset-y-0 end-4 flex items-center text-sm text-muted-foreground">
+              {unit}
+            </span>
+          )}
+        </div>
+      )}
+    </FieldShell>
   );
 }
 
@@ -319,6 +433,19 @@ export function ContactStep({ form, field, locale, errorOf }: StepProps) {
           })}
         </div>
       </fieldset>
+
+      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-surface px-4 py-3 sm:col-span-2">
+        <input
+          id={fieldId("siteVisit")}
+          type="checkbox"
+          {...field("siteVisit")}
+          className="mt-0.5 size-5 shrink-0 rounded accent-primary-600"
+        />
+        <span className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium text-foreground">{t("siteVisit.label")}</span>
+          <span className="text-xs text-muted-foreground">{t("siteVisit.help")}</span>
+        </span>
+      </label>
     </div>
   );
 }
@@ -330,23 +457,36 @@ export function ReviewStep({
   field,
   locale,
   errorOf,
+  activities,
   onEdit,
   privacyHref,
-}: StepProps & { onEdit: (step: number) => void; privacyHref: string }) {
+  files,
+}: StepProps & { activities: DevisChoice[]; onEdit: (step: number) => void; privacyHref: string; files: File[] }) {
   const t = useTranslations("devis");
-  // Previous steps are valid here; parse for display (normalized numbers, labels).
-  const parsed = devisSchema.safeParse({ ...form.getValues(), consent: true });
   const consentId = fieldId("consent");
   const consentError = errorOf("consent");
-
-  if (!parsed.success) return null;
-  const lead = parsed.data;
-  const technical = technicalSummary(lead, locale);
+  const values = form.getValues();
+  const choice = activities.find((a) => a.id === values.service);
+  const filesLabel = useAttachmentsLabel(choice?.form, locale);
+  // Previous steps are valid here; parse for display (normalized numbers, labels).
+  const parsed = choice ? answersSchema(choice.form).safeParse(values.answers ?? {}) : null;
+  const contact = stepSchema(2, activities, values.service).safeParse(values);
+  if (!choice || !parsed?.success || !contact.success) return null;
 
   const sections = [
-    { title: t("review.activity"), step: 0, rows: [{ label: contactLabels.activity[locale], value: activityLabel(lead.activity, locale) }] },
-    { title: t("review.technical"), step: 1, rows: technical, empty: t("review.empty") },
-    { title: t("review.contact"), step: 2, rows: contactSummary(lead, locale) },
+    { title: t("review.activity"), step: 0, rows: [{ label: contactLabels.activity[locale], value: choice.title }] },
+    {
+      title: t("review.technical"),
+      step: 1,
+      rows: [
+        ...answersSummary(choice.form, parsed.data, locale),
+        ...(files.length > 0 && attachmentsMode(choice.form) !== "off"
+          ? [{ label: filesLabel, value: files.map((f) => f.name).join("\n") }]
+          : []),
+      ],
+      empty: t("review.empty"),
+    },
+    { title: t("review.contact"), step: 2, rows: contactSummary(contact.data as typeof values, locale) },
   ];
 
   return (
