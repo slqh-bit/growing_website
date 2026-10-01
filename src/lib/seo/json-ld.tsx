@@ -23,7 +23,7 @@ type SiteLike = Pick<Site, "url" | "domains">;
 
 export const orgId = (site: SiteLike) => `${siteOrigin(site)}/#organization`;
 const websiteId = (site: SiteLike) => `${siteOrigin(site)}/#website`;
-const groupId = (site: SiteLike) => `${siteOrigin(site)}/#group`;
+export const groupId = (site: SiteLike) => `${siteOrigin(site)}/#group`;
 
 /** An upload as an absolute URL on the site's origin. */
 function absoluteImage(site: SiteLike, value: Site["logo"]): string | undefined {
@@ -82,8 +82,9 @@ export function organizationLd(settings: Site, locale: Locale, group: GroupRef |
   };
 }
 
-/** The website itself, published by the company, in the page's language. */
+/** The website itself, published by the company (the group, on the group site), in the page's language. */
 export function websiteLd(settings: Site, locale: Locale): object {
+  const publisher = settings.key === "group" ? groupId(settings) : orgId(settings);
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -91,7 +92,7 @@ export function websiteLd(settings: Site, locale: Locale): object {
     name: settings.companyName,
     url: `${siteOrigin(settings)}/${locale}`,
     inLanguage: locale,
-    publisher: { "@id": orgId(settings) },
+    publisher: { "@id": publisher },
   };
 }
 

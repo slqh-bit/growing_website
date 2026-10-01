@@ -14,6 +14,14 @@ import {
   StatsBlockView,
   UpcomingBlockView,
 } from "./renderers";
+import {
+  CompaniesBlockView,
+  GroupHeroBlockView,
+  GroupProjectsBlockView,
+  GroupServicesBlockView,
+  QuoteFormBlockView,
+  StepsBlockView,
+} from "./group-renderers";
 
 type LayoutBlock = NonNullable<Page["layout"]>[number];
 
@@ -53,6 +61,18 @@ function BlockView({ block, locale, site }: { block: LayoutBlock; locale: Locale
       return <FaqBlockView block={block} locale={locale} site={site} />;
     case "upcoming":
       return <UpcomingBlockView block={block} locale={locale} site={site} />;
+    case "groupHero":
+      return <GroupHeroBlockView block={block} locale={locale} site={site} />;
+    case "companies":
+      return <CompaniesBlockView block={block} locale={locale} site={site} />;
+    case "groupServices":
+      return <GroupServicesBlockView block={block} locale={locale} site={site} />;
+    case "steps":
+      return <StepsBlockView block={block} locale={locale} site={site} />;
+    case "groupProjects":
+      return <GroupProjectsBlockView block={block} locale={locale} site={site} />;
+    case "quoteForm":
+      return <QuoteFormBlockView block={block} locale={locale} site={site} />;
     default: {
       // Compile-time exhaustiveness: a new block type must get a renderer.
       const unknown: never = block;

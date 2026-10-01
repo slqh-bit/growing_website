@@ -185,6 +185,12 @@ export interface Page {
         | PartnersBlock
         | FaqBlock
         | UpcomingBlock
+        | GroupHeroBlock
+        | CompaniesBlock
+        | GroupServicesBlock
+        | StepsBlock
+        | GroupProjectsBlock
+        | QuoteFormBlock
       )[]
     | null;
   /**
@@ -230,7 +236,7 @@ export interface Site {
   /**
    * Format : 1234567/A/B/M/000
    */
-  matriculeFiscal: string;
+  matriculeFiscal?: string | null;
   certification?: string | null;
   /**
    * The schema.org category announced to Google for the company.
@@ -264,6 +270,10 @@ export interface Site {
    * E.g. GT — used when no logo is uploaded.
    */
   monogram?: string | null;
+  /**
+   * Optional. When set, the full name is on the first line and this text below it (e.g. “Group”).
+   */
+  logoSubline?: string | null;
   /**
    * Shown on Facebook, WhatsApp, LinkedIn… when a page has none of its own (1200 × 630 px). Empty = an image generated in the site's colours.
    */
@@ -442,6 +452,7 @@ export interface HeroBlock {
  */
 export interface StatsBlock {
   title?: string | null;
+  style?: ('band' | 'card') | null;
   useSiteStats?: boolean | null;
   items?:
     | {
@@ -719,6 +730,134 @@ export interface UpcomingBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'upcoming';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GroupHeroBlock".
+ */
+export interface GroupHeroBlock {
+  badge?: string | null;
+  /**
+   * Large dark banner with one card per company. The companies come from Settings → Group (else every site).
+   */
+  title: string;
+  highlight?: string | null;
+  subtitle?: string | null;
+  primaryCta?: {
+    label?: string | null;
+    /**
+     * Path without locale, e.g. /services — the locale is added automatically.
+     */
+    href?: string | null;
+  };
+  secondaryCta?: {
+    label?: string | null;
+    /**
+     * Path without locale, e.g. /services — the locale is added automatically.
+     */
+    href?: string | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'groupHero';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CompaniesBlock".
+ */
+export interface CompaniesBlock {
+  /**
+   * Small text above the title.
+   */
+  eyebrow?: string | null;
+  /**
+   * One large card per company, in its colours, with its activities. The companies come from Settings → Group (else every site).
+   */
+  title?: string | null;
+  subtitle?: string | null;
+  /**
+   * E.g. “Visit the site”.
+   */
+  linkLabel?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'companies';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GroupServicesBlock".
+ */
+export interface GroupServicesBlock {
+  /**
+   * Small text above the title.
+   */
+  eyebrow?: string | null;
+  /**
+   * One tab per company listing its activities (Services), each linking to its page. The companies come from Settings → Group (else every site).
+   */
+  title?: string | null;
+  subtitle?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'groupServices';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StepsBlock".
+ */
+export interface StepsBlock {
+  /**
+   * Small text above the title.
+   */
+  eyebrow?: string | null;
+  title?: string | null;
+  items?:
+    | {
+        title: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'steps';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GroupProjectsBlock".
+ */
+export interface GroupProjectsBlock {
+  /**
+   * Small text above the title.
+   */
+  eyebrow?: string | null;
+  /**
+   * Each company's “featured” projects, labelled with its name. Hidden when there are none. The companies come from Settings → Group (else every site).
+   */
+  title?: string | null;
+  subtitle?: string | null;
+  limit?: number | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'groupProjects';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "QuoteFormBlock".
+ */
+export interface QuoteFormBlock {
+  /**
+   * Small text above the title.
+   */
+  eyebrow?: string | null;
+  /**
+   * The full quote form. On the group site the client first picks the company: the request goes to its team.
+   */
+  title?: string | null;
+  subtitle?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'quoteForm';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1572,6 +1711,12 @@ export interface PagesSelect<T extends boolean = true> {
         partners?: T | PartnersBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
         upcoming?: T | UpcomingBlockSelect<T>;
+        groupHero?: T | GroupHeroBlockSelect<T>;
+        companies?: T | CompaniesBlockSelect<T>;
+        groupServices?: T | GroupServicesBlockSelect<T>;
+        steps?: T | StepsBlockSelect<T>;
+        groupProjects?: T | GroupProjectsBlockSelect<T>;
+        quoteForm?: T | QuoteFormBlockSelect<T>;
       };
   seo?:
     | T
@@ -1614,6 +1759,7 @@ export interface HeroBlockSelect<T extends boolean = true> {
  */
 export interface StatsBlockSelect<T extends boolean = true> {
   title?: T;
+  style?: T;
   useSiteStats?: T;
   items?:
     | T
@@ -1743,6 +1889,93 @@ export interface UpcomingBlockSelect<T extends boolean = true> {
         href?: T;
         id?: T;
       };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GroupHeroBlock_select".
+ */
+export interface GroupHeroBlockSelect<T extends boolean = true> {
+  badge?: T;
+  title?: T;
+  highlight?: T;
+  subtitle?: T;
+  primaryCta?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  secondaryCta?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CompaniesBlock_select".
+ */
+export interface CompaniesBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  title?: T;
+  subtitle?: T;
+  linkLabel?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GroupServicesBlock_select".
+ */
+export interface GroupServicesBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  title?: T;
+  subtitle?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StepsBlock_select".
+ */
+export interface StepsBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  title?: T;
+  items?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GroupProjectsBlock_select".
+ */
+export interface GroupProjectsBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  title?: T;
+  subtitle?: T;
+  limit?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "QuoteFormBlock_select".
+ */
+export interface QuoteFormBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  title?: T;
+  subtitle?: T;
   id?: T;
   blockName?: T;
 }
@@ -2123,6 +2356,7 @@ export interface SitesSelect<T extends boolean = true> {
   logoDark?: T;
   logoIncludesName?: T;
   monogram?: T;
+  logoSubline?: T;
   ogImage?: T;
   favicon?: T;
   theme?:

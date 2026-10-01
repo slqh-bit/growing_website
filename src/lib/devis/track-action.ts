@@ -49,10 +49,14 @@ export async function trackDevis(input: {
   }
 
   try {
+    // Only this site's requests (its own reference prefix and team); the group
+    // site takes requests for every company, so it tracks them all.
+    const site = await currentSiteKey();
     const { docs } = await payload.find({
       collection: "devis-requests",
-      // Only this site's requests (its own reference prefix and team).
-      where: { and: [{ reference: { equals: reference } }, { "site.key": { equals: await currentSiteKey() } }] },
+      where: {
+        and: [{ reference: { equals: reference } }, ...(site === "group" ? [] : [{ "site.key": { equals: site } }])],
+      },
       limit: 1,
       depth: 0,
       pagination: false,

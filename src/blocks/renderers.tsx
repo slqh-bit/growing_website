@@ -31,7 +31,7 @@ import { RichText } from "@/components/cms/rich-text";
 import { SmartLink } from "@/components/cms/smart-link";
 import { CtaButtons, Hero } from "@/components/sections/hero";
 import { PageHeader } from "@/components/sections/page-header";
-import { StatsBand } from "@/components/sections/stats-band";
+import { StatsBand, StatsCard } from "@/components/sections/stats-band";
 import { ServiceCard } from "@/components/sections/service-card";
 import { ProjectCard } from "@/components/sections/project-card";
 import { CtaBand } from "@/components/sections/cta-band";
@@ -74,7 +74,7 @@ export async function HeroBlockView({ block, locale, site }: BlockProps<HeroBloc
 
 export async function StatsBlockView({ block, locale, site }: BlockProps<StatsBlock>) {
   const items = block.useSiteStats === false ? (block.items ?? []) : ((await getSite(site, locale)).stats ?? []);
-  return <StatsBand title={block.title} items={items} />;
+  return block.style === "card" ? <StatsCard items={items} /> : <StatsBand title={block.title} items={items} />;
 }
 
 export async function ActivityGridBlockView({ block, locale, site }: BlockProps<ActivityGridBlock>) {

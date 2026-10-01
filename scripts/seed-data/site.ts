@@ -1,6 +1,7 @@
 import type { SiteKey } from "../../src/sites/config";
 import type { Localized } from "./types";
 import type { BusinessType } from "../../src/lib/seo/business-types";
+import type { NavItem } from "./navigation";
 
 /**
  * The group's websites — mirrors the Payload `Sites` collection (plan §2, §5).
@@ -31,6 +32,11 @@ export interface SiteSeed {
   coords: { lat: number; lng: number };
   socials: { facebook: string; instagram: string; linkedin: string };
   stats: { value: string; label: Localized }[];
+  /** Second line of the wordmark (group: "GROUPE"). */
+  logoSubline?: Localized;
+  /** Menu and footer links when they differ from the companies' (./navigation). */
+  nav?: NavItem[];
+  footerLinks?: NavItem[];
 }
 
 const sbeitla = {
@@ -121,5 +127,54 @@ export const sites: SiteSeed[] = [
     ...sbeitla,
     socials: { facebook: "", instagram: "", linkedin: "" },
     stats: [],
+  },
+  {
+    // The group's own site (plan §3.3): plain localhost in development, its own
+    // domain once decided. Not the default site: unknown domains keep showing Growing.
+    key: "group",
+    isDefault: false,
+    companyName: "Hikview × Growing",
+    legalName: "Groupe Hikview & Growing",
+    matriculeFiscal: "", // not a legal entity: each company's is in the group footer
+    certification: "",
+    businessType: "LocalBusiness",
+    tagline: {
+      fr: "Sécurité électronique, réseaux et énergie solaire",
+      ar: "الأمن الإلكتروني والشبكات والطاقة الشمسية",
+      en: "Electronic security, networks and solar energy",
+    },
+    servicesIntro: {
+      fr: "Les services de nos deux sociétés.",
+      ar: "خدمات شركتينا.",
+      en: "The services of our two companies.",
+    },
+    monogram: "HG",
+    // Hikview blue × Growing green (plan §3.2: "a combined gradient").
+    theme: { primary: "#2563eb", accent: "#16a34a" },
+    email: "growingtechnologies88@gmail.com", // TODO: group contact email (plan §9)
+    phone: "+216 41 716 017", // TODO: group phone (plan §9)
+    whatsapp: "",
+    telegram: "",
+    ...sbeitla,
+    socials: { facebook: "", instagram: "", linkedin: "" },
+    stats: [
+      { value: "2", label: { fr: "Sociétés du groupe", ar: "شركات المجموعة", en: "Group companies" } },
+      { value: "10", label: { fr: "Domaines d'expertise", ar: "مجالات الخبرة", en: "Fields of expertise" } },
+      { value: "48 h", label: { fr: "Réponse aux demandes de devis", ar: "للردّ على طلبات التسعيرة", en: "Reply to quote requests" } },
+      { value: "ANME", label: { fr: "Installateur solaire certifié", ar: "مركّب شمسي معتمد", en: "Certified solar installer" } },
+    ],
+    logoSubline: { fr: "Groupe", ar: "المجموعة", en: "Group" },
+    nav: [
+      { href: "/groupe", labelKey: "group" },
+      { href: "/#filiales", labelKey: "companies" },
+      { href: "/#services", labelKey: "services" },
+      { href: "/#references", labelKey: "references" },
+      { href: "/#contact", labelKey: "contact" },
+    ],
+    footerLinks: [
+      { href: "/groupe", labelKey: "group" },
+      { href: "/devis", labelKey: "devis" },
+      { href: "/contact", labelKey: "contact" },
+    ],
   },
 ];

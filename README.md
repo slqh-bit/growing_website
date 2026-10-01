@@ -90,8 +90,8 @@ Every public URL is served for the site that owns the requested domain:
   internally (`app/(frontend)/[domain]/[locale]`), so each domain gets its own
   statically cached pages; browser URLs don't change.
 - Pages resolve the hostname to a site (`src/lib/site.ts`) from **Sites →
-  Noms de domaine** in the admin (`www.` is matched too). Unknown domains — and
-  plain `localhost` — show the site marked **Site par défaut**.
+  Noms de domaine** in the admin (`www.` is matched too). Unknown domains show
+  the site marked **Site par défaut** (Growing).
 - The site's **colours** (Sites → Marque) set the hue/intensity of the CSS
   palettes (`src/lib/theme.ts`, `src/styles/globals.css`); lightness steps are
   fixed, so contrast holds for any colour. Logo, dark-mode logo, favicon and
@@ -102,8 +102,8 @@ Firefox and Edge, so no hosts-file edit is needed:
 
 | URL | Site |
 | --- | --- |
-| `http://localhost:3000` | the default site (Growing) |
-| `http://growing.localhost:3000`, `http://hikview.localhost:3000` | that site |
+| `http://localhost:3000` | the group site |
+| `http://growing.localhost:3000`, `http://hikview.localhost:3000` | that company's site |
 | `http://localhost:3000/fr?site=hikview` | preview a site on plain localhost (dev only, remembered in a cookie; `?site=` clears it) |
 
 Log in to the admin on the origin set in `NEXT_PUBLIC_SITE_URL` / `SERVER_URL`
@@ -240,6 +240,34 @@ in-memory (single instance).
 Phone numbers accept spaces, `+216`/`00216` and Arabic-Indic digits, and are
 stored as `+216XXXXXXXX`; numbers in answers accept Arabic-Indic digits and
 decimal commas.
+
+## Group site
+
+A third site (key `group`, **Hikview × Growing**) presents the group: plain
+`localhost` in development, its own domain once chosen (Sites → Groupe →
+Noms de domaine). It is not the default site, so production domains are
+unaffected until it gets one.
+
+Its home page (Pages → Accueil, site Groupe) is built from blocks whose texts
+are edited in the admin while the content comes live from each company's site
+(the companies of Paramètres → Groupe, else every site):
+
+| Block | Shows |
+| --- | --- |
+| Bannière du groupe | dark hero in both companies' colours, one card per company |
+| Chiffres clés (style *Carte*) | the site's key figures, overlapping the hero |
+| Sociétés du groupe | one card per company: summary, activities, link to its site |
+| Services par société | tabs, each company's activities linking to their pages |
+| Étapes | the method, numbered |
+| Réalisations du groupe | the companies' featured projects (hidden when none) |
+| Bientôt disponible | upcoming features |
+| Formulaire de devis | the quote form |
+
+**Quote requests from the group site:** the client picks the company first,
+then one of its services; the request belongs to that company (its reference
+prefix, team emails, Telegram, admin access). `/devis` works the same way, and
+the group site's `/suivi` tracks requests of every company. The footer shows
+each company's legal identity with links to its site and documents.
 
 ## Tender documents
 
@@ -391,6 +419,11 @@ Group platform (multi-site):
       `subOrganization`), `WebSite`, default share image per site (uploaded or
       generated in its colours), robots open to images and public documents,
       Plausible per domain; Lighthouse ≥ 90 on both sites.
+- [x] **Group site** — `group` site on plain localhost (own domain later):
+      home built from new blocks (group hero, companies, services by company,
+      steps, group projects, quote form) reading each company's content; quote
+      form for both companies routed to the chosen one; group footer and
+      structured data.
 - [x] **Phase 9** — Coming soon: "Bientôt disponible" cards block (seeded on
       both home pages), client area / careers / news placeholder pages with a
       useful action each, noindex and out of the sitemap.

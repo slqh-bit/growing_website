@@ -10,11 +10,11 @@ import { submitDevis } from "@/lib/devis/actions";
 import { emptyDevisValues, stepSchema, type DevisErrorKey, type DevisFormValues } from "@/lib/devis/schema";
 import { checkAttachments, type AttachmentErrorKey } from "@/lib/devis/attachments";
 import { attachmentsMode } from "@/lib/devis/form-def";
-import type { DevisChoice } from "@/lib/devis/choices";
+import type { DevisChoice, DevisCompany } from "@/lib/devis/choices";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StepProgress } from "./step-progress";
-import { ActivityStep, ContactStep, ReviewStep, TechnicalStep, type FilesState } from "./steps";
+import { ActivityStep, ContactStep, ReviewStep, TechnicalStep, type CompanyState, type FilesState } from "./steps";
 import { DevisSuccess } from "./devis-success";
 
 const STEP_KEYS = ["activity", "technical", "contact", "review"] as const;
@@ -46,11 +46,14 @@ function stepOfPath(path: string): number {
  */
 export function DevisForm({
   activities,
+  companies = [],
   locale,
   privacyHref,
 }: {
   /** The site's services that have a quote form. */
   activities: DevisChoice[];
+  /** Group site: the companies to choose from first (else empty). */
+  companies?: DevisCompany[];
   locale: Locale;
   privacyHref: string;
 }) {
@@ -66,6 +69,9 @@ export function DevisForm({
   const [files, setFiles] = React.useState<File[]>([]);
   const [fileError, setFileError] = React.useState<AttachmentErrorKey | "required" | null>(null);
   const attachments: FilesState = { files, setFiles, error: fileError, setError: setFileError };
+  // Group site: which company the request is for (its services are shown).
+  const [company, setCompany] = React.useState<string | null>(companies.length === 1 ? companies[0]!.key : null);
+  const companyState: CompanyState = { companies, company, setCompany };
 
   // The resolver validates only the current step's schema (step 2: the chosen service's questions).
   const stepRef = React.useRef(0);
@@ -90,7 +96,10 @@ export function DevisForm({
     const key = params.get("activite");
     const preset = activities.find((a) => (slug && a.slug === slug) || (key && a.activityKey === key));
     if (preset) form.setValue("service", preset.id);
-  }, [form, activities]);
+    // Group site: ?societe=hikview preselects the company; a preset service implies its own.
+    const wanted = preset?.company ?? params.get("societe");
+    if (wanted && companies.some((c) => c.key === wanted)) setCompany(wanted);
+  }, [form, activities, companies]);
 
   // Move focus to the new step's heading (screen readers announce it).
   React.useEffect(() => {
@@ -198,6 +207,7 @@ export function DevisForm({
 
   function reset() {
     form.reset(emptyDevisValues);
+    setCompany(companies.length === 1 ? companies[0]!.key : null);
     setFiles([]);
     setFileError(null);
     startedAt.current = Date.now();
@@ -262,7 +272,16 @@ export function DevisForm({
               <p className="text-sm text-muted-foreground">{t(`stepIntro.${STEP_KEYS[step]}`)}</p>
             </div>
 
-            {step === 0 && <ActivityStep form={form} field={field} locale={locale} errorOf={errorOf} activities={activities} />}
+            {step === 0 && (
+              <ActivityStep
+                form={form}
+                field={field}
+                locale={locale}
+                errorOf={errorOf}
+                activities={activities}
+                companyState={companyState}
+              />
+            )}
             {step === 1 && (
               <TechnicalStep
                 form={form}
@@ -284,6 +303,7 @@ export function DevisForm({
                 onEdit={(s) => goTo(s)}
                 privacyHref={privacyHref}
                 files={files}
+                companies={companies}
               />
             )}
         </div>

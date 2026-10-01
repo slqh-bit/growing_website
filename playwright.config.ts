@@ -11,7 +11,8 @@ import { defineConfig, devices } from "@playwright/test";
  * The devis spec submits a real quote request (stored as a lead).
  */
 const port = Number(process.env.E2E_PORT ?? 3100);
-const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${port}`;
+// Growing's site: plain localhost is the group site, hikview.localhost Hikview's.
+const baseURL = process.env.E2E_BASE_URL ?? `http://growing.localhost:${port}`;
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -34,7 +35,7 @@ export default defineConfig({
     ? undefined
     : {
         command: `npm run start -- -p ${port}`,
-        url: `${baseURL}/api/health`,
+        url: `http://localhost:${port}/api/health`,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
       },

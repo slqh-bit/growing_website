@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, onHost, test } from "./fixtures";
 
 // A distinct client IP per test keeps the per-IP rate limit (5 / 15 min) out
 // of the way; the app reads X-Real-IP, which Caddy sets in production.
@@ -199,5 +200,39 @@ test("Hikview: area pages open the quote form, sub-services preselect theirs", a
   await page.locator('main a[href="/fr/devis?service=securite-incendie"]').first().click();
   await next(page, "Continuer");
   await expect(page.locator("form")).toContainText("Type d'établissement");
+});
+
+test("Group: a request picks the company first, goes to that company, and is tracked from the group site", async ({
+  page,
+  baseURL,
+}) => {
+  test.slow();
+  await page.goto(onHost(baseURL, "localhost", "/fr/devis"));
+  const form = page.locator("form");
+  await expect(form).toContainText("Choisissez d'abord une société");
+  await page.getByRole("radio", { name: /Growing Technologies/ }).click();
+  await form.getByText("Pompage solaire", { exact: true }).click();
+  await next(page, "Continuer");
+  await page.selectOption("#devis-answers-waterSource", "forage");
+  await page.fill("#devis-answers-flowM3PerDay", "30");
+  await next(page, "Continuer");
+  await page.fill("#devis-fullName", "Test E2E Groupe");
+  await page.fill("#devis-phone", "55 666 777");
+  await page.selectOption("#devis-region", "kasserine");
+  await next(page, "Continuer");
+  await expect(form).toContainText("Growing Technologies");
+  await page.check("#devis-consent");
+  await page.waitForTimeout(5_200);
+  await page.getByRole("button", { name: "Envoyer ma demande" }).click();
+  await expect(page.getByRole("heading", { name: "Demande envoyée !" })).toBeVisible({ timeout: 15_000 });
+  const reference = (await page.locator("span.font-mono").textContent())!.trim();
+  // Growing's request: its own reference prefix.
+  expect(reference).toMatch(/^GT-\d{6}-[0-9A-F]{4}$/);
+
+  // The group site tracks requests of every company.
+  await page.goto(onHost(baseURL, "localhost", `/fr/suivi?ref=${reference}`));
+  await page.fill("#track-phone", "55666777");
+  await page.getByRole("button", { name: "Voir l'avancement" }).click();
+  await expect(page.getByRole("heading", { level: 2 })).toContainText(reference);
 });
 

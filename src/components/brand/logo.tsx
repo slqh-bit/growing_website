@@ -13,6 +13,8 @@ export interface Brand {
   logoDark: ImageSource | null;
   /** The uploaded logo is a full lockup: don't write the name next to it. */
   includesName: boolean;
+  /** Sites → Marque → Seconde ligne: the full name on line 1, this below ("GROUPE"). */
+  subline: string | null;
   /** The site's own colours: its logo looks the same on any site of the group. */
   colors: ReturnType<typeof brandColors>;
 }
@@ -31,13 +33,17 @@ function initials(name: string): string {
 /** Site (Sites → Marque) → Brand. */
 export function brandOf(site: Site): Brand {
   const logo = imageSource(site.logo);
+  const colors = brandColors(site.theme);
+  // The group's badge blends both brands: from its primary to its accent colour.
+  if (site.key === "group" && site.theme?.accent) colors.markTo = brandColors({ primary: site.theme.accent }).markTo;
   return {
     name: site.companyName,
     monogram: site.monogram?.trim() || initials(site.companyName),
     logo,
     logoDark: logo ? imageSource(site.logoDark) : null,
     includesName: Boolean(logo && site.logoIncludesName),
-    colors: brandColors(site.theme),
+    subline: site.logoSubline?.trim() || null,
+    colors,
   };
 }
 
@@ -133,8 +139,19 @@ export function BrandMark({ brand }: { brand: Brand }) {
  * badge, followed by the two-line wordmark ("GROWING / TECHNOLOGIES") unless
  * the logo already contains the name.
  */
-export function Logo({ brand, className }: { brand: Brand; className?: string }) {
-  const [first, ...rest] = brand.name.trim().split(/\s+/);
+export function Logo({
+  brand,
+  className,
+  tone = "default",
+}: {
+  brand: Brand;
+  className?: string;
+  /** "light": white wordmark, for dark backgrounds (group footer). */
+  tone?: "default" | "light";
+}) {
+  const [firstWord, ...rest] = brand.name.trim().split(/\s+/);
+  const first = brand.subline ? brand.name.trim() : firstWord;
+  const second = brand.subline ?? rest.join(" ");
   return (
     <span
       className={cn("inline-flex items-center gap-2.5", className)}
@@ -154,12 +171,21 @@ export function Logo({ brand, className }: { brand: Brand; className?: string })
       ) : (
         <span className="flex flex-col uppercase leading-none">
           <span className="sr-only">{brand.name}</span>
-          <span aria-hidden className="text-[17px] font-extrabold tracking-wide text-[var(--logo-ink)] dark:text-[var(--logo-ink-dark)]">
+          <span
+            aria-hidden
+            className={cn(
+              "text-[17px] font-extrabold tracking-wide",
+              tone === "light" ? "text-white" : "text-[var(--logo-ink)] dark:text-[var(--logo-ink-dark)]",
+            )}
+          >
             {first}
           </span>
-          {rest.length > 0 && (
-            <span aria-hidden className="mt-0.5 text-[10.5px] font-semibold tracking-[0.12em] text-foreground/75">
-              {rest.join(" ")}
+          {second && (
+            <span
+              aria-hidden
+              className={cn("mt-0.5 text-[10.5px] font-semibold tracking-[0.12em]", tone === "light" ? "text-white/70" : "text-foreground/75")}
+            >
+              {second}
             </span>
           )}
         </span>

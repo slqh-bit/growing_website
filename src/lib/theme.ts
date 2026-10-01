@@ -122,6 +122,8 @@ export function brandHex(theme: { primary?: string | null; accent?: string | nul
   return {
     from: oklchToHex({ l: 0.51, c: 0.15 * p.c, h: p.h }),
     to: oklchToHex({ l: 0.39, c: 0.1 * p.c, h: p.h + 3 }),
+    /** primary-400: readable on dark backgrounds. */
+    light: oklchToHex({ l: 0.72, c: 0.16 * p.c, h: p.h - 1 }),
     accent: oklchToHex({ l: 0.79, c: 0.18 * a.c, h: a.h }),
   };
 }

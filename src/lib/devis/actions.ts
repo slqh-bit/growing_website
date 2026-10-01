@@ -9,7 +9,7 @@ import type { DevisRequest } from "@/payload-types";
 import { getSite } from "@/lib/cms/queries";
 import { currentSiteKey } from "@/lib/site";
 import { attachmentMimeType, checkAttachments, matchesSignature } from "./attachments";
-import { getDevisChoices } from "./choices";
+import { getDevisChoices, leadSite } from "./choices";
 import { attachmentsMode, type FormSnapshot } from "./form-def";
 import { notifyNewLead } from "./notify";
 import { clientIp, takeToken } from "./rate-limit";
@@ -84,6 +84,8 @@ export async function submitDevis(raw: unknown, meta: SubmitDevisMeta, files?: F
   ).safeParse(raw);
   if (!parsed.success) return { ok: false, error: "validation", fieldErrors: fieldErrorsOf(parsed.error) };
   if (!choice) return { ok: false, error: "validation", fieldErrors: { service: "chooseActivity" } };
+  // The company that receives the request: this site, or on the group site the chosen service's company.
+  const owner = choice.company === site ? siteDoc : await leadSite(choice, locale);
 
   const mode = attachmentsMode(choice.form);
   const uploads = mode === "off" ? [] : (files?.getAll("files") ?? []).filter((f): f is File => f instanceof File);
@@ -105,7 +107,7 @@ export async function submitDevis(raw: unknown, meta: SubmitDevisMeta, files?: F
     try {
       const doc = await payload.create({
         collection: "devis-attachments",
-        data: { site: siteDoc.id },
+        data: { site: owner.id },
         file: {
           data: contents[i]!,
           mimetype: attachmentMimeType(file.name),
@@ -131,7 +133,7 @@ export async function submitDevis(raw: unknown, meta: SubmitDevisMeta, files?: F
     const lead = await payload.create({
       collection: "devis-requests",
       data: {
-        site: siteDoc.id,
+        site: owner.id,
         service: service.id,
         activity: (choice.activityKey as DevisRequest["activity"]) ?? undefined,
         technicalDetails: data.answers,

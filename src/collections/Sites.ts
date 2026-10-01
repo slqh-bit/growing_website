@@ -166,7 +166,9 @@ export const Sites: CollectionConfig = {
                 {
                   name: "matriculeFiscal",
                   type: "text",
-                  required: true,
+                  // Every company has one; the group site (not a legal entity) may not.
+                  validate: (value: string | null | undefined, { data }: { data: { key?: string } }) =>
+                    data?.key === "group" || Boolean(value?.trim()) || "Le matricule fiscal est obligatoire.",
                   label: t3("Matricule fiscal", "Tax ID (matricule fiscal)", "المعرّف الجبائي"),
                   admin: { description: "Format : 1234567/A/B/M/000" },
                 },
@@ -289,6 +291,19 @@ export const Sites: CollectionConfig = {
                   },
                 },
               ],
+            },
+            {
+              name: "logoSubline",
+              type: "text",
+              localized: true,
+              label: t3("Seconde ligne du logo", "Logo second line", "السطر الثاني للشعار"),
+              admin: {
+                description: t3(
+                  "Optionnel. Si rempli, le nom s'affiche en entier sur la première ligne et ce texte dessous (ex. « Groupe »).",
+                  "Optional. When set, the full name is on the first line and this text below it (e.g. “Group”).",
+                  "اختياري. عند ملئه يظهر الاسم كاملاً في السطر الأول وهذا النص تحته.",
+                ),
+              },
             },
             {
               name: "ogImage",

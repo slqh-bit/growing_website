@@ -16,11 +16,11 @@ describe("normalizeHost", () => {
     assert.equal(normalizeHost("hikview.tn."), "hikview.tn");
   });
 
-  it("maps anything that isn't a hostname to localhost", () => {
-    assert.equal(normalizeHost(null), "localhost");
-    assert.equal(normalizeHost(""), "localhost");
-    assert.equal(normalizeHost("a<b>"), "localhost");
-    assert.equal(normalizeHost("../etc"), "localhost");
+  it("maps anything that isn't a hostname to an unknown host (the default site)", () => {
+    assert.equal(normalizeHost(null), "unknown.invalid");
+    assert.equal(normalizeHost(""), "unknown.invalid");
+    assert.equal(normalizeHost("a<b>"), "unknown.invalid");
+    assert.equal(normalizeHost("../etc"), "unknown.invalid");
   });
 });
 
@@ -43,6 +43,15 @@ describe("matchSite", () => {
     assert.equal(matchSite("group.localhost", sites), "growing"); // no "group" site yet
     assert.equal(matchSite("x.tn", [{ ...sites[1]!, isDefault: true }, { ...sites[0]!, isDefault: false }]), "hikview");
     assert.equal(matchSite("x.tn", sites.map((s) => ({ ...s, isDefault: false }))), "growing");
+  });
+
+  it("serves the group site on plain localhost once it exists; unknown domains keep the default", () => {
+    const withGroup: SiteDomains[] = [...sites, { key: "group", isDefault: false, domains: [] }];
+    assert.equal(matchSite("localhost", withGroup), "group");
+    assert.equal(matchSite("group.localhost", withGroup), "group");
+    assert.equal(matchSite("growing.localhost", withGroup), "growing");
+    assert.equal(matchSite("unknown.example.com", withGroup), "growing");
+    assert.equal(matchSite("unknown.invalid", withGroup), "growing");
   });
 
   it("returns null when no site exists", () => {

@@ -16,7 +16,7 @@ import {
   type QuestionDef,
 } from "@/lib/devis/form-def";
 import type { AttachmentErrorKey } from "@/lib/devis/attachments";
-import type { DevisChoice } from "@/lib/devis/choices";
+import type { DevisChoice, DevisCompany } from "@/lib/devis/choices";
 import { contactChannelOptions, governorateOptions } from "@/lib/devis/options";
 import { stepSchema, type DevisFormValues } from "@/lib/devis/schema";
 import { ServiceIcon } from "@/components/ui/service-icon";
@@ -36,13 +36,29 @@ interface StepProps {
 
 // --- Step 1 ------------------------------------------------------------------------
 
-export function ActivityStep({ form, field, errorOf, activities }: StepProps & { activities: DevisChoice[] }) {
+/** Group site: the company the request is for, picked before its services. */
+export interface CompanyState {
+  companies: DevisCompany[];
+  company: string | null;
+  setCompany: (key: string) => void;
+}
+
+export function ActivityStep({
+  form,
+  field,
+  errorOf,
+  activities,
+  companyState,
+}: StepProps & { activities: DevisChoice[]; companyState: CompanyState }) {
   const t = useTranslations("devis");
   const selected = form.watch("service");
   const error = errorOf("service");
   const id = fieldId("service");
+  const { companies, company, setCompany } = companyState;
+  const multi = companies.length > 1;
+  const shown = multi ? activities.filter((a) => a.company === company) : activities;
   // Sub-services are grouped under their area (Hikview); top-level services have none.
-  const groups = activities.reduce<{ area: string | null; items: DevisChoice[] }[]>((acc, a) => {
+  const groups = shown.reduce<{ area: string | null; items: DevisChoice[] }[]>((acc, a) => {
     const last = acc.at(-1);
     if (last && last.area === a.area) last.items.push(a);
     else acc.push({ area: a.area, items: [a] });
@@ -52,6 +68,48 @@ export function ActivityStep({ form, field, errorOf, activities }: StepProps & {
   return (
     <fieldset>
       <legend className="sr-only">{t("steps.activity")}</legend>
+      {multi && (
+        <div className="mb-6 flex flex-col gap-3">
+          <p id="devis-company-label" className="text-sm font-semibold text-foreground">
+            {t("company.question")}
+          </p>
+          <div role="radiogroup" aria-labelledby="devis-company-label" className="grid gap-3 sm:grid-cols-2">
+            {companies.map((c) => {
+              const active = company === c.key;
+              return (
+                <button
+                  key={c.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => {
+                    setCompany(c.key);
+                    // A service of the other company no longer applies.
+                    if (activities.find((a) => a.id === selected)?.company !== c.key) form.setValue("service", "");
+                  }}
+                  className={cn(
+                    "flex items-start gap-3 rounded-2xl border-2 p-4 text-start transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    active ? "border-primary-500 bg-primary-50 shadow-sm dark:bg-primary-950/40" : "border-border bg-surface hover:-translate-y-0.5 hover:border-primary-300",
+                  )}
+                >
+                  <span
+                    aria-hidden
+                    className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold text-white"
+                    style={{ backgroundImage: `linear-gradient(135deg, ${c.colors.from}, ${c.colors.to})` }}
+                  >
+                    {c.monogram}
+                  </span>
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span className="font-semibold text-foreground">{c.name}</span>
+                    <span className="line-clamp-2 text-sm text-muted-foreground">{c.summary}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {multi && !company && <p className="text-sm text-muted-foreground">{t("company.pickFirst")}</p>}
       <div
         role="radiogroup"
         aria-label={t("steps.activity")}
@@ -461,7 +519,14 @@ export function ReviewStep({
   onEdit,
   privacyHref,
   files,
-}: StepProps & { activities: DevisChoice[]; onEdit: (step: number) => void; privacyHref: string; files: File[] }) {
+  companies,
+}: StepProps & {
+  activities: DevisChoice[];
+  onEdit: (step: number) => void;
+  privacyHref: string;
+  files: File[];
+  companies: DevisCompany[];
+}) {
   const t = useTranslations("devis");
   const consentId = fieldId("consent");
   const consentError = errorOf("consent");
@@ -474,7 +539,16 @@ export function ReviewStep({
   if (!choice || !parsed?.success || !contact.success) return null;
 
   const sections = [
-    { title: t("review.activity"), step: 0, rows: [{ label: contactLabels.activity[locale], value: choice.title }] },
+    {
+      title: t("review.activity"),
+      step: 0,
+      rows: [
+        ...(companies.length > 1
+          ? [{ label: t("company.label"), value: companies.find((c) => c.key === choice.company)?.name ?? "" }]
+          : []),
+        { label: contactLabels.activity[locale], value: choice.title },
+      ],
+    },
     {
       title: t("review.technical"),
       step: 1,

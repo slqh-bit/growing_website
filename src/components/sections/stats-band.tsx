@@ -34,3 +34,33 @@ export function StatsBand({ title, items }: { title?: string | null; items: Stat
     </section>
   );
 }
+
+/**
+ * Key figures as a card overlapping the large banner above it (group home):
+ * gradient numbers, dividers between figures.
+ */
+export function StatsCard({ items }: { items: StatItem[] }) {
+  if (items.length === 0) return null;
+  return (
+    <section className="relative z-10 -mt-14">
+      <Container>
+        <RevealGroup className="grid grid-cols-2 gap-y-6 rounded-3xl bg-surface px-4 py-8 shadow-xl ring-1 ring-border sm:grid-cols-4 sm:py-9">
+          {items.map((s, i) => (
+            <Reveal
+              key={`${s.value}-${i}`}
+              className="flex flex-col items-center gap-1 px-3 text-center sm:border-e sm:border-border sm:last:border-e-0"
+            >
+              <bdi
+                dir="ltr"
+                className="bg-gradient-to-br from-primary-600 to-accent-500 bg-clip-text text-4xl font-extrabold text-transparent"
+              >
+                {s.value}
+              </bdi>
+              <span className="text-sm font-medium text-muted-foreground">{s.label}</span>
+            </Reveal>
+          ))}
+        </RevealGroup>
+      </Container>
+    </section>
+  );
+}
