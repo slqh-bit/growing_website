@@ -13,7 +13,8 @@ import { imageSource } from "@/lib/cms/media";
 import { siteOrigin } from "@/lib/metadata";
 import { resolveSiteKey } from "@/lib/site";
 import { themeVars } from "@/lib/theme";
-import { JsonLd, localBusinessLd } from "@/lib/seo/json-ld";
+import { getGroupMembers } from "@/lib/group";
+import { JsonLd, organizationLd, websiteLd, type GroupRef } from "@/lib/seo/json-ld";
 import "@/styles/globals.css";
 
 /**
@@ -72,12 +73,20 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
   const dir = getDir(locale);
-  const plausibleDomain = process.env.PLAUSIBLE_DOMAIN;
-  const [messages, t, settings] = await Promise.all([
+  const [messages, t, settings, { group, members }] = await Promise.all([
     getMessages(),
     getTranslations({ locale, namespace: "common" }),
     getSite(site, locale),
+    getGroupMembers(locale),
   ]);
+  // The group is announced as each company's parent once it has a name and several companies.
+  const groupRef: GroupRef | null = group.name && members.length > 1 ? { name: group.name, path: "/groupe" } : null;
+  // Plausible is on when PLAUSIBLE_DOMAIN is set; each site is measured under its own domain.
+  const plausibleDomain = process.env.PLAUSIBLE_DOMAIN
+    ? settings.url || settings.domains?.[0]?.domain
+      ? new URL(siteOrigin(settings)).hostname
+      : process.env.PLAUSIBLE_DOMAIN
+    : undefined;
 
   return (
     <html
@@ -115,7 +124,8 @@ export default async function LocaleLayout({
                 {children}
               </main>
               <SiteFooter locale={locale} site={site} />
-              <JsonLd data={localBusinessLd(settings, locale, settings.tagline)} />
+              <JsonLd data={organizationLd(settings, locale, groupRef)} />
+              <JsonLd data={websiteLd(settings, locale)} />
             </div>
           </NextIntlClientProvider>
         </ThemeProvider>

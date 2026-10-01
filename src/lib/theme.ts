@@ -80,3 +80,48 @@ export function brandColors(theme: { primary?: string | null } | null | undefine
     inkDark: shade(0.8, 0.14, -2), // primary-300
   };
 }
+
+/** OKLCH → sRGB hex, clipped to the sRGB gamut (inverse of hexToOklch). */
+export function oklchToHex({ l, c, h }: Oklch): string {
+  const a = c * Math.cos((h * Math.PI) / 180);
+  const b = c * Math.sin((h * Math.PI) / 180);
+  const l_ = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m_ = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s_ = (l - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const linear = [
+    4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_,
+    -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_,
+    -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_,
+  ];
+  return `#${linear
+    .map((v) => {
+      const x = Math.min(1, Math.max(0, v));
+      const srgb = x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055;
+      return Math.round(srgb * 255)
+        .toString(16)
+        .padStart(2, "0");
+    })
+    .join("")}`;
+}
+
+const DEFAULT_ACCENT = { h: 82, c: 1 };
+
+/**
+ * A site's brand colours as hex (for places without CSS variables: generated
+ * share images): primary-600 → primary-800 and accent-500 of its palettes.
+ */
+export function brandHex(theme: { primary?: string | null; accent?: string | null } | null | undefined) {
+  const hue = (name: "primary" | "accent", fallback: { h: number; c: number }) => {
+    const vars = paletteVars(name, theme?.[name]);
+    return vars[`--${name}-h`] !== undefined
+      ? { h: Number(vars[`--${name}-h`]), c: Number(vars[`--${name}-c`]) }
+      : fallback;
+  };
+  const p = hue("primary", DEFAULT_PRIMARY);
+  const a = hue("accent", DEFAULT_ACCENT);
+  return {
+    from: oklchToHex({ l: 0.51, c: 0.15 * p.c, h: p.h }),
+    to: oklchToHex({ l: 0.39, c: 0.1 * p.c, h: p.h + 3 }),
+    accent: oklchToHex({ l: 0.79, c: 0.18 * a.c, h: a.h }),
+  };
+}

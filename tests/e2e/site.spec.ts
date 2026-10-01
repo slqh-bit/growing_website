@@ -223,10 +223,32 @@ test.describe("SEO and platform endpoints", () => {
     expect(xml).not.toContain("/admin");
   });
 
+  test("each company announces its own business type, within the group", async ({ page, baseURL }) => {
+    const url = new URL("/fr", baseURL);
+    url.hostname = "hikview.localhost";
+    await page.goto(url.toString());
+    const blocks = (await page.locator('script[type="application/ld+json"]').allTextContents()).map((t) => JSON.parse(t));
+    const company = blocks.find((b) => b["@type"] === "ProfessionalService");
+    expect(company?.name).toBe("Hikview Engineering");
+    expect(company?.parentOrganization?.["@type"]).toBe("Organization");
+    expect(blocks.map((b) => b["@type"])).toContain("WebSite");
+  });
+
+  test("pages without their own image share one generated in the site's colours", async ({ page, request }) => {
+    await page.goto("/fr/about");
+    const image = await page.locator('meta[property="og:image"]').getAttribute("content");
+    expect(image).toMatch(/\/fr\/og\?title=/);
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
+    const response = await request.get(new URL(image!).pathname + new URL(image!).search);
+    expect(response.headers()["content-type"]).toBe("image/png");
+  });
+
   test("robots.txt blocks the admin and points to the sitemap", async ({ request }) => {
     const text = await (await request.get("/robots.txt")).text();
     expect(text).toContain("Disallow: /admin");
     expect(text).toMatch(/Sitemap: .*\/sitemap\.xml/);
+    // Images and public documents stay crawlable although /api/ is not.
+    expect(text).toContain("Allow: /api/media/file/");
   });
 
   test("health endpoint reports the database", async ({ request }) => {

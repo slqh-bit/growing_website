@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { matchSite, normalizeHost, type SiteDomains } from "../../src/sites/config";
-import { hexToOklch, themeVars } from "../../src/lib/theme";
+import { brandHex, hexToOklch, oklchToHex, themeVars } from "../../src/lib/theme";
 import { findRedirect, normalizeRedirectPath, redirectTarget, type RedirectRule } from "../../src/lib/redirects";
 
 const sites: SiteDomains[] = [
@@ -101,3 +101,22 @@ describe("redirects", () => {
     assert.equal(redirectTarget("https://example.com/x", "fr"), "https://example.com/x");
   });
 });
+
+describe("brand colours for generated share images", () => {
+  it("converts OKLCH back to the same hex", () => {
+    for (const hex of ["#1f6fd1", "#06b6d4", "#16a34a", "#000000", "#ffffff"]) {
+      assert.equal(oklchToHex(hexToOklch(hex)), hex);
+    }
+  });
+
+  it("follows the site's colours, else the default (Growing) palette", () => {
+    const growing = brandHex(null);
+    const hikview = brandHex({ primary: "#1f6fd1", accent: "#06b6d4" });
+    assert.match(growing.from, /^#[0-9a-f]{6}$/);
+    assert.notEqual(growing.from, hikview.from);
+    // Hikview's blue stays blue: blue channel dominates.
+    const [r, , b] = [1, 3, 5].map((i) => parseInt(hikview.from.slice(i, i + 2), 16));
+    assert.ok(b! > r!);
+  });
+});
+

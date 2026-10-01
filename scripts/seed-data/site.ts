@@ -1,5 +1,6 @@
 import type { SiteKey } from "../../src/sites/config";
 import type { Localized } from "./types";
+import type { BusinessType } from "../../src/lib/seo/business-types";
 
 /**
  * The group's websites — mirrors the Payload `Sites` collection (plan §2, §5).
@@ -13,6 +14,8 @@ export interface SiteSeed {
   legalName: string;
   matriculeFiscal: string;
   certification: string;
+  /** schema.org type announced to search engines (src/lib/seo/business-types.ts). */
+  businessType: BusinessType;
   tagline: Localized;
   servicesIntro: Localized;
   monogram: string;
@@ -49,6 +52,7 @@ export const sites: SiteSeed[] = [
     legalName: "Growing Technologies",
     matriculeFiscal: "1739065/C/A/M/000",
     certification: "ANME",
+    businessType: "Electrician",
     tagline: {
       fr: "Énergie solaire & électricité — installateur certifié ANME",
       ar: "طاقة شمسية وكهرباء — مركّب معتمد من الوكالة الوطنية للتحكم في الطاقة",
@@ -96,6 +100,7 @@ export const sites: SiteSeed[] = [
     legalName: "Hikview Engineering SARL",
     matriculeFiscal: "1667878K",
     certification: "",
+    businessType: "ProfessionalService",
     tagline: {
       fr: "Sécurité électronique, réseaux & solutions technologiques",
       ar: "الأمن الإلكتروني، الشبكات والحلول التكنولوجية",

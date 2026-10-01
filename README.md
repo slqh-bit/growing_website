@@ -269,20 +269,34 @@ in `quotes/company-documents/` (same volume and backup as quote PDFs).
 
 ## SEO, performance & analytics
 
-- **Metadata:** per-page title/description/Open Graph, canonical and `hreflang`
-  alternates (incl. `x-default`) for every locale; CMS `seo` fields override.
-- **`/sitemap.xml`** (all locales, CMS services/projects/pages, alternates) and
-  **`/robots.txt`** (admin and API disallowed). Both use `NEXT_PUBLIC_SITE_URL`.
-- **JSON-LD:** `Electrician` LocalBusiness on every page (address, geo, tax ID,
-  contact), `Service` + breadcrumbs on service pages, breadcrumbs on projects.
+- **Each site is indexed on its own:** canonical URLs, `hreflang` alternates
+  (incl. `x-default`), `/sitemap.xml` and `/robots.txt` use the site's origin —
+  **Sites → Adresse publique**, else its first domain (so a second site never
+  borrows the first one's address), else `NEXT_PUBLIC_SITE_URL` (development).
+- **Metadata:** per-page title/description/Open Graph and Twitter card; CMS
+  `seo` fields override. Share image: the page's own, else **Sites → Image de
+  partage par défaut**, else one generated at `/{locale}/og?title=…` in the
+  site's colours (Arabic titles fall back to the French tagline: the image
+  renderer has no Arabic shaping).
+- **robots.txt:** admin and API disallowed, except uploaded images
+  (`/api/media/file/`) and public company documents.
+- **JSON-LD:** each company as the schema.org type chosen in **Sites →
+  Entreprise → Type d'activité** (Growing: `Electrician`, Hikview:
+  `ProfessionalService`) with logo, tax ID, RNE, address, geo and the group as
+  `parentOrganization`; a `WebSite` entity; the group with its
+  `subOrganization`s on `/groupe`; `Service` + breadcrumbs on service pages,
+  breadcrumbs on projects.
 - **Fonts:** Inter and IBM Plex Sans Arabic are self-hosted (no build-time
   network). The Arabic font only downloads on pages with Arabic text, and
   size-adjusted system fallbacks prevent layout shift when it swaps in.
-- **Lighthouse (mobile, simulated 4G):** performance ≥ 90 and 100 for
-  accessibility, best practices and SEO on the 18 audited fr/ar/en pages.
+- **Lighthouse (mobile, simulated 4G), both sites:** performance 91–97, and
+  100 for accessibility, best practices and SEO (home, service, sub-service in
+  Arabic, devis, documents and group pages, with each site on its own origin).
 - **Analytics:** set `PLAUSIBLE_DOMAIN` to load Plausible (no cookies, no
-  consent banner). A `Devis` goal fires on each successful quote request (props:
-  activity, locale) — add it under *Goals* in Plausible.
+  consent banner). Each site with an address is measured under its own domain
+  (add both in Plausible); `PLAUSIBLE_DOMAIN` is used for a site without one. A
+  `Devis` goal fires on each successful quote request (props: activity,
+  locale) — add it under *Goals* in Plausible.
 
 ## Tests & CI
 
@@ -359,6 +373,11 @@ Group platform (multi-site):
       public / on request / internal), `/documents` page per company with its
       legal identity, links from footers and the B2G / PV plant pages, daily
       expiry alerts (Payload job, email + Telegram) and dashboard warning.
+- [x] **Phase 7** — SEO per site: origin never shared between sites,
+      schema.org type per company + group (`parentOrganization`,
+      `subOrganization`), `WebSite`, default share image per site (uploaded or
+      generated in its colours), robots open to images and public documents,
+      Plausible per domain; Lighthouse ≥ 90 on both sites.
 
 ## Structure
 

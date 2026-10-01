@@ -34,6 +34,7 @@ const SHADOWED_SLUGS = new Set([
   "team",
   "blog",
   "suivi", // client tracking page: noindex, not in the sitemap
+  "og", // generated share images (og/route.tsx)
 ]);
 
 type Entry = MetadataRoute.Sitemap[number];

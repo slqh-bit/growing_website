@@ -5,6 +5,8 @@ import type { Locale } from "@/i18n/routing";
 import { routeContext } from "@/lib/site";
 import { buildMetadata } from "@/lib/metadata";
 import { getGroupMembers } from "@/lib/group";
+import { getSite } from "@/lib/cms/queries";
+import { groupLd, JsonLd } from "@/lib/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,13 +37,15 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function GroupPage({ params }: { params: Params }) {
   const { site, locale } = await routeContext(params);
   setRequestLocale(locale);
-  const [t, { group, members }] = await Promise.all([
+  const [t, { group, members }, settings] = await Promise.all([
     getTranslations({ locale, namespace: "group" }),
     getGroupMembers(locale),
+    getSite(site, locale),
   ]);
 
   return (
     <>
+      <JsonLd data={groupLd(settings, locale, group, members.map((m) => m.site))} />
       <PageHeader eyebrow={t("title")} title={group.name} subtitle={group.tagline ?? undefined} />
 
       {group.story && (

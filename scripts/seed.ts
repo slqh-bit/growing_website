@@ -127,6 +127,7 @@ async function seedSites(payload: Payload): Promise<Record<SiteKey, Id | undefin
       legalName: s.legalName,
       matriculeFiscal: s.matriculeFiscal,
       certification: s.certification || null,
+      businessType: s.businessType,
       tagline: s.tagline[l],
       servicesIntro: s.servicesIntro[l],
       monogram: s.monogram,

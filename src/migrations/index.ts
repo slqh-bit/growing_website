@@ -11,6 +11,7 @@ import * as migration_20260930_095234_group_cross_sell from './20260930_095234_g
 import * as migration_20260930_101604_devis_form_builder from './20260930_101604_devis_form_builder';
 import * as migration_20260930_132453_hikview_forms_attachments from './20260930_132453_hikview_forms_attachments';
 import * as migration_20260930_143138_company_documents from './20260930_143138_company_documents';
+import * as migration_20260930_150249_seo_business_type from './20260930_150249_seo_business_type';
 
 export const migrations = [
   {
@@ -76,6 +77,11 @@ export const migrations = [
   {
     up: migration_20260930_143138_company_documents.up,
     down: migration_20260930_143138_company_documents.down,
-    name: '20260930_143138_company_documents'
+    name: '20260930_143138_company_documents',
+  },
+  {
+    up: migration_20260930_150249_seo_business_type.up,
+    down: migration_20260930_150249_seo_business_type.down,
+    name: '20260930_150249_seo_business_type'
   },
 ];

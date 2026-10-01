@@ -7,9 +7,15 @@ import { getSite } from "@/lib/cms/queries";
 
 export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-/** Public origin of a site (Sites → Adresse publique), else NEXT_PUBLIC_SITE_URL. */
-export function siteOrigin(site: Pick<Site, "url">): string {
-  return site.url || siteUrl;
+/**
+ * Public origin of a site: Sites → Adresse publique, else its first domain,
+ * else NEXT_PUBLIC_SITE_URL (development). The domain step keeps a second
+ * site from announcing the first site's address as its canonical URL.
+ */
+export function siteOrigin(site: Pick<Site, "url" | "domains">): string {
+  if (site.url) return site.url;
+  const domain = site.domains?.[0]?.domain;
+  return domain ? `https://${domain}` : siteUrl;
 }
 
 /**
@@ -73,11 +79,19 @@ export async function buildMetadata({
   seo?: SeoFields | null;
   noindex?: boolean;
 }): Promise<Metadata> {
-  const { companyName } = await getSite(site, locale);
+  const settings = await getSite(site, locale);
+  const { companyName } = settings;
   const route = path === "/" ? "" : path;
   const finalTitle = seo?.metaTitle || title;
   const finalDescription = seo?.metaDescription || description;
-  const share = imageSource(seo?.ogImage ?? image, "hero");
+  // The page's image, else the site's default (Sites → Marque), else one generated in its colours.
+  const picked = imageSource(seo?.ogImage ?? image, "hero") ?? imageSource(settings.ogImage, "hero");
+  const share = picked ?? {
+    src: `/${locale}/og${finalTitle ? `?title=${encodeURIComponent(finalTitle)}` : ""}`,
+    width: 1200,
+    height: 630,
+    alt: finalTitle ?? companyName,
+  };
 
   const languages: Record<string, string> = Object.fromEntries(
     locales.map((l) => [l, `/${l}${route}`]),
@@ -99,8 +113,9 @@ export async function buildMetadata({
       url: `/${locale}${route}`,
       title: ogTitle ?? (finalTitle ? `${finalTitle} — ${companyName}` : companyName),
       ...(finalDescription !== undefined && { description: finalDescription }),
-      ...(share && { images: [{ url: share.src, width: share.width, height: share.height, alt: share.alt }] }),
+      images: [{ url: share.src, width: share.width, height: share.height, alt: share.alt }],
     },
+    twitter: { card: "summary_large_image" },
     ...(noindex && { robots: { index: false, follow: true } }),
   };
 }

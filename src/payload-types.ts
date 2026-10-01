@@ -232,6 +232,10 @@ export interface Site {
   matriculeFiscal: string;
   certification?: string | null;
   /**
+   * The schema.org category announced to Google for the company.
+   */
+  businessType: 'Electrician' | 'HomeAndConstructionBusiness' | 'ProfessionalService' | 'Store' | 'LocalBusiness';
+  /**
    * Shown on the company documents page.
    */
   rne?: string | null;
@@ -259,6 +263,10 @@ export interface Site {
    * E.g. GT — used when no logo is uploaded.
    */
   monogram?: string | null;
+  /**
+   * Shown on Facebook, WhatsApp, LinkedIn… when a page has none of its own (1200 × 630 px). Empty = an image generated in the site's colours.
+   */
+  ogImage?: (number | null) | Media;
   /**
    * Square PNG, 512×512 recommended.
    */
@@ -2014,6 +2022,7 @@ export interface SitesSelect<T extends boolean = true> {
   legalName?: T;
   matriculeFiscal?: T;
   certification?: T;
+  businessType?: T;
   rne?: T;
   servicesIntro?: T;
   tagline?: T;
@@ -2021,6 +2030,7 @@ export interface SitesSelect<T extends boolean = true> {
   logoDark?: T;
   logoIncludesName?: T;
   monogram?: T;
+  ogImage?: T;
   favicon?: T;
   theme?:
     | T

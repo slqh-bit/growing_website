@@ -5,6 +5,7 @@ import { linkFields } from "../cms/fields";
 import { revalidateCollection } from "../cms/revalidate";
 import { HEX_COLOR } from "../lib/theme";
 import { normalizeHost, siteKeys } from "../sites/config";
+import { businessTypes } from "../lib/seo/business-types";
 
 const httpsUrl = (value: string | null | undefined) =>
   !value || /^https:\/\/[^\s]+$/.test(value) || "Use an https:// URL.";
@@ -173,6 +174,21 @@ export const Sites: CollectionConfig = {
               ],
             },
             {
+              name: "businessType",
+              type: "select",
+              required: true,
+              defaultValue: "LocalBusiness",
+              options: businessTypes.map((t) => ({ value: t.value, label: t.label })),
+              label: t3("Type d'activité (moteurs de recherche)", "Business type (search engines)", "نوع النشاط (محركات البحث)"),
+              admin: {
+                description: t3(
+                  "Catégorie schema.org annoncée à Google pour l'entreprise.",
+                  "The schema.org category announced to Google for the company.",
+                  "صنف schema.org المُعلن لمحرّك Google.",
+                ),
+              },
+            },
+            {
               name: "rne",
               type: "text",
               label: t3("Identifiant unique (RNE)", "Company ID (RNE)", "المعرّف الوحيد (السجل الوطني للمؤسسات)"),
@@ -273,6 +289,19 @@ export const Sites: CollectionConfig = {
                   },
                 },
               ],
+            },
+            {
+              name: "ogImage",
+              type: "upload",
+              relationTo: "media",
+              label: t3("Image de partage par défaut", "Default share image", "صورة المشاركة الافتراضية"),
+              admin: {
+                description: t3(
+                  "Affichée sur Facebook, WhatsApp, LinkedIn… quand une page n'a pas la sienne (1200 × 630 px). Vide = image générée aux couleurs du site.",
+                  "Shown on Facebook, WhatsApp, LinkedIn… when a page has none of its own (1200 × 630 px). Empty = an image generated in the site's colours.",
+                  "تظهر على فيسبوك وواتساب ولينكدإن… عندما لا تملك الصفحة صورتها (1200 × 630 بكسل). فارغ = صورة مولَّدة بألوان الموقع.",
+                ),
+              },
             },
             {
               name: "favicon",

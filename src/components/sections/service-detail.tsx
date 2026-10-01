@@ -100,7 +100,7 @@ export async function ServiceDetail({ site, locale, service }: { site: SiteKey; 
 
   return (
     <>
-      <JsonLd data={serviceLd(service, locale, origin, path)} />
+      <JsonLd data={serviceLd(service, locale, settings, path)} />
       <JsonLd
         data={breadcrumbLd(
           [
