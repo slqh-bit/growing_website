@@ -41,8 +41,10 @@ export interface SiteDomains {
 /**
  * Which site a hostname belongs to:
  *   1. a domain listed on a site in the admin (www. is matched too);
- *   2. development: `<key>.localhost` (growing.localhost, hikview.localhost),
- *      and plain `localhost` for the group site when it exists;
+ *   2. development: `<key>.localhost` (growing.localhost, hikview.localhost);
+ *      an address without a name — plain `localhost` or an IP address (the
+ *      machine's network address, e.g. 192.168.1.20) — is the group site when
+ *      it exists;
  *   3. the site marked "default", else the first one (unknown domains).
  * Returns null only when no site exists at all.
  */
@@ -56,7 +58,8 @@ export function matchSite(hostname: string, sites: readonly SiteDomains[]): Site
   );
   if (listed) return listed.key;
 
-  const local = hostname === "localhost" ? "group" : /^([a-z0-9-]+)\.localhost$/.exec(hostname)?.[1];
+  const nameless = hostname === "localhost" || /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+  const local = nameless ? "group" : /^([a-z0-9-]+)\.localhost$/.exec(hostname)?.[1];
   const byKey = local ? sites.find((site) => site.key === local) : undefined;
   if (byKey) return byKey.key;
 
