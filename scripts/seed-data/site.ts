@@ -120,8 +120,8 @@ export const sites: SiteSeed[] = [
     monogram: "HE",
     // Blue + cyan (plan §3.2).
     theme: { primary: "#1f6fd1", accent: "#06b6d4" },
-    email: "slahchmissi@gmail.com", // TODO: Hikview contact email (plan §9)
-    phone: "+216 00 000 000", // TODO: Hikview phone (plan §9)
+    email: "contact@hikview.tn",
+    phone: "+216 41 716 017",
     whatsapp: "",
     telegram: "",
     ...sbeitla,
