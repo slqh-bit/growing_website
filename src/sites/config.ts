@@ -8,7 +8,11 @@
 export const siteKeys = ["growing", "hikview", "group"] as const;
 export type SiteKey = (typeof siteKeys)[number];
 
-/** Development only: `?site=<key>` previews a site on plain localhost; remembered in this cookie. */
+/**
+ * Development only: `?site=<key>` shows a site on an address the sites share
+ * (plain localhost, or the machine's IP address from another device);
+ * remembered in this cookie.
+ */
 export const SITE_PREVIEW_COOKIE = "site-preview";
 
 export function isSiteKey(value: string): value is SiteKey {
@@ -32,6 +36,11 @@ export function normalizeHost(host: string | null | undefined): string {
   return /^[a-z0-9-]+(\.[a-z0-9-]+)*$/.test(hostname) ? hostname : UNKNOWN_HOST;
 }
 
+/** `localhost` or `<key>.localhost`: development, on the machine itself. */
+export function isLocalhost(hostname: string): boolean {
+  return hostname === "localhost" || hostname.endsWith(".localhost");
+}
+
 export interface SiteDomains {
   key: SiteKey;
   isDefault?: boolean | null;
@@ -42,9 +51,9 @@ export interface SiteDomains {
  * Which site a hostname belongs to:
  *   1. a domain listed on a site in the admin (www. is matched too);
  *   2. development: `<key>.localhost` (growing.localhost, hikview.localhost);
- *      an address without a name — plain `localhost` or an IP address (the
- *      machine's network address, e.g. 192.168.1.20) — is the group site when
- *      it exists;
+ *      an address that isn't a domain name — plain `localhost`, or the
+ *      machine's IP address or name from another device (192.168.1.20,
+ *      desktop-pc) — is the group site when it exists;
  *   3. the site marked "default", else the first one (unknown domains).
  * Returns null only when no site exists at all.
  */
@@ -58,7 +67,7 @@ export function matchSite(hostname: string, sites: readonly SiteDomains[]): Site
   );
   if (listed) return listed.key;
 
-  const nameless = hostname === "localhost" || /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+  const nameless = !hostname.includes(".") || /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
   const local = nameless ? "group" : /^([a-z0-9-]+)\.localhost$/.exec(hostname)?.[1];
   const byKey = local ? sites.find((site) => site.key === local) : undefined;
   if (byKey) return byKey.key;

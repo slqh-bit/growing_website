@@ -35,7 +35,7 @@ export async function GroupFooter({ locale, settings }: { locale: Locale; settin
             {footer.tagline && <p className="mt-4 max-w-xs text-sm">{footer.tagline}</p>}
           </div>
 
-          {members.map(({ site: member, origin }) => (
+          {members.map(({ site: member, link }) => (
             <div key={member.id}>
               <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
                 <span
@@ -54,11 +54,11 @@ export async function GroupFooter({ locale, settings }: { locale: Locale; settin
                 )}
                 {member.certification && <li>{member.certification}</li>}
                 <li className="whitespace-pre-line">{member.address}</li>
-                {origin && (
+                {link && (
                   <>
                     <li className="pt-1">
                       <a
-                        href={`${origin}/${locale}`}
+                        href={link(`/${locale}`)}
                         className="inline-flex items-center gap-1.5 font-medium text-white/85 hover:text-white"
                       >
                         {tg("visitSite", { company: member.companyName })}
@@ -67,7 +67,7 @@ export async function GroupFooter({ locale, settings }: { locale: Locale; settin
                     </li>
                     <li>
                       <a
-                        href={`${origin}/${locale}/documents`}
+                        href={link(`/${locale}/documents`)}
                         className="inline-flex items-center gap-1.5 hover:text-white"
                       >
                         <FileText className="size-3.5" aria-hidden />

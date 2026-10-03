@@ -57,8 +57,13 @@ function emailAdapter() {
  * cookie on requests from this origin (CSRF protection), so it must match the
  * URL the admin is opened from — otherwise every save fails with 403.
  * SERVER_URL is read at runtime; NEXT_PUBLIC_SITE_URL is inlined at build time.
+ *
+ * Development: only an explicit SERVER_URL counts. Without one the admin's
+ * requests stay relative and its session is accepted on any address, so it
+ * also works from another device (http://192.168.1.20:3000/admin).
  */
-const serverURL = process.env.SERVER_URL || process.env.NEXT_PUBLIC_SITE_URL;
+const serverURL =
+  process.env.SERVER_URL || (process.env.NODE_ENV === "production" ? process.env.NEXT_PUBLIC_SITE_URL : undefined);
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
