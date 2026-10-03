@@ -102,7 +102,7 @@ Firefox and Edge, so no hosts-file edit is needed:
 
 | URL | Site |
 | --- | --- |
-| `http://localhost:3000` | the group site |
+| `http://localhost:3000`, or the machine's IP address (`http://192.168.1.20:3000`) | the group site |
 | `http://growing.localhost:3000`, `http://hikview.localhost:3000` | that company's site |
 | `http://localhost:3000/fr?site=hikview` | preview a site on plain localhost (dev only, remembered in a cookie; `?site=` clears it) |
 
