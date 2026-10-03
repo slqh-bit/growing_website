@@ -62,7 +62,7 @@ export default async function GroupPage({ params }: { params: Params }) {
         <Container>
           <h2 className="text-2xl font-bold tracking-tight text-foreground">{t("companies")}</h2>
           <RevealGroup className="mt-8 grid gap-6 md:grid-cols-2">
-            {members.map(({ site: member, summary, origin }) => {
+            {members.map(({ site: member, summary, link }) => {
               const current = member.key === site;
               return (
                 <Reveal key={member.id} className="h-full">
@@ -77,9 +77,9 @@ export default async function GroupPage({ params }: { params: Params }) {
                       {member.city}
                       {member.certification && <span>· {member.certification}</span>}
                     </p>
-                    {!current && origin && (
+                    {!current && link && (
                       <Button asChild variant="outline" className="mt-auto w-fit">
-                        <a href={`${origin}/${locale}`}>
+                        <a href={link(`/${locale}`)}>
                           {t("visit")}
                           <ArrowUpRight className="size-4 rtl:-scale-x-100" aria-hidden />
                         </a>

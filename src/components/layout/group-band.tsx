@@ -16,7 +16,7 @@ export async function GroupBand({ locale, site }: { locale: Locale; site: SiteKe
     getTranslations({ locale, namespace: "group" }),
     getGroupMembers(locale),
   ]);
-  const others = members.filter((m) => m.site.key !== site && m.origin);
+  const others = members.filter((m) => m.site.key !== site && m.link);
   if (group.footerBand === false || others.length === 0) return null;
 
   return (
@@ -26,7 +26,7 @@ export async function GroupBand({ locale, site }: { locale: Locale; site: SiteKe
         {others.map((m) => (
           <li key={m.site.id}>
             <a
-              href={`${m.origin}/${locale}`}
+              href={m.link?.(`/${locale}`)}
               className="block opacity-80 transition-opacity hover:opacity-100"
               title={t("visitSite", { company: m.site.companyName })}
             >

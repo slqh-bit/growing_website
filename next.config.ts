@@ -1,11 +1,25 @@
+import os from "node:os";
 import type { NextConfig } from "next";
 import { withPayload } from "@payloadcms/next/withPayload";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+/**
+ * Development from another device: the site is opened through this machine's
+ * network address or name (http://192.168.1.20:3000), which must be allowed to
+ * load the dev server's own resources (/_next/*).
+ */
+const ownAddresses = [
+  os.hostname().toLowerCase(),
+  ...Object.values(os.networkInterfaces()).flatMap((addresses) =>
+    (addresses ?? []).filter((a) => a.family === "IPv4").map((a) => a.address),
+  ),
+];
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  allowedDevOrigins: ownAddresses,
   // Self-contained server bundle for the Docker image (set in the Dockerfile).
   ...(process.env.NEXT_OUTPUT === "standalone" && { output: "standalone" as const }),
   images: {

@@ -106,8 +106,18 @@ Firefox and Edge, so no hosts-file edit is needed:
 | `http://growing.localhost:3000`, `http://hikview.localhost:3000` | that company's site |
 | `http://localhost:3000/fr?site=hikview` | preview a site on plain localhost (dev only, remembered in a cookie; `?site=` clears it) |
 
-Log in to the admin on the origin set in `NEXT_PUBLIC_SITE_URL` / `SERVER_URL`
-(e.g. `http://localhost:3000/admin`), not on a `*.localhost` host.
+**From another device** (a phone or a second PC on the same network), open the
+machine's address printed by `npm run dev` as "Network"
+(`http://192.168.1.20:3000`). `*.localhost` doesn't exist there, so the three
+sites share that address: the links between them switch site with `?site=`
+(remembered in the cookie), and a small bar at the bottom of the page — shown
+only in development on such an address — switches between the three sites.
+
+The admin works on any address in development (`/admin` on localhost or on the
+machine's address). In production it must be opened on the origin set in
+`SERVER_URL` / `NEXT_PUBLIC_SITE_URL`: Payload only accepts the session cookie
+from that origin, so saves fail with 403 anywhere else. In development that
+origin is only enforced when `SERVER_URL` is set.
 
 Every content document (page, service, project, FAQ, team member) belongs to
 one site, and each site's queries, sitemap and robots.txt only see their own.

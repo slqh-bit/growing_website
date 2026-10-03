@@ -6,7 +6,8 @@ import type { Faq, Service, Site } from "@/payload-types";
 import type { SiteKey } from "@/sites/config";
 import { getPartners, getProjectsForService, getServices, getServicesByIds, getSite } from "@/lib/cms/queries";
 import { populated } from "@/lib/cms/media";
-import { otherSiteOrigin, siteOrigin } from "@/lib/metadata";
+import { siteLink } from "@/lib/group";
+import { siteOrigin } from "@/lib/metadata";
 import { childrenOf, parentId, servicePath, topLevel } from "@/lib/services";
 import { breadcrumbLd, JsonLd, serviceLd } from "@/lib/seo/json-ld";
 import { Container } from "@/components/ui/container";
@@ -25,7 +26,7 @@ import { Reveal, RevealGroup } from "@/components/motion/reveal";
 
 /**
  * Services picked in "Chez notre société sœur", grouped by company, each with
- * its absolute URL on that company's site (hidden while it has no address).
+ * its URL on that company's site (hidden while it has no address).
  */
 async function crossSellGroups(service: Service, site: SiteKey, locale: Locale) {
   const ids = (service.crossSell ?? []).map((c) => (typeof c === "object" ? c.id : c));
@@ -40,12 +41,12 @@ async function crossSellGroups(service: Service, site: SiteKey, locale: Locale) 
   }
   const groups = await Promise.all(
     [...bySite.values()].map(async ({ company, items }) => {
-      const origin = otherSiteOrigin(company);
-      if (!origin) return null;
+      const link = await siteLink(company);
+      if (!link) return null;
       const theirServices = await getServices(company.key, locale);
       return {
         company,
-        links: items.map((s) => ({ service: s, href: `${origin}/${locale}${servicePath(s, theirServices)}` })),
+        links: items.map((s) => ({ service: s, href: link(`/${locale}${servicePath(s, theirServices)}`) })),
       };
     }),
   );

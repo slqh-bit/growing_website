@@ -7,6 +7,7 @@ import { latin } from "@/app/fonts";
 import { ThemeProvider, initScript } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { DevSiteSwitcher } from "@/components/layout/dev-site-switcher";
 import { brandOf } from "@/components/brand/logo";
 import { getSite } from "@/lib/cms/queries";
 import { imageSource } from "@/lib/cms/media";
@@ -124,6 +125,7 @@ export default async function LocaleLayout({
                 {children}
               </main>
               <SiteFooter locale={locale} site={site} />
+              <DevSiteSwitcher locale={locale} site={site} />
               {/* The group site describes the group and its companies; a company site, itself within the group. */}
               <JsonLd
                 data={

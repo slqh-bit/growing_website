@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { locales, defaultLocale, type Locale } from "@/i18n/routing";
 import type { Media, Site } from "@/payload-types";
-import type { SiteKey } from "@/sites/config";
+import { isLocalhost, type SiteKey } from "@/sites/config";
 import { imageSource } from "@/lib/cms/media";
 import { getSite } from "@/lib/cms/queries";
 
@@ -28,7 +28,7 @@ export function otherSiteOrigin(site: Pick<Site, "url" | "domains" | "key">): st
   const domain = site.domains?.[0]?.domain;
   if (domain) return `https://${domain}`;
   const own = new URL(siteUrl);
-  if (own.hostname === "localhost" || own.hostname.endsWith(".localhost")) {
+  if (isLocalhost(own.hostname)) {
     // Plain localhost is the group site (src/sites/config.ts).
     const host = site.key === "group" ? "localhost" : `${site.key}.localhost`;
     return `${own.protocol}//${host}${own.port ? `:${own.port}` : ""}`;

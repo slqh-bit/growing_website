@@ -5,7 +5,11 @@ import { isSiteKey, normalizeHost, SITE_PREVIEW_COOKIE } from "./sites/config";
 
 const handleI18nRouting = createMiddleware(routing);
 
-/** Development only: `?site=hikview` previews a site on plain localhost (remembered in a cookie). */
+/**
+ * Development only: `?site=hikview` shows a site on an address the sites share
+ * (remembered in a cookie). From another device, where `<key>.localhost`
+ * doesn't exist, the links between the sites use it (src/lib/group.ts).
+ */
 const allowSitePreview = process.env.NODE_ENV !== "production";
 
 /**

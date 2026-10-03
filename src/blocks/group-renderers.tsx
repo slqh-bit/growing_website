@@ -86,7 +86,7 @@ function GroupHeading({
   );
 }
 
-const memberHref = (m: GroupMember, locale: Locale) => (m.origin ? `${m.origin}/${locale}` : null);
+const memberHref = (m: GroupMember, locale: Locale) => m.link?.(`/${locale}`) ?? null;
 const initialsOf = (m: GroupMember) =>
   m.site.monogram?.trim() || m.site.companyName.slice(0, 2).toUpperCase();
 
@@ -297,7 +297,7 @@ export async function GroupServicesBlockView({ block, locale }: BlockProps<Group
           title: s.title,
           description: s.shortDescription,
           icon: s.icon,
-          href: m.origin ? `${m.origin}/${locale}${servicePath(s, services)}` : null,
+          href: m.link?.(`/${locale}${servicePath(s, services)}`) ?? null,
         })),
       };
     }),
@@ -385,9 +385,7 @@ export async function GroupProjectsBlockView({ block, locale }: BlockProps<Group
         <RevealGroup className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map(({ project, member }) => {
             const hex = brandHex(member.site.theme);
-            const href = member.origin
-              ? `${member.origin}/${locale}/projects/${project.slug}`
-              : null;
+            const href = member.link?.(`/${locale}/projects/${project.slug}`) ?? null;
             const card = (
               <article className="border-border bg-surface-muted/40 flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl">
                 <div

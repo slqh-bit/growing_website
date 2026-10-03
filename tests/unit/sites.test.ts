@@ -40,17 +40,19 @@ describe("matchSite", () => {
   it("falls back to the default site, else the first one", () => {
     assert.equal(matchSite("localhost", sites), "growing");
     assert.equal(matchSite("192.168.1.20", sites), "growing");
+    assert.equal(matchSite("desktop-pc", sites), "growing");
     assert.equal(matchSite("unknown.example.com", sites), "growing");
     assert.equal(matchSite("group.localhost", sites), "growing"); // no "group" site yet
     assert.equal(matchSite("x.tn", [{ ...sites[1]!, isDefault: true }, { ...sites[0]!, isDefault: false }]), "hikview");
     assert.equal(matchSite("x.tn", sites.map((s) => ({ ...s, isDefault: false }))), "growing");
   });
 
-  it("serves the group site on plain localhost or an IP address once it exists; unknown domains keep the default", () => {
+  it("serves the group site on an address that isn't a domain name once it exists; unknown domains keep the default", () => {
     const withGroup: SiteDomains[] = [...sites, { key: "group", isDefault: false, domains: [] }];
     assert.equal(matchSite("localhost", withGroup), "group");
     assert.equal(matchSite("192.168.1.20", withGroup), "group");
     assert.equal(matchSite("127.0.0.1", withGroup), "group");
+    assert.equal(matchSite("desktop-pc", withGroup), "group");
     assert.equal(matchSite("192.168.1.example.com", withGroup), "growing");
     assert.equal(matchSite("group.localhost", withGroup), "group");
     assert.equal(matchSite("growing.localhost", withGroup), "growing");
