@@ -122,7 +122,9 @@ test.describe("Hikview catalogue (6 areas, sub-services)", () => {
     ]) {
       await expect(page.locator(`main a[href="/fr/services/${area}"]`).first()).toBeVisible();
     }
-    await expect(page.locator('main a[href="/fr/services/securite-electronique/videosurveillance"]')).toBeVisible();
+    for (const sub of ["videosurveillance", "amped-five", "intelligence-artificielle"]) {
+      await expect(page.locator(`main a[href="/fr/services/securite-electronique/${sub}"]`)).toBeVisible();
+    }
   });
 
   test("a sub-service lives under its area, and its old top-level URL redirects there", async ({ page, request, baseURL }) => {

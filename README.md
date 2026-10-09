@@ -192,7 +192,7 @@ optional "only show if <question> = <value>" condition. A service without a
 form gets a "Contact" button instead (an area whose sub-services have forms
 links to `/devis`).
 
-Seeded forms: Growing's 4 activities and Hikview's 15 (one per sub-service,
+Seeded forms: Growing's 4 activities and Hikview's 17 (one per sub-service,
 the IoT form shared by both IoT pages, and the public-sector/B2G form).
 
 Every form also offers, after its questions, **attachments** (Formulaire →

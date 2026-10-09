@@ -352,6 +352,146 @@ export const hikviewDevisForms: SeedForm[] = [
       },
     ],
   },
+  {
+    site: "hikview",
+    services: ["amped-five"],
+    title: "Amped FIVE – analyse vidéo forensique",
+    attachments: { mode: "off" },
+    questions: [
+      {
+        name: "organisation",
+        type: "select",
+        required: true,
+        label: t3("Votre organisme", "Your organisation", "هيكلكم"),
+        options: [
+          opt("forces-ordre", "Service d'enquête / forces de l'ordre", "Investigation unit / law enforcement", "مصلحة بحث / قوات الأمن"),
+          opt("laboratoire", "Laboratoire de police scientifique", "Forensic laboratory", "مخبر شرطة فنية"),
+          opt("expert", "Expert judiciaire / cabinet d'expertise", "Court expert / expert firm", "خبير عدلي / مكتب خبرة"),
+          opt("entreprise", "Entreprise (sécurité, assurance…)", "Company (security, insurance…)", "مؤسسة (أمن، تأمين…)"),
+          opt("autre", "Autre", "Other", "آخر"),
+        ],
+      },
+      {
+        name: "needs",
+        type: "multiselect",
+        required: true,
+        label: t3("Votre besoin", "What you need", "حاجتكم"),
+        options: [
+          opt("licences", "Licences du logiciel", "Software licences", "تراخيص البرمجية"),
+          opt("installation", "Installation et configuration", "Installation and configuration", "التركيب والضبط"),
+          opt("formation", "Formation des utilisateurs", "User training", "تكوين المستعملين"),
+          opt("poste", "Poste de travail adapté", "Suitable workstation", "حاسوب عمل ملائم"),
+          opt("support", "Assistance et mises à jour", "Support and updates", "المساعدة والتحديثات"),
+        ],
+      },
+      {
+        name: "licences",
+        type: "number",
+        label: t3("Nombre de postes à équiper", "Number of workstations to equip", "عدد الحواسيب المراد تجهيزها"),
+        min: 1,
+        max: 1_000,
+      },
+      {
+        name: "trainees",
+        type: "number",
+        label: t3("Personnes à former", "People to train", "عدد الأشخاص المراد تكوينهم"),
+        max: 1_000,
+      },
+      {
+        name: "sources",
+        type: "multiselect",
+        label: t3("Sources à analyser", "Footage to analyse", "المصادر المراد تحليلها"),
+        options: [
+          opt("enregistreurs", "Enregistreurs de vidéosurveillance (DVR / NVR)", "CCTV recorders (DVR / NVR)", "أجهزة تسجيل المراقبة (DVR / NVR)"),
+          opt("telephones", "Téléphones et réseaux sociaux", "Phones and social media", "الهواتف وشبكات التواصل"),
+          opt("embarquees", "Caméras-piétons / embarquées", "Body-worn / dashboard cameras", "كاميرات محمولة / على متن العربات"),
+          opt("images", "Photos et documents", "Photos and documents", "صور ووثائق"),
+        ],
+      },
+      existingNotes(
+        "Outils d'analyse déjà utilisés",
+        "Analysis tools you already use",
+        "أدوات التحليل المستعملة حالياً",
+      ),
+    ],
+  },
+  {
+    site: "hikview",
+    services: ["intelligence-artificielle"],
+    title: "Solutions d'intelligence artificielle",
+    attachments: {
+      help: t3(
+        "Quelques photos de la scène à analyser, prises depuis les caméras, nous aident à évaluer la faisabilité.",
+        "A few photos of the scene to analyse, taken from the cameras, help us assess feasibility.",
+        "بعض الصور للمشهد المراد تحليله، ملتقطة من الكاميرات، تساعدنا على تقييم إمكانية الإنجاز.",
+      ),
+    },
+    questions: [
+      {
+        ...clientType,
+        options: clientType.options.slice(1),
+      },
+      {
+        name: "useCases",
+        type: "multiselect",
+        required: true,
+        label: t3("Ce que l'IA doit détecter ou mesurer", "What the AI should detect or measure", "ما يجب أن يكشفه أو يقيسه الذكاء الاصطناعي"),
+        help: t3(
+          "Un besoin qui n'est pas dans la liste ? Décrivez-le dans votre message.",
+          "A need that isn't listed? Describe it in your message.",
+          "حاجة غير موجودة في القائمة؟ صفها في رسالتك.",
+        ),
+        options: [
+          opt("intrusion", "Intrusion / surveillance de périmètre", "Intrusion / perimeter monitoring", "التسلّل / مراقبة المحيط"),
+          opt("lapi", "Lecture de plaques (LAPI / ANPR)", "Number-plate recognition (ANPR)", "قراءة لوحات السيارات"),
+          opt("comptage", "Comptage et analyse des flux", "Counting and flow analysis", "العدّ وتحليل الحركة"),
+          opt("visage", "Reconnaissance faciale", "Face recognition", "التعرّف على الوجوه"),
+          opt("epi", "Port des équipements de protection (casque, gilet)", "Protective equipment worn (helmet, vest)", "ارتداء معدّات الوقاية (خوذة، صدرية)"),
+          opt("feu-fumee", "Détection de feu / fumée", "Fire / smoke detection", "كشف النار / الدخان"),
+          opt("qualite", "Contrôle qualité / inspection industrielle", "Quality control / industrial inspection", "مراقبة الجودة / الفحص الصناعي"),
+          opt("autre", "Autre besoin", "Another need", "حاجة أخرى"),
+        ],
+      },
+      {
+        name: "cameras",
+        type: "radio",
+        required: true,
+        label: t3("Caméras", "Cameras", "الكاميرات"),
+        options: [
+          opt("existantes", "Utiliser les caméras existantes", "Use the existing cameras", "استعمال الكاميرات الموجودة"),
+          opt("nouvelles", "Installer de nouvelles caméras", "Install new cameras", "تركيب كاميرات جديدة"),
+          opt("mixte", "Les deux", "Both", "كلاهما"),
+        ],
+      },
+      {
+        name: "cameraCount",
+        type: "number",
+        label: t3("Nombre de caméras concernées", "Number of cameras involved", "عدد الكاميرات المعنية"),
+        max: 5_000,
+      },
+      {
+        name: "processing",
+        type: "select",
+        label: t3("Où traiter les images", "Where to process the images", "أين تُعالج الصور"),
+        help: t3(
+          "Sur site, les images ne quittent pas vos locaux ; le cloud évite d'installer un serveur.",
+          "On site, footage never leaves your premises; the cloud avoids installing a server.",
+          "في الموقع لا تغادر الصور محلاتكم؛ السحابة تغني عن تركيب خادم.",
+        ),
+        options: [
+          opt("serveur-local", "Sur site (serveur local)", "On site (local server)", "في الموقع (خادم محلّي)"),
+          opt("camera", "Dans les caméras", "Inside the cameras", "داخل الكاميرات"),
+          opt("cloud", "Dans le cloud", "In the cloud", "في السحابة"),
+          opt("conseil", "À conseiller", "Please advise", "حسب نصيحتكم"),
+        ],
+      },
+      existingNotes(
+        "Systèmes à relier (logiciel vidéo, contrôle d'accès, ERP…)",
+        "Systems to connect (video software, access control, ERP…)",
+        "الأنظمة المراد ربطها (برمجية الفيديو، مراقبة الدخول، ERP…)",
+      ),
+    ],
+  },
 
   // --- H2 Réseaux & infrastructures ---------------------------------------------
   {

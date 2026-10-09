@@ -4,7 +4,7 @@
  * without an icon (or vice versa) is a type error.
  */
 
-/** Icons offered for Services and their page sections (solar, security, networks, AV, IoT, B2G). */
+/** Icons offered for Services and their page sections (solar, security, video analysis & AI, networks, AV, IoT, B2G). */
 export const serviceIconNames = [
   "PlugZap",
   "Droplets",
@@ -36,6 +36,8 @@ export const serviceIconNames = [
   "Video",
   "Cpu",
   "Landmark",
+  "ScanSearch",
+  "BrainCircuit",
 ] as const;
 export type ServiceIconName = (typeof serviceIconNames)[number];
 

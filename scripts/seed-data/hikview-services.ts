@@ -1,7 +1,7 @@
 import type { Localized, ProcessStep, Service } from "./types";
 
 /**
- * Hikview Engineering's catalogue (plan §4.2): 6 areas, 15 sub-services
+ * Hikview Engineering's catalogue (plan §4.2): 6 areas, 17 sub-services
  * served at /services/<area>/<sub>. Trilingual. Seed data only: once created,
  * everything is edited in the admin (brands are added as Partners there).
  */
@@ -168,6 +168,52 @@ export const hikviewServices: HikviewService[] = [
       ["Détection précoce et localisée", "Conformité protection civile", "Extinction automatique des locaux techniques", "Contrats de maintenance"],
       ["Early, pinpointed detection", "Civil-protection compliance", "Automatic extinguishing for technical rooms", "Maintenance contracts"],
       ["كشف مبكّر ومحدّد الموقع", "مطابقة لمتطلبات الحماية المدنية", "إطفاء آلي للمحلات التقنية", "عقود صيانة"],
+    ),
+    process: [],
+  },
+  {
+    slug: "amped-five",
+    parent: "securite-electronique",
+    icon: "ScanSearch",
+    order: 5,
+    title: L("Amped FIVE – analyse vidéo forensique", "Amped FIVE – forensic video analysis", "Amped FIVE – التحليل الجنائي للفيديو"),
+    shortDescription: L(
+      "Logiciel d'analyse et d'amélioration forensique d'images et de vidéos : fourniture, installation et formation de vos enquêteurs et experts.",
+      "Forensic image and video analysis and enhancement software: supply, installation and training for your investigators and experts.",
+      "برمجية التحليل الجنائي للصور والفيديو وتحسينها: التزويد والتركيب وتكوين المحقّقين والخبراء.",
+    ),
+    body: L(
+      "Amped FIVE, édité par Amped Software, est un logiciel d'analyse forensique d'images et de vidéos utilisé par les services d'enquête, les laboratoires de police scientifique et les experts judiciaires. Il convertit les formats propriétaires des enregistreurs de vidéosurveillance, améliore les images (netteté, bruit, flou de mouvement, stabilisation, correction de perspective) et permet de mesurer des tailles ou des distances dans une scène.\n\nChaque traitement appliqué est tracé et documenté dans un rapport généré automatiquement, pour que le résultat soit reproductible et présentable devant un tribunal. Nous fournissons les licences, installons le logiciel sur vos postes et accompagnons vos équipes dans sa prise en main.",
+      "Amped FIVE, published by Amped Software, is forensic image and video analysis software used by investigation units, forensic laboratories and court experts. It converts the proprietary formats of CCTV recorders, enhances footage (sharpness, noise, motion blur, stabilisation, perspective correction) and measures heights or distances in a scene.\n\nEvery processing step is logged and documented in an automatically generated report, so the result can be reproduced and presented in court. We supply the licences, install the software on your workstations and help your teams get started.",
+      "Amped FIVE من تطوير Amped Software برمجية للتحليل الجنائي للصور والفيديو تستعملها مصالح البحث ومخابر الشرطة الفنية والخبراء العدليون. تحوّل الصيغ الخاصة بأجهزة تسجيل المراقبة، وتحسّن الصور (الوضوح والتشويش وضبابية الحركة والتثبيت وتصحيح المنظور)، وتتيح قياس الأطوال والمسافات داخل المشهد.\n\nتُوثَّق كل معالجة في تقرير يُنشأ آلياً، حتى تكون النتيجة قابلة للإعادة ومقبولة أمام المحكمة. نوفّر التراخيص ونثبّت البرمجية على حواسيبكم ونرافق فرقكم في استعمالها.",
+    ),
+    benefits: list(
+      ["Lecture des formats propriétaires des enregistreurs", "Amélioration d'images floues, sombres ou bruitées", "Rapport détaillé et reproductible pour la justice", "Installation et formation de vos équipes"],
+      ["Plays proprietary CCTV recorder formats", "Enhancement of blurred, dark or noisy footage", "Detailed, reproducible report for court", "Installation and training for your teams"],
+      ["قراءة الصيغ الخاصة بأجهزة التسجيل", "تحسين الصور الضبابية أو المظلمة أو المشوّشة", "تقرير مفصّل قابل للإعادة أمام القضاء", "تركيب وتكوين لفرقكم"],
+    ),
+    process: [],
+  },
+  {
+    slug: "intelligence-artificielle",
+    parent: "securite-electronique",
+    icon: "BrainCircuit",
+    order: 6,
+    title: L("Solutions d'intelligence artificielle", "Artificial intelligence solutions", "حلول الذكاء الاصطناعي"),
+    shortDescription: L(
+      "Analyse d'images par IA sur mesure : détection d'objets et de comportements, équipements de protection, contrôle qualité, alertes et tableaux de bord.",
+      "Custom AI image analysis: object and behaviour detection, protective equipment checks, quality inspection, alerts and dashboards.",
+      "تحليل الصور بالذكاء الاصطناعي حسب الطلب: كشف الأجسام والسلوكيات ومعدّات الوقاية ومراقبة الجودة مع تنبيهات ولوحات متابعة.",
+    ),
+    body: L(
+      "Nous concevons des solutions de vision par ordinateur adaptées à votre activité, sur vos caméras existantes ou sur de nouvelles : détection et classification de personnes, de véhicules et d'objets, vérification du port des équipements de protection, détection de feu et de fumée, comptage et analyse des flux, contrôle qualité sur une ligne de production.\n\nLes modèles d'IA sont entraînés ou ajustés sur vos propres images, puis déployés sur un serveur local, directement dans les caméras ou dans le cloud selon vos contraintes. Les alertes arrivent en temps réel et les résultats sont présentés dans des tableaux de bord ou transmis à vos systèmes existants.",
+      "We design computer vision solutions tailored to your business, on your existing cameras or new ones: detection and classification of people, vehicles and objects, checks that protective equipment is worn, fire and smoke detection, counting and flow analysis, quality inspection on a production line.\n\nThe AI models are trained or fine-tuned on your own images, then deployed on a local server, inside the cameras or in the cloud, depending on your constraints. Alerts arrive in real time and results are shown in dashboards or sent to your existing systems.",
+      "نصمّم حلول رؤية حاسوبية ملائمة لنشاطكم، على الكاميرات الموجودة أو على كاميرات جديدة: كشف الأشخاص والعربات والأجسام وتصنيفها، التثبّت من ارتداء معدّات الوقاية، كشف النار والدخان، العدّ وتحليل الحركة، ومراقبة الجودة على خطّ الإنتاج.\n\nتُدرَّب نماذج الذكاء الاصطناعي أو تُضبط على صوركم الخاصة، ثم تُشغَّل على خادم محلّي أو داخل الكاميرات أو في السحابة حسب متطلباتكم. تصل التنبيهات فورياً وتُعرض النتائج في لوحات متابعة أو تُرسل إلى أنظمتكم الموجودة.",
+    ),
+    benefits: list(
+      ["Solutions sur mesure pour votre métier", "Compatible avec vos caméras existantes", "Alertes en temps réel et tableaux de bord", "Traitement sur site, dans la caméra ou dans le cloud"],
+      ["Solutions tailored to your business", "Works with your existing cameras", "Real-time alerts and dashboards", "Processing on site, in the camera or in the cloud"],
+      ["حلول حسب الطلب لنشاطكم", "متوافقة مع الكاميرات الموجودة", "تنبيهات فورية ولوحات متابعة", "معالجة في الموقع أو داخل الكاميرا أو في السحابة"],
     ),
     process: [],
   },
