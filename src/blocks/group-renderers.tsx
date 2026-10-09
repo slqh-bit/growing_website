@@ -6,7 +6,6 @@ import type {
   GroupHeroBlock,
   GroupProjectsBlock,
   GroupServicesBlock,
-  Project,
   QuoteFormBlock,
   StepsBlock,
 } from "@/payload-types";
@@ -22,6 +21,7 @@ import { Reveal, RevealGroup } from "@/components/motion/reveal";
 import { CmsImage } from "@/components/cms/cms-image";
 import { SmartLink } from "@/components/cms/smart-link";
 import { DevisForm } from "@/components/devis/devis-form";
+import { ReferenceLogosGrid } from "@/components/sections/reference-logos-grid";
 import { GroupServicesTabs, type CompanyServices } from "./group-services-tabs";
 
 /**
@@ -363,74 +363,95 @@ export async function GroupProjectsBlockView({ block, locale }: BlockProps<Group
   const limit = block.limit ?? 6;
   const { members } = await getGroupMembers(locale);
   const perCompany = await Promise.all(
-    members.map(async (m) =>
-      (await getFeaturedProjects(m.site.key, locale, limit)).map((p) => ({
-        project: p,
-        member: m,
-      })),
-    ),
+    members.map(async (m) => ({
+      member: m,
+      projects: await getFeaturedProjects(m.site.key, locale, limit),
+    })),
   );
-  // Most recent first, whichever the company.
-  const time = (p: Project) => new Date(p.date).getTime() || 0;
-  const projects = perCompany
-    .flat()
-    .sort((x, y) => time(y.project) - time(x.project))
-    .slice(0, limit);
-  if (projects.length === 0) return null;
+  // One titled sub-section per company (Hikview last). Hikview always shows
+  // its client logos (from the company presentation), even without projects.
+  const isHikview = (m: GroupMember) => m.site.key === "hikview";
+  const sections = perCompany
+    .filter(({ member, projects }) => projects.length > 0 || isHikview(member))
+    .sort((x, y) => Number(isHikview(x.member)) - Number(isHikview(y.member)));
+  if (sections.length === 0) return null;
 
   return (
     <section id="references" className="bg-surface scroll-mt-20 py-20 sm:py-24">
       <Container>
         <GroupHeading eyebrow={block.eyebrow} title={block.title} subtitle={block.subtitle} />
-        <RevealGroup className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.map(({ project, member }) => {
-            const hex = brandHex(member.site.theme);
-            const href = member.link?.(`/${locale}/projects/${project.slug}`) ?? null;
-            const card = (
-              <article className="border-border bg-surface-muted/40 flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl">
-                <div
-                  className="relative h-44 overflow-hidden"
-                  style={{ backgroundImage: `linear-gradient(135deg, ${hex.from}, ${hex.accent})` }}
-                >
-                  <CmsImage
-                    media={project.coverImage}
-                    size="card"
-                    fill
-                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                  />
-                </div>
-                <div className="flex flex-1 flex-col gap-2 p-5">
-                  <span
-                    className="w-fit rounded-full px-2.5 py-0.5 text-xs font-bold"
-                    style={{ color: hex.from, backgroundColor: `${hex.from}1a` }}
-                  >
-                    {member.site.companyName}
-                  </span>
-                  <h3 className="text-foreground font-bold">{project.title}</h3>
-                  <p className="text-muted-foreground text-sm">
-                    {[project.region, project.date ? new Date(project.date).getFullYear() : null]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                </div>
-              </article>
-            );
-            return (
-              <Reveal key={`${member.site.key}-${project.id}`} className="h-full">
-                {href ? (
-                  <a
-                    href={href}
-                    className="group focus-visible:ring-ring block h-full rounded-2xl focus-visible:ring-2 focus-visible:outline-none"
-                  >
-                    {card}
-                  </a>
-                ) : (
-                  <div className="group h-full">{card}</div>
-                )}
+        {sections.map(({ member, projects }) => {
+          const hex = brandHex(member.site.theme);
+          return (
+            <div key={member.site.key} className="mt-12">
+              <Reveal className="mb-6 flex items-center gap-3">
+                <span
+                  className="h-7 w-1.5 rounded-full"
+                  style={{ backgroundImage: `linear-gradient(180deg, ${hex.from}, ${hex.accent})` }}
+                  aria-hidden
+                />
+                <h3 className="text-foreground text-2xl font-bold tracking-tight">
+                  {member.site.companyName}
+                </h3>
               </Reveal>
-            );
-          })}
-        </RevealGroup>
+              {projects.length > 0 && (
+                <RevealGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {projects.map((project) => {
+                    const href = member.link?.(`/${locale}/projects/${project.slug}`) ?? null;
+                    const card = (
+                      <article className="border-border bg-surface-muted/40 flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl">
+                        <div
+                          className="relative h-44 overflow-hidden"
+                          style={{ backgroundImage: `linear-gradient(135deg, ${hex.from}, ${hex.accent})` }}
+                        >
+                          <CmsImage
+                            media={project.coverImage}
+                            size="card"
+                            fill
+                            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                          />
+                        </div>
+                        <div className="flex flex-1 flex-col gap-2 p-5">
+                          <span
+                            className="w-fit rounded-full px-2.5 py-0.5 text-xs font-bold"
+                            style={{ color: hex.from, backgroundColor: `${hex.from}1a` }}
+                          >
+                            {member.site.companyName}
+                          </span>
+                          <h3 className="text-foreground font-bold">{project.title}</h3>
+                          <p className="text-muted-foreground text-sm">
+                            {[project.region, project.date ? new Date(project.date).getFullYear() : null]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
+                        </div>
+                      </article>
+                    );
+                    return (
+                      <Reveal key={`${member.site.key}-${project.id}`} className="h-full">
+                        {href ? (
+                          <a
+                            href={href}
+                            className="group focus-visible:ring-ring block h-full rounded-2xl focus-visible:ring-2 focus-visible:outline-none"
+                          >
+                            {card}
+                          </a>
+                        ) : (
+                          <div className="group h-full">{card}</div>
+                        )}
+                      </Reveal>
+                    );
+                  })}
+                </RevealGroup>
+              )}
+              {isHikview(member) && (
+                <div className={projects.length > 0 ? "mt-8" : undefined}>
+                  <ReferenceLogosGrid locale={locale} />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </Container>
     </section>
   );
