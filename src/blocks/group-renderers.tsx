@@ -21,6 +21,7 @@ import { Reveal, RevealGroup } from "@/components/motion/reveal";
 import { CmsImage } from "@/components/cms/cms-image";
 import { SmartLink } from "@/components/cms/smart-link";
 import { DevisForm } from "@/components/devis/devis-form";
+import { brandOf, Logo } from "@/components/brand/logo";
 import { ReferenceLogosGrid } from "@/components/sections/reference-logos-grid";
 import { GroupServicesTabs, type CompanyServices } from "./group-services-tabs";
 
@@ -87,8 +88,6 @@ function GroupHeading({
 }
 
 const memberHref = (m: GroupMember, locale: Locale) => m.link?.(`/${locale}`) ?? null;
-const initialsOf = (m: GroupMember) =>
-  m.site.monogram?.trim() || m.site.companyName.slice(0, 2).toUpperCase();
 
 // --- Hero ---------------------------------------------------------------------------
 
@@ -167,27 +166,16 @@ export async function GroupHeroBlockView({ block, locale }: BlockProps<GroupHero
             className="grid gap-3.5 rounded-3xl border border-white/20 bg-white/[0.08] p-6 backdrop-blur-md"
           >
             {members.map((m) => {
-              const hex = brandHex(m.site.theme);
               const href = memberHref(m, locale);
+              // The company's logo carries its name.
               const inner = (
                 <>
-                  <span
-                    aria-hidden
-                    className="inline-flex size-12 shrink-0 items-center justify-center rounded-2xl text-sm font-extrabold"
-                    style={{
-                      backgroundImage: `linear-gradient(135deg, ${hex.from}, ${hex.accent})`,
-                    }}
-                  >
-                    {initialsOf(m)}
-                  </span>
-                  <span className="flex min-w-0 flex-col">
-                    <span className="font-bold">{m.site.companyName}</span>
-                    <span className="text-sm text-white/65">{m.summary}</span>
-                  </span>
+                  <Logo brand={brandOf(m.site)} tone="light" />
+                  <span className="text-sm text-white/65">{m.summary}</span>
                 </>
               );
               const cls =
-                "flex items-center gap-3.5 rounded-2xl bg-white/[0.07] p-4 transition-all duration-300 hover:bg-white/15 hover:translate-x-1.5 rtl:hover:-translate-x-1.5";
+                "flex flex-col gap-3 rounded-2xl bg-white/[0.07] p-4 transition-all duration-300 hover:bg-white/15 hover:translate-x-1.5 rtl:hover:-translate-x-1.5";
               return href ? (
                 <a key={m.site.id} href={href} className={cls}>
                   {inner}
@@ -233,11 +221,12 @@ export async function CompaniesBlockView({ block, locale }: BlockProps<Companies
                     aria-hidden
                     className="absolute -end-24 -top-28 -z-10 size-[21rem] rounded-full bg-white/10 transition-transform duration-500 group-hover:scale-125"
                   />
+                  {/* On a white tile: the logo keeps its own colours on the brand gradient. */}
                   <span
                     aria-hidden
-                    className="inline-flex size-16 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-xl font-extrabold ring-1 ring-white/30 backdrop-blur-sm"
+                    className="inline-flex h-16 w-fit shrink-0 items-center rounded-2xl bg-white px-4 shadow-sm ring-1 ring-white/30"
                   >
-                    {initialsOf(m)}
+                    <Logo brand={brandOf(m.site)} tone="dark" />
                   </span>
                   {/* Content sits at the bottom of the card, whatever its length. */}
                   <div className="mt-auto flex flex-col">
