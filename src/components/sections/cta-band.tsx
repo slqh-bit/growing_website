@@ -43,8 +43,8 @@ export async function CtaBand({
           <div className="pointer-events-none absolute -end-16 -top-16 size-56 rounded-full bg-white/10 blur-2xl" />
           <div className="pointer-events-none absolute -bottom-20 -start-10 size-56 rounded-full bg-accent-300/20 blur-2xl" />
           <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-4">
-            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">{title || t("ctaTitle")}</h2>
-            <p className="text-lg text-white/90">{subtitle || t("ctaSubtitle")}</p>
+            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">{title || t(site === "hikview" ? "ctaTitleHikview" : "ctaTitle")}</h2>
+            <p className="text-lg text-white/90">{subtitle || t(site === "hikview" ? "ctaSubtitleHikview" : "ctaSubtitle")}</p>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" variant="accent">
                 <SmartLink href={href}>

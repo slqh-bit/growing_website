@@ -39,7 +39,7 @@ describe("Hikview quote forms (plan §6.3)", () => {
     const subServices = hikviewServices.filter((s) => s.parent).map((s) => s.slug);
     assert.deepEqual([...linked].sort(), [...subServices, "integration-b2g"].sort());
     assert.equal(new Set(linked).size, linked.length);
-    assert.equal(hikviewForms.length, 15);
+    assert.equal(hikviewForms.length, 17);
   });
 
   it("are well formed, in all three languages", () => {

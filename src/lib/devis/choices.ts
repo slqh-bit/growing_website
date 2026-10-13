@@ -5,7 +5,7 @@ import type { SiteKey } from "@/sites/config";
 import { getDevisForms, getServices, getSite } from "@/lib/cms/queries";
 import { getGroupMembers } from "@/lib/group";
 import { childrenOf, topLevel } from "@/lib/services";
-import { brandHex } from "@/lib/theme";
+import { brandOf, type Brand } from "@/components/brand/logo";
 import type { FormDef, QuestionDef } from "./form-def";
 
 /** A company the client can address a request to (group site: one per member). */
@@ -13,9 +13,8 @@ export interface DevisCompany {
   key: SiteKey;
   name: string;
   summary: string;
-  monogram: string;
-  /** Brand colours (hex) for its choice card. */
-  colors: { from: string; to: string };
+  /** Its logo, on its choice card. */
+  brand: Brand;
 }
 
 /** A service offered at step 1 of the quote form, with its questions. */
@@ -89,16 +88,12 @@ export async function getDevisChoices(site: SiteKey, locale: Locale): Promise<De
 export async function getDevisCompanies(site: SiteKey, locale: Locale): Promise<DevisCompany[]> {
   if (site !== "group") return [];
   const { members } = await getGroupMembers(locale);
-  return members.map(({ site: member, summary }) => {
-    const hex = brandHex(member.theme);
-    return {
-      key: member.key,
-      name: member.companyName,
-      summary,
-      monogram: member.monogram?.trim() || member.companyName.slice(0, 2).toUpperCase(),
-      colors: { from: hex.from, to: hex.to },
-    };
-  });
+  return members.map(({ site: member, summary }) => ({
+    key: member.key,
+    name: member.companyName,
+    summary,
+    brand: brandOf(member),
+  }));
 }
 
 /** Just the site record a request belongs to (for routing and its reference). */

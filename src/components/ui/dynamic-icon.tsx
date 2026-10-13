@@ -1,6 +1,7 @@
 import {
   Award,
   BatteryCharging,
+  BrainCircuit,
   Briefcase,
   Building2,
   Cable,
@@ -27,6 +28,7 @@ import {
   RadioTower,
   Router,
   ScanBarcode,
+  ScanSearch,
   Server,
   ShieldCheck,
   Siren,
@@ -86,6 +88,8 @@ const iconMap: Record<IconName, LucideIcon> = {
   Video,
   Cpu,
   Landmark,
+  ScanSearch,
+  BrainCircuit,
 };
 
 /** Renders a CMS-selected icon by name; unknown names fall back to the sun. */

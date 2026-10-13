@@ -165,7 +165,16 @@ async function seedSites(payload: Payload): Promise<Record<SiteKey, Id | undefin
     const site = await payload.findByID({ collection: "sites", id: result.id, depth: 0 });
     if (s.logoFile && !site.logo) {
       const logo = await uploadImage(payload, s.logoFile, () => `${s.companyName} — logo`);
-      await payload.update({ collection: "sites", id: site.id, data: { logo }, depth: 0, context });
+      const logoDark = s.logoDarkFile
+        ? await uploadImage(payload, s.logoDarkFile, () => `${s.companyName} — logo (dark)`)
+        : undefined;
+      await payload.update({
+        collection: "sites",
+        id: site.id,
+        data: { logo, ...(logoDark && { logoDark }), ...(s.logoIncludesName && { logoIncludesName: true }) },
+        depth: 0,
+        context,
+      });
       payload.logger.info(`Site ${s.key}: logo uploaded.`);
     }
   }

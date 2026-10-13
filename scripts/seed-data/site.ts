@@ -22,6 +22,10 @@ export interface SiteSeed {
   monogram: string;
   /** Uploaded as the logo when the site has none (path from the repo root). */
   logoFile?: string;
+  /** Variant for dark backgrounds. */
+  logoDarkFile?: string;
+  /** The logo is a full lockup: the name isn't written next to it. */
+  logoIncludesName?: boolean;
   theme: { primary: string | null; accent: string | null };
   email: string;
   phone: string;
@@ -118,6 +122,9 @@ export const sites: SiteSeed[] = [
       en: "Six areas of expertise, from electronic security to public-sector projects.",
     },
     monogram: "HE",
+    logoFile: "scripts/seed-data/logos/hikview.png",
+    logoDarkFile: "scripts/seed-data/logos/hikview-dark.png",
+    logoIncludesName: true,
     // Blue + cyan (plan §3.2).
     theme: { primary: "#1f6fd1", accent: "#06b6d4" },
     email: "contact@hikview.tn",

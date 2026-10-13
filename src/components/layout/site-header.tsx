@@ -48,7 +48,8 @@ export function SiteHeader({ items, brand }: { items: HeaderNavItem[]; brand: Br
       )}
     >
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6 lg:px-8">
-        <Link href="/" className="shrink-0">
+        {/* Phones: a long wordmark (the group's) gives way rather than widening the page. */}
+        <Link href="/" className="min-w-0 sm:shrink-0">
           <Logo brand={brand} />
         </Link>
 

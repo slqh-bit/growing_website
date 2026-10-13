@@ -19,6 +19,7 @@ import type { AttachmentErrorKey } from "@/lib/devis/attachments";
 import type { DevisChoice, DevisCompany } from "@/lib/devis/choices";
 import { contactChannelOptions, governorateOptions } from "@/lib/devis/options";
 import { stepSchema, type DevisFormValues } from "@/lib/devis/schema";
+import { Logo } from "@/components/brand/logo";
 import { ServiceIcon } from "@/components/ui/service-icon";
 import { AttachmentsField, useAttachmentsLabel } from "./attachments-field";
 import { FieldError, FieldShell, describedBy, fieldId, inputClass } from "./field-shell";
@@ -88,21 +89,13 @@ export function ActivityStep({
                     if (activities.find((a) => a.id === selected)?.company !== c.key) form.setValue("service", "");
                   }}
                   className={cn(
-                    "flex items-start gap-3 rounded-2xl border-2 p-4 text-start transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "flex flex-col items-start gap-3 rounded-2xl border-2 p-4 text-start transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     active ? "border-primary-500 bg-primary-50 shadow-sm dark:bg-primary-950/40" : "border-border bg-surface hover:-translate-y-0.5 hover:border-primary-300",
                   )}
                 >
-                  <span
-                    aria-hidden
-                    className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold text-white"
-                    style={{ backgroundImage: `linear-gradient(135deg, ${c.colors.from}, ${c.colors.to})` }}
-                  >
-                    {c.monogram}
-                  </span>
-                  <span className="flex min-w-0 flex-col gap-0.5">
-                    <span className="font-semibold text-foreground">{c.name}</span>
-                    <span className="line-clamp-2 text-sm text-muted-foreground">{c.summary}</span>
-                  </span>
+                  {/* The logo carries the company's name. */}
+                  <Logo brand={c.brand} />
+                  <span className="line-clamp-2 text-sm text-muted-foreground">{c.summary}</span>
                 </button>
               );
             })}

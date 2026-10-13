@@ -84,17 +84,22 @@ export function LogoMark({
   );
 }
 
+/** 36px tall — less for a wide lockup (a wordmark), so it stays about 150px wide. */
+function fitHeight(image: ImageSource, maxHeight = 36, maxWidth = 150): number {
+  return Math.min(maxHeight, Math.max(22, Math.round((maxWidth * image.height) / image.width)));
+}
+
 function LogoImage({ image, className }: { image: ImageSource; className?: string }) {
-  // Fixed height, natural width (a square badge or a wide lockup).
-  const width = Math.round((image.width / image.height) * 36);
+  const height = fitHeight(image);
   return (
     <Image
       src={image.src}
       alt=""
-      width={width}
-      height={36}
+      width={Math.round((image.width / image.height) * height)}
+      height={height}
       priority
-      className={cn("h-9 w-auto shrink-0 object-contain", className)}
+      style={{ height }}
+      className={cn("w-auto shrink-0 object-contain", className)}
     />
   );
 }
@@ -121,14 +126,16 @@ export function BrandMark({ brand }: { brand: Brand }) {
       />
     );
   }
+  const height = fitHeight(brand.logo, 56, 220);
   return (
-    <span className="inline-flex h-20 min-w-20 items-center justify-center rounded-2xl bg-white p-3 shadow-lg ring-1 ring-white/30">
+    <span className="inline-flex h-20 min-w-20 items-center justify-center rounded-2xl bg-white px-5 py-3 shadow-lg ring-1 ring-white/30">
       <Image
         src={brand.logo.src}
         alt=""
-        width={Math.round((brand.logo.width / brand.logo.height) * 56)}
-        height={56}
-        className="h-14 w-auto object-contain"
+        width={Math.round((brand.logo.width / brand.logo.height) * height)}
+        height={height}
+        style={{ height }}
+        className="w-auto object-contain"
       />
     </span>
   );
@@ -146,36 +153,47 @@ export function Logo({
 }: {
   brand: Brand;
   className?: string;
-  /** "light": white wordmark, for dark backgrounds (group footer). */
-  tone?: "default" | "light";
+  /**
+   * "default" follows the theme. On a background that doesn't: "light" (white
+   * wordmark, dark-mode logo) for a dark one, "dark" for a white one.
+   */
+  tone?: "default" | "light" | "dark";
 }) {
   const [firstWord, ...rest] = brand.name.trim().split(/\s+/);
   const first = brand.subline ? brand.name.trim() : firstWord;
   const second = brand.subline ?? rest.join(" ");
   return (
     <span
-      className={cn("inline-flex items-center gap-2.5", className)}
+      className={cn("inline-flex max-w-full min-w-0 items-center gap-2.5", className)}
       dir="ltr"
       style={{ "--logo-ink": brand.colors.ink, "--logo-ink-dark": brand.colors.inkDark } as React.CSSProperties}
     >
       {brand.logo ? (
-        <>
-          <LogoImage image={brand.logo} className={brand.logoDark ? "dark:hidden" : undefined} />
-          {brand.logoDark && <LogoImage image={brand.logoDark} className="hidden dark:block" />}
-        </>
+        tone === "default" ? (
+          <>
+            <LogoImage image={brand.logo} className={brand.logoDark ? "dark:hidden" : undefined} />
+            {brand.logoDark && <LogoImage image={brand.logoDark} className="hidden dark:block" />}
+          </>
+        ) : (
+          <LogoImage image={(tone === "light" && brand.logoDark) || brand.logo} />
+        )
       ) : (
         <LogoMark monogram={brand.monogram} colors={brand.colors} />
       )}
       {brand.includesName ? (
         <span className="sr-only">{brand.name}</span>
       ) : (
-        <span className="flex flex-col uppercase leading-none">
+        <span className="flex min-w-0 flex-col uppercase leading-none">
           <span className="sr-only">{brand.name}</span>
           <span
             aria-hidden
             className={cn(
-              "text-[17px] font-extrabold tracking-wide",
-              tone === "light" ? "text-white" : "text-[var(--logo-ink)] dark:text-[var(--logo-ink-dark)]",
+              "truncate text-[17px] font-extrabold tracking-wide",
+              // A long name ("HIKVIEW × GROWING") is set smaller on narrow phones.
+              (first?.length ?? 0) > 12 && "max-[399px]:text-[15px] max-[399px]:tracking-normal",
+              tone === "light" && "text-white",
+              tone === "dark" && "text-[var(--logo-ink)]",
+              tone === "default" && "text-[var(--logo-ink)] dark:text-[var(--logo-ink-dark)]",
             )}
           >
             {first}
@@ -183,7 +201,10 @@ export function Logo({
           {second && (
             <span
               aria-hidden
-              className={cn("mt-0.5 text-[10.5px] font-semibold tracking-[0.12em]", tone === "light" ? "text-white/70" : "text-foreground/75")}
+              className={cn(
+                "mt-0.5 text-[10.5px] font-semibold tracking-[0.12em]",
+                tone === "light" ? "text-white/70" : tone === "dark" ? "text-black/70" : "text-foreground/75",
+              )}
             >
               {second}
             </span>

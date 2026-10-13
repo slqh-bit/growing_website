@@ -47,6 +47,8 @@
     "projectsSubtitle": "Quelques projets livrés à travers la région.",
     "ctaTitle": "Prêt à réduire votre facture d'énergie ?",
     "ctaSubtitle": "Demandez un devis gratuit et adapté à votre activité.",
+    "ctaTitleHikview": "Un projet de sécurité, de réseau ou de courant faible ?",
+    "ctaSubtitleHikview": "Parlez-nous de votre besoin : vidéosurveillance, contrôle d'accès, réseaux, électricité et énergie solaire. Devis gratuit.",
     "whyTitle": "Pourquoi Growing Technologies",
     "whySubtitle": "Un partenaire de confiance, du premier contact à la maintenance.",
     "why": {
@@ -93,7 +95,45 @@
       "industriel": "Industriel",
       "public": "Public / B2G"
     },
-    "date": "Date"
+    "date": "Date",
+    "references": {
+      "eyebrow": "Références",
+      "heading": "Des projets menés pour l'État, les collectivités et les entreprises",
+      "body1": "Depuis 2017, HikView Engineering conçoit, installe et met en service des solutions complètes : sécurité électronique résidentielle et professionnelle, réseaux et infrastructures numériques, solutions de gestion et de point de vente, solutions audiovisuelles et collaboratives, IoT et Smart City.",
+      "body2": "Intégrateur de projets publics (B2G), nous accompagnons ministères, communes, établissements de santé et d'enseignement, médias nationaux et entreprises privées dans toute la Tunisie, avec plus de 320 références. Chaque projet réunit fourniture, installation et mise en service, avec garantie et service après-vente réactif.",
+      "highlightSince": "Société créée en 2017",
+      "highlightClients": "Plus de 320 références publiques et privées",
+      "highlightWarranty": "Garantie et service après-vente",
+      "wallTitle": "Ils nous font confiance",
+      "wallSubtitle": "Quelques-unes de nos références : institutions publiques, collectivités et entreprises.",
+      "all": "Toutes",
+      "categories": {
+        "state": "Ministères",
+        "local": "Collectivités locales",
+        "health": "Santé et enseignement",
+        "media": "Médias",
+        "private": "Entreprises privées"
+      },
+      "items": {
+        "ministere-interieur": "Ministère de l'Intérieur",
+        "ministere-transport": "Ministère du Transport",
+        "ministere-equipement": "Ministère de l'Équipement et de l'Habitat",
+        "ministere-education": "Ministère de l'Éducation",
+        "ministere-defense": "Ministère de la Défense nationale",
+        "commune-sbeitla": "Commune de Sbeïtla",
+        "commune-tunis": "Commune de Tunis",
+        "hopital-sbeitla": "Hôpital régional de Sbeïtla",
+        "imko": "Institut Mohamed T. Kassab d'Orthopédie (IMKO)",
+        "iset-kasserine": "ISET de Kasserine",
+        "tv-tunisienne": "Télévision Tunisienne",
+        "ont": "Office National de la Télédiffusion",
+        "shell": "Shell",
+        "oilibya": "OiLibya",
+        "hotel-jeunesse": "Hôtel La Jeunesse de Sbeïtla",
+        "hotel-marco-polo": "Hôtel Marco Polo",
+        "tunisie-telecom": "Tunisie Telecom"
+      }
+    }
   },
   "about": {
     "title": "À propos de Growing Technologies",

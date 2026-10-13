@@ -517,6 +517,8 @@ export interface FeaturesBlock {
               | 'Video'
               | 'Cpu'
               | 'Landmark'
+              | 'ScanSearch'
+              | 'BrainCircuit'
               | 'ShieldCheck'
               | 'MapPin'
               | 'Wrench'
@@ -706,6 +708,8 @@ export interface UpcomingBlock {
               | 'Video'
               | 'Cpu'
               | 'Landmark'
+              | 'ScanSearch'
+              | 'BrainCircuit'
               | 'ShieldCheck'
               | 'MapPin'
               | 'Wrench'
@@ -924,7 +928,9 @@ export interface Service {
     | 'ListOrdered'
     | 'Video'
     | 'Cpu'
-    | 'Landmark';
+    | 'Landmark'
+    | 'ScanSearch'
+    | 'BrainCircuit';
   order: number;
   /**
    * Shown on cards (≈ 1 sentence).
@@ -983,6 +989,8 @@ export interface Service {
               | 'Video'
               | 'Cpu'
               | 'Landmark'
+              | 'ScanSearch'
+              | 'BrainCircuit'
             )
           | null;
         title: string;

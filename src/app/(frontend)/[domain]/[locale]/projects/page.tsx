@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/sections/page-header";
 import { ProjectsExplorer } from "@/components/sections/projects-explorer";
 import { toProjectView } from "@/components/sections/project-card";
 import { CtaBand } from "@/components/sections/cta-band";
+import { ClientReferences } from "@/components/sections/client-references";
 
 export async function generateMetadata({
   params,
@@ -36,20 +37,24 @@ export default async function ProjectsPage({
   return (
     <>
       <PageHeader title={t("title")} subtitle={t("subtitle")} />
-      <section className="py-16 sm:py-20">
-        <Container>
-          <ProjectsExplorer
-            projects={views}
-            labels={{
-              all: t("filterAll"),
-              activity: t("filterActivity"),
-              region: t("filterRegion"),
-              clientType: t("filterClientType"),
-              noResults: t("noResults"),
-            }}
-          />
-        </Container>
-      </section>
+      {/* Client references (logos from the Hikview presentation): Hikview site only. */}
+      {site === "hikview" && <ClientReferences locale={locale} />}
+      {views.length > 0 && (
+        <section className="py-16 sm:py-20">
+          <Container>
+            <ProjectsExplorer
+              projects={views}
+              labels={{
+                all: t("filterAll"),
+                activity: t("filterActivity"),
+                region: t("filterRegion"),
+                clientType: t("filterClientType"),
+                noResults: t("noResults"),
+              }}
+            />
+          </Container>
+        </section>
+      )}
       <CtaBand locale={locale} site={site} />
     </>
   );
