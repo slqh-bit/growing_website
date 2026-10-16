@@ -3,6 +3,7 @@ import { siteContentAccess } from "../cms/access";
 import { siteField } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
+import { workspaceFilter } from "../cms/workspace-server";
 
 /** FAQ entries (devplan §4.4), grouped by category on the FAQ page. */
 export const Faq: CollectionConfig = {
@@ -12,8 +13,9 @@ export const Faq: CollectionConfig = {
     plural: t3("FAQ", "FAQ", "الأسئلة الشائعة"),
   },
   admin: {
+    baseFilter: workspaceFilter("site"),
     useAsTitle: "question",
-    defaultColumns: ["question", "category", "order", "site"],
+    defaultColumns: ["question", "category", "order"],
     group: groups.content,
   },
   defaultSort: "order",

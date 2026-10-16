@@ -5,6 +5,7 @@ import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
 import { documentTypes, documentVisibilities, expiryLevels, startOfTunisDay } from "../lib/documents";
 import { companyDocumentsDir } from "../lib/devis/quote-files";
+import { workspaceFilter } from "../cms/workspace-server";
 
 /**
  * Visitors may download a document (file and data) only while it is public
@@ -35,9 +36,10 @@ export const CompanyDocuments: CollectionConfig = {
     plural: t3("Documents administratifs", "Company documents", "الوثائق الإدارية"),
   },
   admin: {
+    baseFilter: workspaceFilter("site"),
     group: groups.tenders,
     useAsTitle: "title",
-    defaultColumns: ["title", "type", "site", "validUntil", "visibility"],
+    defaultColumns: ["title", "type", "validUntil", "visibility"],
     description: t3(
       "Attestations et certificats pour les appels d'offres. Les documents publics et valides sont téléchargeables sur la page /documents du site ; l'équipe est prévenue 30 jours puis 7 jours avant l'expiration.",
       "Certificates for tenders. Public, valid documents can be downloaded from the site's /documents page; the team is alerted 30 then 7 days before they expire.",

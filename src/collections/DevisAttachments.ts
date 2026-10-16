@@ -4,6 +4,7 @@ import { siteField } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { attachmentMimeTypes } from "../lib/devis/attachments";
 import { attachmentsDir } from "../lib/devis/quote-files";
+import { workspaceFilter } from "../cms/workspace-server";
 
 /**
  * Files attached by clients to their quote requests (plans, photos, tender
@@ -18,9 +19,10 @@ export const DevisAttachments: CollectionConfig = {
     plural: t3("Pièces jointes clients", "Client attachments", "مرفقات العملاء"),
   },
   admin: {
+    baseFilter: workspaceFilter("site"),
     group: groups.leads,
     useAsTitle: "filename",
-    defaultColumns: ["filename", "site", "filesize", "createdAt"],
+    defaultColumns: ["filename", "filesize", "createdAt"],
     description: t3(
       "Fichiers envoyés par les clients avec leur demande de devis. Visibles uniquement par l'équipe.",
       "Files sent by clients with their quote request. Visible to the team only.",

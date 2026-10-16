@@ -83,8 +83,10 @@ export default buildConfig({
     // Built-in avatar instead of Gravatar: no admin email hash sent to a third party.
     avatar: "default",
     components: {
-      // Company documents that are expired or about to expire.
-      beforeDashboard: ["/components/admin/document-expiry#DocumentExpiry"],
+      // One company at a time, seven entries instead of one link per collection.
+      Nav: "/components/admin/nav/index#AdminNav",
+      // What is waiting: new quote requests, quotes to send, documents to renew.
+      views: { dashboard: { Component: "/components/admin/home/index#Home" } },
     },
   },
   collections: [

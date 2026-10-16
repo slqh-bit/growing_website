@@ -4,6 +4,7 @@ import { seoField, siteField, slugField, uniqueSlugPerSite } from "../cms/fields
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
 import { activityOptions, serviceIconOptions } from "../cms/options";
+import { workspaceFilter } from "../cms/workspace-server";
 
 const idOf = (v: unknown): number | null =>
   v === null || v === undefined ? null : typeof v === "object" ? ((v as { id?: number }).id ?? null) : Number(v);
@@ -36,8 +37,9 @@ export const Services: CollectionConfig = {
     plural: t3("Services", "Services", "الخدمات"),
   },
   admin: {
+    baseFilter: workspaceFilter("site"),
     useAsTitle: "title",
-    defaultColumns: ["title", "site", "parent", "devisForm", "order", "updatedAt"],
+    defaultColumns: ["title", "parent", "devisForm", "order", "updatedAt"],
     group: groups.content,
   },
   defaultSort: "order",
@@ -45,13 +47,6 @@ export const Services: CollectionConfig = {
   indexes: [...uniqueSlugPerSite, { fields: ["site", "activityKey"], unique: true }],
   hooks: revalidateCollection("services"),
   fields: [
-    {
-      name: "title",
-      type: "text",
-      localized: true,
-      required: true,
-      label: t3("Titre", "Title", "العنوان"),
-    },
     slugField("title", { unique: false }),
     siteField(),
     {
@@ -133,200 +128,222 @@ export const Services: CollectionConfig = {
       },
     },
     {
-      type: "row",
-      fields: [
+      type: "tabs",
+      tabs: [
         {
-          // Legacy (typed quote form, before Phase 5a): kept for old requests and ?activite= links.
-          name: "activityKey",
-          type: "select",
-          options: [...activityOptions],
-          label: t3("Activité", "Activity", "النشاط"),
-          admin: {
-            hidden: true,
-            width: "50%",
-            description: t3(
-              "Relie le service au formulaire de devis. Vide = le bouton « Devis » mène à la page Contact.",
-              "Links the service to the quote form. Empty = the quote button leads to the Contact page.",
-              "يربط الخدمة باستمارة التسعيرة. فارغ = يؤدي زر التسعيرة إلى صفحة الاتصال.",
-            ),
-          },
-        },
-        {
-          name: "icon",
-          type: "select",
-          required: true,
-          defaultValue: "Sun",
-          options: serviceIconOptions,
-          label: t3("Icône", "Icon", "الأيقونة"),
-          admin: { width: "25%" },
-        },
-        {
-          name: "order",
-          type: "number",
-          required: true,
-          defaultValue: 0,
-          label: t3("Ordre", "Order", "الترتيب"),
-          admin: { width: "25%" },
-        },
-      ],
-    },
-    {
-      name: "shortDescription",
-      type: "textarea",
-      localized: true,
-      required: true,
-      maxLength: 240,
-      label: t3("Description courte", "Short description", "وصف قصير"),
-      admin: {
-        description: t3(
-          "Affichée sur les cartes (≈ 1 phrase).",
-          "Shown on cards (≈ 1 sentence).",
-          "تظهر على البطاقات (جملة واحدة تقريباً).",
-        ),
-      },
-    },
-    {
-      name: "body",
-      type: "richText",
-      localized: true,
-      label: t3("Contenu", "Body", "المحتوى"),
-    },
-    {
-      // Shared rows (same anchors in every language), translated text.
-      name: "sections",
-      type: "array",
-      label: t3("Sections de la page", "Page sections", "أقسام الصفحة"),
-      labels: {
-        singular: t3("Section", "Section", "قسم"),
-        plural: t3("Sections", "Sections", "الأقسام"),
-      },
-      admin: {
-        description: t3(
-          "Parties de la page avec leur propre ancre, ex. #commercial → /fr/services/installation-raccordee#commercial.",
-          "Parts of the page with their own anchor, e.g. #commercial → /fr/services/installation-raccordee#commercial.",
-          "أجزاء من الصفحة لكلّ منها مرساة، مثل ‎#commercial.",
-        ),
-      },
-      fields: [
-        {
-          type: "row",
+          label: t3("Essentiel", "Essentials", "الأساسيات"),
           fields: [
             {
-              name: "anchor",
+              name: "title",
               type: "text",
+              localized: true,
               required: true,
-              label: t3("Ancre", "Anchor", "المرساة"),
-              validate: (value: string | null | undefined) =>
-                (typeof value === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) ||
-                "Lowercase letters, digits and hyphens only (e.g. commercial).",
-              admin: { width: "50%" },
+              label: t3("Titre", "Title", "العنوان"),
             },
             {
-              name: "icon",
-              type: "select",
-              options: serviceIconOptions,
-              label: t3("Icône", "Icon", "الأيقونة"),
-              admin: { width: "50%" },
+              type: "row",
+              fields: [
+                {
+                  // Legacy (typed quote form, before Phase 5a): kept for old requests and ?activite= links.
+                  name: "activityKey",
+                  type: "select",
+                  options: [...activityOptions],
+                  label: t3("Activité", "Activity", "النشاط"),
+                  admin: {
+                    hidden: true,
+                    width: "50%",
+                    description: t3(
+                      "Relie le service au formulaire de devis. Vide = le bouton « Devis » mène à la page Contact.",
+                      "Links the service to the quote form. Empty = the quote button leads to the Contact page.",
+                      "يربط الخدمة باستمارة التسعيرة. فارغ = يؤدي زر التسعيرة إلى صفحة الاتصال.",
+                    ),
+                  },
+                },
+                {
+                  name: "icon",
+                  type: "select",
+                  required: true,
+                  defaultValue: "Sun",
+                  options: serviceIconOptions,
+                  label: t3("Icône", "Icon", "الأيقونة"),
+                  admin: { width: "25%" },
+                },
+                {
+                  name: "order",
+                  type: "number",
+                  required: true,
+                  defaultValue: 0,
+                  label: t3("Ordre", "Order", "الترتيب"),
+                  admin: { width: "25%" },
+                },
+              ],
+            },
+            {
+              name: "shortDescription",
+              type: "textarea",
+              localized: true,
+              required: true,
+              maxLength: 240,
+              label: t3("Description courte", "Short description", "وصف قصير"),
+              admin: {
+                description: t3(
+                  "Affichée sur les cartes (≈ 1 phrase).",
+                  "Shown on cards (≈ 1 sentence).",
+                  "تظهر على البطاقات (جملة واحدة تقريباً).",
+                ),
+              },
+            },
+            {
+              name: "heroImage",
+              type: "upload",
+              relationTo: "media",
+              label: t3("Image principale", "Hero image", "الصورة الرئيسية"),
+            },
+            {
+              name: "body",
+              type: "richText",
+              localized: true,
+              label: t3("Contenu", "Body", "المحتوى"),
             },
           ],
         },
         {
-          name: "title",
-          type: "text",
-          localized: true,
-          required: true,
-          label: t3("Titre", "Title", "العنوان"),
-        },
-        {
-          name: "body",
-          type: "richText",
-          localized: true,
-          label: t3("Contenu", "Body", "المحتوى"),
-        },
-        {
-          name: "image",
-          type: "upload",
-          relationTo: "media",
-          label: t3("Image", "Image", "صورة"),
+          label: t3("Plus d'options", "More options", "خيارات إضافية"),
+          fields: [
+            {
+              // Shared rows (same anchors in every language), translated text.
+              name: "sections",
+              type: "array",
+              label: t3("Sections de la page", "Page sections", "أقسام الصفحة"),
+              labels: {
+                singular: t3("Section", "Section", "قسم"),
+                plural: t3("Sections", "Sections", "الأقسام"),
+              },
+              admin: {
+                description: t3(
+                  "Parties de la page avec leur propre ancre, ex. #commercial → /fr/services/installation-raccordee#commercial.",
+                  "Parts of the page with their own anchor, e.g. #commercial → /fr/services/installation-raccordee#commercial.",
+                  "أجزاء من الصفحة لكلّ منها مرساة، مثل ‎#commercial.",
+                ),
+              },
+              fields: [
+                {
+                  type: "row",
+                  fields: [
+                    {
+                      name: "anchor",
+                      type: "text",
+                      required: true,
+                      label: t3("Ancre", "Anchor", "المرساة"),
+                      validate: (value: string | null | undefined) =>
+                        (typeof value === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) ||
+                        "Lowercase letters, digits and hyphens only (e.g. commercial).",
+                      admin: { width: "50%" },
+                    },
+                    {
+                      name: "icon",
+                      type: "select",
+                      options: serviceIconOptions,
+                      label: t3("Icône", "Icon", "الأيقونة"),
+                      admin: { width: "50%" },
+                    },
+                  ],
+                },
+                {
+                  name: "title",
+                  type: "text",
+                  localized: true,
+                  required: true,
+                  label: t3("Titre", "Title", "العنوان"),
+                },
+                {
+                  name: "body",
+                  type: "richText",
+                  localized: true,
+                  label: t3("Contenu", "Body", "المحتوى"),
+                },
+                {
+                  name: "image",
+                  type: "upload",
+                  relationTo: "media",
+                  label: t3("Image", "Image", "صورة"),
+                },
+              ],
+            },
+            {
+              // Localized array: each language keeps its own list of benefits.
+              name: "benefits",
+              type: "array",
+              localized: true,
+              label: t3("Bénéfices", "Benefits", "الفوائد"),
+              labels: {
+                singular: t3("Bénéfice", "Benefit", "فائدة"),
+                plural: t3("Bénéfices", "Benefits", "الفوائد"),
+              },
+              fields: [
+                {
+                  name: "text",
+                  type: "text",
+                  required: true,
+                  label: t3("Texte", "Text", "النص"),
+                },
+              ],
+            },
+            {
+              // Shared steps with translated text, so the process stays aligned across languages.
+              name: "process",
+              type: "array",
+              label: t3("Démarche", "Process", "المنهجية"),
+              labels: {
+                singular: t3("Étape", "Step", "خطوة"),
+                plural: t3("Étapes", "Steps", "الخطوات"),
+              },
+              fields: [
+                {
+                  name: "title",
+                  type: "text",
+                  localized: true,
+                  required: true,
+                  label: t3("Titre", "Title", "العنوان"),
+                },
+                {
+                  name: "description",
+                  type: "textarea",
+                  localized: true,
+                  label: t3("Description", "Description", "الوصف"),
+                },
+              ],
+            },
+            {
+              name: "crossSell",
+              type: "relationship",
+              relationTo: "services",
+              hasMany: true,
+              label: t3("Chez notre société sœur", "At our sister company", "لدى شركتنا الشقيقة"),
+              // Services of the other sites of the group.
+              filterOptions: ({ siblingData }) => {
+                const site = idOf((siblingData as { site?: unknown }).site);
+                return site !== null ? { site: { not_equals: site } } : true;
+              },
+              admin: {
+                description: t3(
+                  "Services complémentaires d'une autre société du groupe, proposés en bas de cette page (ex. vidéosurveillance pour une centrale solaire).",
+                  "Complementary services of another group company, suggested at the bottom of this page (e.g. video surveillance for a solar plant).",
+                  "خدمات مكمّلة لدى شركة أخرى من المجموعة تُقترح أسفل هذه الصفحة.",
+                ),
+              },
+            },
+            {
+              name: "faqRefs",
+              type: "relationship",
+              relationTo: "faq",
+              hasMany: true,
+              label: t3("Questions fréquentes liées", "Related FAQ", "أسئلة شائعة مرتبطة"),
+            },
+            seoField,
+          ],
         },
       ],
     },
-    {
-      name: "heroImage",
-      type: "upload",
-      relationTo: "media",
-      label: t3("Image principale", "Hero image", "الصورة الرئيسية"),
-    },
-    {
-      // Localized array: each language keeps its own list of benefits.
-      name: "benefits",
-      type: "array",
-      localized: true,
-      label: t3("Bénéfices", "Benefits", "الفوائد"),
-      labels: {
-        singular: t3("Bénéfice", "Benefit", "فائدة"),
-        plural: t3("Bénéfices", "Benefits", "الفوائد"),
-      },
-      fields: [
-        {
-          name: "text",
-          type: "text",
-          required: true,
-          label: t3("Texte", "Text", "النص"),
-        },
-      ],
-    },
-    {
-      // Shared steps with translated text, so the process stays aligned across languages.
-      name: "process",
-      type: "array",
-      label: t3("Démarche", "Process", "المنهجية"),
-      labels: {
-        singular: t3("Étape", "Step", "خطوة"),
-        plural: t3("Étapes", "Steps", "الخطوات"),
-      },
-      fields: [
-        {
-          name: "title",
-          type: "text",
-          localized: true,
-          required: true,
-          label: t3("Titre", "Title", "العنوان"),
-        },
-        {
-          name: "description",
-          type: "textarea",
-          localized: true,
-          label: t3("Description", "Description", "الوصف"),
-        },
-      ],
-    },
-    {
-      name: "crossSell",
-      type: "relationship",
-      relationTo: "services",
-      hasMany: true,
-      label: t3("Chez notre société sœur", "At our sister company", "لدى شركتنا الشقيقة"),
-      // Services of the other sites of the group.
-      filterOptions: ({ siblingData }) => {
-        const site = idOf((siblingData as { site?: unknown }).site);
-        return site !== null ? { site: { not_equals: site } } : true;
-      },
-      admin: {
-        description: t3(
-          "Services complémentaires d'une autre société du groupe, proposés en bas de cette page (ex. vidéosurveillance pour une centrale solaire).",
-          "Complementary services of another group company, suggested at the bottom of this page (e.g. video surveillance for a solar plant).",
-          "خدمات مكمّلة لدى شركة أخرى من المجموعة تُقترح أسفل هذه الصفحة.",
-        ),
-      },
-    },
-    {
-      name: "faqRefs",
-      type: "relationship",
-      relationTo: "faq",
-      hasMany: true,
-      label: t3("Questions fréquentes liées", "Related FAQ", "أسئلة شائعة مرتبطة"),
-    },
-    seoField,
   ],
 };

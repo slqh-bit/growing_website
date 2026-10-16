@@ -2,6 +2,7 @@ import type { CollectionConfig } from "payload";
 import { managedSiteIds, siteContentAccess } from "../cms/access";
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
+import { workspaceFilter, workspaceSiteId } from "../cms/workspace-server";
 
 const httpsUrl = (value: string | null | undefined) =>
   !value || /^https:\/\/[^\s]+$/.test(value) || "Use an https:// URL.";
@@ -18,6 +19,7 @@ export const Partners: CollectionConfig = {
     plural: t3("Partenaires & marques", "Partners & brands", "الشركاء والعلامات"),
   },
   admin: {
+    baseFilter: workspaceFilter("sites"),
     useAsTitle: "name",
     defaultColumns: ["name", "kind", "sites", "showInStrip", "order"],
     group: groups.content,
@@ -74,7 +76,7 @@ export const Partners: CollectionConfig = {
       hasMany: true,
       required: true,
       label: t3("Sites", "Sites", "المواقع"),
-      defaultValue: ({ user }: { user?: unknown }) => managedSiteIds(user)?.slice(0, 1),
+      defaultValue: async ({ req }) => [await workspaceSiteId(req)].filter((id) => id !== undefined),
       filterOptions: ({ user }) => {
         const ids = managedSiteIds(user);
         return ids ? { id: { in: ids } } : true;

@@ -4,6 +4,7 @@ import { siteField } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
 import { choiceTypes, questionTypes, questionsProblem, type QuestionType } from "../lib/devis/form-def";
+import { workspaceFilter } from "../cms/workspace-server";
 
 const KEY = /^[a-zA-Z][a-zA-Z0-9]*$/;
 
@@ -40,8 +41,9 @@ export const DevisForms: CollectionConfig = {
     plural: t3("Formulaires de devis", "Quote forms", "استمارات التسعيرة"),
   },
   admin: {
+    baseFilter: workspaceFilter("site"),
     useAsTitle: "title",
-    defaultColumns: ["title", "site", "updatedAt"],
+    defaultColumns: ["title", "updatedAt"],
     group: groups.leads,
     description: t3(
       "Les questions techniques posées pour un service. Reliez un formulaire à un service dans Services → Formulaire de devis.",

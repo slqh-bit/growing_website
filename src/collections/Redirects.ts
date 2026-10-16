@@ -4,6 +4,7 @@ import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
 import { locales } from "../i18n/config";
 import { normalizeRedirectPath } from "../lib/redirects";
+import { workspaceFilter, workspaceSiteId } from "../cms/workspace-server";
 
 const localePrefix = new RegExp(`^/(${locales.join("|")})(/|$)`);
 
@@ -28,6 +29,7 @@ export const Redirects: CollectionConfig = {
     plural: t3("Redirections", "Redirects", "إعادات التوجيه"),
   },
   admin: {
+    baseFilter: workspaceFilter("sites"),
     useAsTitle: "from",
     defaultColumns: ["from", "to", "sites", "permanent"],
     group: groups.settings,
@@ -71,7 +73,7 @@ export const Redirects: CollectionConfig = {
       relationTo: "sites",
       hasMany: true,
       label: t3("Sites", "Sites", "المواقع"),
-      defaultValue: ({ user }: { user?: unknown }) => managedSiteIds(user)?.slice(0, 1),
+      defaultValue: async ({ req }) => [await workspaceSiteId(req)].filter((id) => id !== undefined),
       filterOptions: ({ user }) => {
         const ids = managedSiteIds(user);
         return ids ? { id: { in: ids } } : true;

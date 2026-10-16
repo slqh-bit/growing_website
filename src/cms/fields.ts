@@ -1,5 +1,6 @@
 import type { Field, GroupField, RelationshipField, TextField } from "payload";
 import { managedSiteIds } from "./access";
+import { workspaceSiteId } from "./workspace-server";
 import { t3 } from "./labels";
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -52,8 +53,9 @@ export function slugField(sourceField = "title", { unique = true }: { unique?: b
 }
 
 /**
- * The website a document belongs to (plan §5). Editors can only pick the
- * sites they manage (Users → Sites gérés), and get their first one by default.
+ * The website a document belongs to (plan §5): the one the admin is working on
+ * (its workspace). Only administrators see the field and can move a document
+ * to another site; editors' documents stay on the site they were created on.
  */
 export function siteField(): RelationshipField {
   return {
@@ -63,13 +65,15 @@ export function siteField(): RelationshipField {
     required: true,
     index: true,
     label: t3("Site", "Site", "الموقع"),
-    defaultValue: ({ user }: { user?: unknown }) => managedSiteIds(user)?.[0],
+    defaultValue: ({ req }) => workspaceSiteId(req),
     filterOptions: ({ user }) => {
       const ids = managedSiteIds(user);
       return ids ? { id: { in: ids } } : true;
     },
     admin: {
       position: "sidebar",
+      // Shown to administrators only (the value stays in the form for editors).
+      components: { Field: "/components/admin/site-field#SiteField" },
       description: t3(
         "Le site web qui publie ce contenu.",
         "The website that publishes this content.",

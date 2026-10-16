@@ -19,6 +19,7 @@ import { notifyStatusChange } from "../lib/devis/email";
 import { generateReference, referencePrefix } from "../lib/devis/reference";
 import { clientNotifiedStatuses, type DevisStatus } from "../lib/devis/tracking";
 import { locales } from "../i18n/config";
+import { workspaceFilter } from "../cms/workspace-server";
 
 /** Legacy typed groups: only for requests made with the pre-Phase-5a form. */
 const onlyFor =
@@ -172,10 +173,13 @@ export const DevisRequests: CollectionConfig = {
     plural: t3("Demandes de devis", "Quote requests", "طلبات التسعيرة"),
   },
   admin: {
+    baseFilter: workspaceFilter("site"),
     useAsTitle: "reference",
-    defaultColumns: ["reference", "createdAt", "site", "service", "region", "fullName", "status"],
+    defaultColumns: ["reference", "createdAt", "service", "region", "fullName", "status"],
     listSearchableFields: ["reference", "fullName", "phone", "email"],
     group: groups.leads,
+    // The list is an inbox: requests by stage, the selected one beside them.
+    components: { views: { list: { Component: "/components/admin/inbox/index#Inbox" } } },
   },
   defaultSort: "-createdAt",
   access: {
