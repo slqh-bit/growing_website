@@ -28,6 +28,7 @@ import { documentExpiryTask } from "./jobs/document-expiry";
 import { Group } from "./globals/Group";
 import { defaultLocale, localeNames, locales, rtlLocales } from "./i18n/config";
 import { migrations } from "./migrations";
+import { assertProductionEnv } from "./lib/security/production-env";
 
 /**
  * SMTP email (devis notifications, admin password resets). Only enabled when
@@ -88,6 +89,11 @@ export default buildConfig({
       // What is waiting: new quote requests, quotes to send, documents to renew.
       views: { dashboard: { Component: "/components/admin/home/index#Home" } },
     },
+  },
+  // Refuse to start production with a placeholder/weak PAYLOAD_SECRET (the
+  // secret signs admin sessions). Runs at server startup, not during build.
+  onInit: async () => {
+    assertProductionEnv();
   },
   collections: [
     Pages,
