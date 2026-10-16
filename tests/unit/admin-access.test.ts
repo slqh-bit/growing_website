@@ -1,8 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import type { Access, Field, Tab } from "payload";
-import { siteContentAccess, siteManagers } from "../../src/cms/access";
+import { keepOtherSites, siteContentAccess, siteManagers } from "../../src/cms/access";
+import { sitesField } from "../../src/cms/fields";
 import { Media } from "../../src/collections/Media";
+import { Partners } from "../../src/collections/Partners";
+import { Redirects } from "../../src/collections/Redirects";
 import { Sites } from "../../src/collections/Sites";
 
 type AccessArgs = Parameters<Access>[0];
@@ -132,5 +135,45 @@ describe("Media access", () => {
     assert.deepEqual(sitesField.filterOptions({ user: hikviewEditor } as never), { id: { in: [11] } });
     assert.equal(sitesField.filterOptions({ id: 5, user: hikviewEditor } as never), true);
     assert.equal(sitesField.filterOptions({ user: admin } as never), true);
+  });
+});
+
+describe("Shared documents' sites (partners, redirects)", () => {
+  // Growing = 10, Hikview = 11, group = 12.
+  it("keeps the other companies' sites when an editor saves", () => {
+    assert.deepEqual(keepOtherSites(hikviewEditor, [10, 11], [10, 11]), [10, 11]);
+    assert.deepEqual(keepOtherSites(hikviewEditor, [11], [10, 11]), [10, 11]);
+    assert.deepEqual(keepOtherSites(hikviewEditor, [{ id: 11 }], [{ id: 10 }, { id: 11 }]), [10, 11]);
+  });
+
+  it("lets an editor remove or add only the sites they manage", () => {
+    assert.deepEqual(keepOtherSites(hikviewEditor, [10], [10, 11]), [10]);
+    assert.deepEqual(keepOtherSites(hikviewEditor, [10, 11, 12], [10]), [10, 11]);
+  });
+
+  it("leaves administrators and unrestricted editors free", () => {
+    assert.deepEqual(keepOtherSites(admin, [12], [10, 11]), [12]);
+    assert.deepEqual(keepOtherSites(anyEditor, [], [10, 11]), []);
+  });
+
+  it("keeps the stored sites when the field isn't sent", () => {
+    assert.equal(keepOtherSites(hikviewEditor, undefined, [10, 11]), undefined);
+  });
+
+  const field = sitesField() as ReturnType<typeof sitesField> & { filterOptions: (args: never) => unknown };
+
+  it("offers an editor their sites plus those already on the document", () => {
+    assert.deepEqual(field.filterOptions({ user: hikviewEditor, siblingData: {} } as never), { id: { in: [11] } });
+    assert.deepEqual(field.filterOptions({ user: hikviewEditor, siblingData: { sites: [10, 11] } } as never), {
+      id: { in: [11, 10, 11] },
+    });
+    assert.equal(field.filterOptions({ user: admin, siblingData: { sites: [10] } } as never), true);
+  });
+
+  it("is used by partners and redirects", () => {
+    for (const collection of [Partners, Redirects]) {
+      const sites = collection.fields.find((f) => "name" in f && f.name === "sites") as { hooks?: { beforeValidate?: unknown[] } };
+      assert.equal(sites.hooks?.beforeValidate?.length, 1, collection.slug);
+    }
   });
 });
