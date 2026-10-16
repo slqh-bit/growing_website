@@ -7,7 +7,7 @@ import { findRedirect, redirectTarget } from "@/lib/redirects";
 import { isSiteKey, matchSite, normalizeHost, SITE_PREVIEW_COOKIE, type SiteKey } from "@/sites/config";
 
 /**
- * The site a request belongs to. The middleware rewrites every public URL to
+ * The site a request belongs to. The proxy (src/proxy.ts) rewrites every public URL to
  * /[domain]/[locale]/…, so pages stay statically cached per domain and resolve
  * their site here from the (cached) domains configured in the admin.
  */
@@ -21,7 +21,7 @@ export async function resolveSiteKey(domain: string): Promise<SiteKey> {
 
 /**
  * The site of the current request outside a page (server actions): from the
- * Host header, like the middleware (including the development preview cookie).
+ * Host header, like the proxy (including the development preview cookie).
  */
 export async function currentSiteKey(): Promise<SiteKey> {
   const [h, c] = await Promise.all([headers(), cookies()]);

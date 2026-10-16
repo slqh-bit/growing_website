@@ -6,7 +6,7 @@ import { getPayload } from "payload";
 import config from "@payload-config";
 import { currentSiteKey } from "@/lib/site";
 import { isValidTnPhone, normalizeTnPhone } from "./phone";
-import { clientIp, takeToken } from "./rate-limit";
+import { clientIp, takeToken } from "@/lib/rate-limit";
 import { buildTrackingView, normalizeReference, type TrackingInput, type TrackingView } from "./tracking";
 
 /**

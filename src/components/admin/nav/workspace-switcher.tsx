@@ -45,6 +45,8 @@ export function WorkspaceSwitcher({ sites, currentId, label }: { sites: Switcher
   const choose = (id: Id) => {
     if (id === currentId) return setOpen(false);
     document.cookie = `${WORKSPACE_COOKIE}=${encodeURIComponent(String(id))}; path=/; max-age=31536000; samesite=lax`;
+    // A full reload on purpose: the admin's server-rendered nav and lists follow the cookie.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.assign("/admin");
   };
 

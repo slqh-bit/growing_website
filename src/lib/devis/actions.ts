@@ -12,7 +12,7 @@ import { attachmentMimeType, checkAttachments, matchesSignature } from "./attach
 import { getDevisChoices, leadSite } from "./choices";
 import { attachmentsMode, type FormSnapshot } from "./form-def";
 import { notifyNewLead } from "./notify";
-import { clientIp, takeToken } from "./rate-limit";
+import { clientIp, takeToken } from "@/lib/rate-limit";
 import { devisSchema, fieldErrorsOf, type DevisErrorKey } from "./schema";
 import { generateReference, referencePrefix } from "./reference";
 

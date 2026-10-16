@@ -1,6 +1,6 @@
 import { after } from "next/server";
 import type { CollectionAfterChangeHook, CollectionConfig, Field } from "payload";
-import { admins, authenticated, ownSites } from "../cms/access";
+import { admins, ownSites, siteContentAccess } from "../cms/access";
 import { siteField } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { devisStatusOptions } from "../cms/options";
@@ -184,7 +184,7 @@ export const DevisRequests: CollectionConfig = {
   defaultSort: "-createdAt",
   access: {
     // Team members can log phone/walk-in leads by hand from the admin.
-    create: authenticated,
+    create: siteContentAccess().create,
     read: ownSites,
     update: ownSites,
     delete: admins,

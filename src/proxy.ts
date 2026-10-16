@@ -20,7 +20,7 @@ const allowSitePreview = process.env.NODE_ENV !== "production";
  *    site the hostname belongs to from the domains set in the admin
  *    (src/lib/site.ts). Browser URLs never change.
  */
-export default function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   let host = normalizeHost(request.headers.get("host"));
 
   const previewParam = allowSitePreview ? request.nextUrl.searchParams.get("site") : null;
@@ -31,11 +31,14 @@ export default function middleware(request: NextRequest) {
 
   const response = handleI18nRouting(request);
 
-  const rewrite = response.headers.get("x-middleware-rewrite");
-  if (rewrite) {
-    const url = new URL(rewrite);
+  // Every response that renders a page (not a redirect) goes to /<host>/…. next-intl
+  // only sets a rewrite when it changes the path; an already-localized URL (/fr/…)
+  // comes back as next(), which keeps its request headers (the locale) here too.
+  if (!response.headers.has("location")) {
+    const url = new URL(response.headers.get("x-middleware-rewrite") ?? request.url);
     url.pathname = `/${host}${url.pathname}`;
     response.headers.set("x-middleware-rewrite", url.toString());
+    response.headers.delete("x-middleware-next");
   }
 
   if (previewParam !== null) {

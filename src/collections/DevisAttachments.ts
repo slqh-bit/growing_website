@@ -1,5 +1,5 @@
 import type { CollectionConfig } from "payload";
-import { admins, authenticated, ownSites } from "../cms/access";
+import { admins, ownSites, siteContentAccess } from "../cms/access";
 import { siteField } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { attachmentMimeTypes } from "../lib/devis/attachments";
@@ -31,7 +31,7 @@ export const DevisAttachments: CollectionConfig = {
   },
   access: {
     read: ownSites,
-    create: authenticated,
+    create: siteContentAccess().create,
     update: ownSites,
     delete: admins,
   },

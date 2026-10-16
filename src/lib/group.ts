@@ -13,7 +13,7 @@ export type SiteLink = (path: string) => string;
  * How to link to another site of the group (null: it has no address yet).
  *
  * On an address the sites share (onSharedDevAddress), the link stays on it and
- * switches site with `?site=<key>` (middleware).
+ * switches site with `?site=<key>` (src/proxy.ts).
  */
 export async function siteLink(site: Pick<Site, "url" | "domains" | "key">): Promise<SiteLink | null> {
   if (!site.url && !site.domains?.length && (await onSharedDevAddress())) {

@@ -4,6 +4,7 @@ import type { Media, Site } from "@/payload-types";
 import { isLocalhost, type SiteKey } from "@/sites/config";
 import { imageSource } from "@/lib/cms/media";
 import { getSite } from "@/lib/cms/queries";
+import { signOgTitle } from "@/lib/og-signature";
 
 export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -89,7 +90,7 @@ export async function buildMetadata({
   // The page's image, else the site's default (Sites → Marque), else one generated in its colours.
   const picked = imageSource(seo?.ogImage ?? image, "hero") ?? imageSource(settings.ogImage, "hero");
   const share = picked ?? {
-    src: `/${locale}/og${finalTitle ? `?title=${encodeURIComponent(finalTitle)}` : ""}`,
+    src: `/${locale}/og${finalTitle ? `?title=${encodeURIComponent(finalTitle)}&s=${signOgTitle(finalTitle)}` : ""}`,
     width: 1200,
     height: 630,
     alt: finalTitle ?? companyName,

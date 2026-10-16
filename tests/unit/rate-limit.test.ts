@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { clientIp, takeToken } from "../../src/lib/devis/rate-limit";
+import { clientIp, takeToken } from "../../src/lib/rate-limit";
 
 describe("takeToken — sliding window", () => {
   it("allows `limit` hits per window, then blocks", () => {
