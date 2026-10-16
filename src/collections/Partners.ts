@@ -1,8 +1,9 @@
 import type { CollectionConfig } from "payload";
-import { managedSiteIds, siteContentAccess } from "../cms/access";
+import { siteContentAccess } from "../cms/access";
+import { sitesField } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
-import { workspaceFilter, workspaceSiteId } from "../cms/workspace-server";
+import { workspaceFilter } from "../cms/workspace-server";
 
 const httpsUrl = (value: string | null | undefined) =>
   !value || /^https:\/\/[^\s]+$/.test(value) || "Use an https:// URL.";
@@ -69,20 +70,7 @@ export const Partners: CollectionConfig = {
         ),
       },
     },
-    {
-      name: "sites",
-      type: "relationship",
-      relationTo: "sites",
-      hasMany: true,
-      required: true,
-      label: t3("Sites", "Sites", "المواقع"),
-      defaultValue: async ({ req }) => [await workspaceSiteId(req)].filter((id) => id !== undefined),
-      filterOptions: ({ user }) => {
-        const ids = managedSiteIds(user);
-        return ids ? { id: { in: ids } } : true;
-      },
-      admin: { position: "sidebar" },
-    },
+    sitesField({ required: true }),
     {
       name: "services",
       type: "relationship",

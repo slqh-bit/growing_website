@@ -380,6 +380,10 @@ export interface Media {
    * Describes the image for screen readers and SEO (translate in each language).
    */
   alt: string;
+  /**
+   * The websites that use this image: their editors can replace it or change its text.
+   */
+  sites: (number | Site)[];
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -2292,6 +2296,7 @@ export interface CompanyDocumentsSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  sites?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

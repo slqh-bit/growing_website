@@ -1,10 +1,11 @@
 import type { CollectionConfig } from "payload";
-import { managedSiteIds, siteContentAccess } from "../cms/access";
+import { siteContentAccess } from "../cms/access";
+import { sitesField } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
 import { locales } from "../i18n/config";
 import { normalizeRedirectPath } from "../lib/redirects";
-import { workspaceFilter, workspaceSiteId } from "../cms/workspace-server";
+import { workspaceFilter } from "../cms/workspace-server";
 
 const localePrefix = new RegExp(`^/(${locales.join("|")})(/|$)`);
 
@@ -67,22 +68,7 @@ export const Redirects: CollectionConfig = {
         ),
       },
     },
-    {
-      name: "sites",
-      type: "relationship",
-      relationTo: "sites",
-      hasMany: true,
-      label: t3("Sites", "Sites", "المواقع"),
-      defaultValue: async ({ req }) => [await workspaceSiteId(req)].filter((id) => id !== undefined),
-      filterOptions: ({ user }) => {
-        const ids = managedSiteIds(user);
-        return ids ? { id: { in: ids } } : true;
-      },
-      admin: {
-        position: "sidebar",
-        description: t3("Vide = tous les sites.", "Empty = every site.", "فارغ = كل المواقع."),
-      },
-    },
+    sitesField({ description: t3("Vide = tous les sites.", "Empty = every site.", "فارغ = كل المواقع.") }),
     {
       name: "permanent",
       type: "checkbox",

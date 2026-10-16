@@ -1,5 +1,5 @@
 import type { Field, GroupField, RelationshipField, TextField } from "payload";
-import { managedSiteIds } from "./access";
+import { keepOtherSites, managedSiteIds, relationIds } from "./access";
 import { workspaceSiteId } from "./workspace-server";
 import { t3 } from "./labels";
 
@@ -81,6 +81,39 @@ export function siteField(): RelationshipField {
       ),
     },
   };
+}
+
+/**
+ * The websites a shared document is published on (partners, redirects). New
+ * documents start on the workspace. Editors pick among the sites they manage;
+ * the other companies' sites already on the document stay, so saving a shared
+ * document neither fails validation nor removes them.
+ */
+export function sitesField({
+  required = false,
+  description,
+}: { required?: boolean; description?: ReturnType<typeof t3> } = {}): RelationshipField {
+  return {
+    name: "sites",
+    type: "relationship",
+    relationTo: "sites",
+    hasMany: true,
+    required,
+    label: t3("Sites", "Sites", "المواقع"),
+    defaultValue: async ({ req }) => [await workspaceSiteId(req)].filter((id) => id !== undefined),
+    filterOptions: ({ user, siblingData }) => {
+      const ids = managedSiteIds(user);
+      const current = relationIds((siblingData as { sites?: unknown } | undefined)?.sites);
+      return ids ? { id: { in: [...ids, ...current] } } : true;
+    },
+    hooks: {
+      beforeValidate: [
+        ({ value, originalDoc, operation, req }) =>
+          operation === "update" ? keepOtherSites(req.user, value, originalDoc?.sites) : value,
+      ],
+    },
+    admin: { position: "sidebar", ...(description && { description }) },
+  } as RelationshipField;
 }
 
 /** One slug per site: `[{ fields: ["site", "slug"], unique: true }]`. */
