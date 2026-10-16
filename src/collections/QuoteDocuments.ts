@@ -1,5 +1,5 @@
 import { APIError, type CollectionConfig } from "payload";
-import { admins, authenticated } from "../cms/access";
+import { admins, authenticated, ownSitesQuotes } from "../cms/access";
 import { groups, t3 } from "../cms/labels";
 import { MAX_QUOTE_BYTES, quotesDir } from "../lib/devis/quote-files";
 
@@ -23,9 +23,10 @@ export const QuoteDocuments: CollectionConfig = {
     ),
   },
   access: {
-    read: authenticated,
+    // Editors limited to some sites: only their requests' quotes.
+    read: ownSitesQuotes,
     create: authenticated,
-    update: authenticated,
+    update: ownSitesQuotes,
     delete: admins,
   },
   upload: {

@@ -113,6 +113,9 @@ export default buildConfig({
     tasks: [documentExpiryTask],
     autoRun: [{ cron: "0 */10 * * * *", queue: "daily" }],
   },
+  // Nothing uses GraphQL (the admin and the site use REST / the Local API):
+  // /api/graphql answers 404 instead of exposing a second query surface.
+  graphQL: { disable: true },
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {

@@ -12,11 +12,11 @@ and the group platform plan (multi-site, phases 1–9).
 
 | Concern      | Choice                                                          |
 | ------------ | --------------------------------------------------------------- |
-| Framework    | Next.js **15.4.11** (App Router, TypeScript) — pinned, see below |
-| CMS          | Payload 3.90 embedded in the app, admin at `/admin`             |
+| Framework    | Next.js **16.4.2** (App Router, TypeScript) — pinned, see below |
+| CMS          | Payload 3.91 embedded in the app, admin at `/admin`             |
 | Database     | PostgreSQL 16 (`@payloadcms/db-postgres`)                        |
 | Styling      | Tailwind CSS v4 + CSS logical properties (RTL)                  |
-| i18n         | next-intl (`/ar`, `/fr`, `/en`, default `fr`)                   |
+| i18n         | next-intl 4 (`/ar`, `/fr`, `/en`, default `fr`)                 |
 | Animations   | CSS reveal-on-scroll; Framer Motion for interactive widgets     |
 | Forms        | Zod + React Hook Form (shared client/server validation)          |
 | Email        | Nodemailer over SMTP (Payload email adapter)                    |
@@ -24,9 +24,10 @@ and the group platform plan (multi-site, phases 1–9).
 | Analytics    | Plausible (optional, cookie-free)                               |
 | Tests        | node:test (unit) + Playwright (e2e), GitHub Actions CI          |
 
-> **Version pin:** Payload 3.90 supports Next `15.4.11–15.4.x` or `≥16.3.3`, so
-> `next` is pinned to the patched `15.4.11` and all `payload`/`@payloadcms/*`
-> packages to the same exact version. Upgrade them together.
+> **Version pin:** Payload 3.91 supports Next `15.4.11–15.4.x` or `≥16.3.3`, and
+> the 15.4 line gets no more security fixes, so `next` is pinned to `16.4.2` and
+> all `payload`/`@payloadcms/*` packages to the same exact version. Upgrade them
+> together, and run `npm audit --omit=dev` after every upgrade.
 
 ## Getting started
 
@@ -86,7 +87,7 @@ The `home` page cannot be deleted (it is the site root).
 
 Every public URL is served for the site that owns the requested domain:
 
-- `src/middleware.ts` rewrites `/{locale}/…` to `/{hostname}/{locale}/…`
+- `src/proxy.ts` rewrites `/{locale}/…` to `/{hostname}/{locale}/…`
   internally (`app/(frontend)/[domain]/[locale]`), so each domain gets its own
   statically cached pages; browser URLs don't change.
 - Pages resolve the hostname to a site (`src/lib/site.ts`) from **Sites →
@@ -446,7 +447,7 @@ src/
 │  ├─ (frontend)/[domain]/[locale]/  Public routes, per site (hostname) and locale
 │  └─ (payload)/            Payload admin + REST/GraphQL API (generated)
 ├─ collections/             Payload collections
-├─ sites/                   Site keys + hostname → site matching (shared with the middleware)
+├─ sites/                   Site keys + hostname → site matching (shared with the proxy)
 ├─ blocks/                  Page-builder block configs + renderers
 ├─ cms/                     Access control, fields, options, labels, revalidation hooks
 ├─ migrations/              Database migrations (generated)
@@ -455,7 +456,7 @@ src/
 ├─ lib/cms/                 Cached CMS queries, media helpers, page helpers
 ├─ components/              UI primitives, layout, sections, motion, cms (RichText, images)
 ├─ i18n/                    Locale config (shared with the CMS), routing
-└─ middleware.ts            Locale detection + site rewrite (skips /admin and /api)
+└─ proxy.ts                 Locale detection + site rewrite (skips /admin and /api)
 messages/                   UI-chrome catalogs: ar.json, fr.json, en.json
 scripts/seed.ts             Idempotent CMS seed (content in scripts/seed-data/)
 tests/                      unit/ (node:test) and e2e/ (Playwright)

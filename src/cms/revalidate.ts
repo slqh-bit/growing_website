@@ -21,7 +21,8 @@ function schedule(tag: string, req: PayloadRequest, context: RequestContext) {
   try {
     // `after` runs once the response is sent — i.e. after Payload committed the
     // DB transaction — so a concurrent request can't re-cache the old data.
-    after(() => revalidateTag(tag));
+    // `expire: 0`: the next visitor gets fresh content, not one more stale view.
+    after(() => revalidateTag(tag, { expire: 0 }));
   } catch {
     // Outside a Next.js request (Payload CLI): this process has no page cache.
     req.payload.logger.debug(`Skipped revalidation of "${tag}" (no request scope).`);

@@ -1,5 +1,6 @@
 import type { CollectionConfig } from "payload";
 import { admins, adminsFieldLevel, adminsOrSelf, roles } from "../cms/access";
+import { limitAuthAttempts } from "../cms/auth-rate-limit";
 import { groups, t3 } from "../cms/labels";
 
 /** CMS users (devplan §4.9). Roles: admin (everything) / editor (content). */
@@ -30,6 +31,7 @@ export const Users: CollectionConfig = {
     delete: admins,
   },
   hooks: {
+    beforeOperation: [limitAuthAttempts],
     beforeChange: [
       // The very first account (created via /admin or the seed) is always an admin,
       // so a fresh install can never lock itself out of user management.

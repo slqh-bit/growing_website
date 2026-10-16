@@ -1,9 +1,11 @@
-import "server-only";
-
 /**
  * Sliding-window rate limiter held in process memory. Enough for the single
  * app container of the v1 deployment; move to Postgres/Redis if the app ever
  * runs as several instances.
+ *
+ * Used by the quote form and tracking (server actions) and by the admin login
+ * (src/cms/auth-rate-limit.ts). Not "server-only": the Payload config, and so
+ * this module, is also loaded by the Payload CLI outside Next.js.
  */
 const hits = new Map<string, number[]>();
 const MAX_KEYS = 10_000;

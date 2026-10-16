@@ -2,7 +2,7 @@
  * The group's websites (plan §1). One Payload `sites` document per key holds
  * everything that differs between them (identity, contacts, theme, logo).
  *
- * Dependency-free: imported by the middleware (edge), the Payload config / CLI
+ * Dependency-free: imported by the proxy (src/proxy.ts), the Payload config / CLI
  * and the app.
  */
 export const siteKeys = ["growing", "hikview", "group"] as const;
@@ -23,7 +23,7 @@ export function isSiteKey(value: string): value is SiteKey {
 export const UNKNOWN_HOST = "unknown.invalid";
 
 /**
- * Hostname sent by the middleware as the `[domain]` route segment: lowercase,
+ * Hostname sent by the proxy as the `[domain]` route segment: lowercase,
  * no port, no trailing dot. Anything that isn't a plain hostname becomes
  * UNKNOWN_HOST (resolved to the default site).
  */

@@ -1,6 +1,6 @@
 import path from "path";
 import type { CollectionConfig } from "payload";
-import { anyone, authenticated } from "../cms/access";
+import { admins, anyone, authenticated } from "../cms/access";
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
 
@@ -22,7 +22,8 @@ export const Media: CollectionConfig = {
     read: anyone,
     create: authenticated,
     update: authenticated,
-    delete: authenticated,
+    // Shared by every site, so only administrators delete (like all site content).
+    delete: admins,
   },
   upload: {
     staticDir: path.resolve(process.cwd(), "media"),

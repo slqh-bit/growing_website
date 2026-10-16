@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { isValidLocale } from "@/i18n/routing";
 import { getSite } from "@/lib/cms/queries";
 import { siteOrigin } from "@/lib/metadata";
+import { isSignedOgTitle } from "@/lib/og-signature";
 import { resolveSiteKey } from "@/lib/site";
 import { brandHex } from "@/lib/theme";
 
@@ -20,7 +21,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ doma
   const settings = await getSite(site, isValidLocale(locale) && locale !== "ar" ? locale : "fr");
   const colours = brandHex(settings.theme);
 
-  const requested = new URL(request.url).searchParams.get("title")?.trim().slice(0, 140) ?? "";
+  // Only a title signed by buildMetadata (src/lib/og-signature.ts); anything else gets the tagline.
+  const query = new URL(request.url).searchParams;
+  const raw = query.get("title") ?? "";
+  const requested = isSignedOgTitle(raw, query.get("s")) ? raw.trim().slice(0, 140) : "";
   const title = requested && !ARABIC.test(requested) ? requested : settings.tagline;
   const initials = settings.monogram || settings.companyName.slice(0, 2).toUpperCase();
   const host = new URL(siteOrigin(settings)).host;

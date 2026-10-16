@@ -6,7 +6,7 @@ import { onSharedDevAddress } from "@/lib/group";
 /**
  * Development only, on an address the sites share (the machine's IP address
  * from another device): the sites, to switch between them. The choice is
- * remembered (`?site=`, middleware), so this is also the way back to the
+ * remembered (`?site=`, src/proxy.ts), so this is also the way back to the
  * group site. Never rendered in production or on localhost.
  */
 export async function DevSiteSwitcher({ site, locale }: { site: SiteKey; locale: Locale }) {

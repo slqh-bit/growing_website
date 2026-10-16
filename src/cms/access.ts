@@ -50,6 +50,27 @@ export const ownSites: Access = ({ req: { user } }) => {
   return ids ? { site: { in: ids } } : true;
 };
 
+/**
+ * Quote PDFs (QuoteDocuments) have no site of their own: an editor limited to
+ * some sites reaches only the PDFs attached to those sites' quote requests.
+ */
+export const ownSitesQuotes: Access = async ({ req }) => {
+  if (!req.user) return false;
+  const ids = managedSiteIds(req.user);
+  if (!ids) return true;
+  const { docs } = await req.payload.find({
+    collection: "devis-requests",
+    where: { and: [{ site: { in: ids } }, { quote: { exists: true } }] },
+    select: { quote: true },
+    depth: 0,
+    pagination: false,
+    overrideAccess: true,
+    req,
+  });
+  const quoteIds = docs.map((doc) => idOf(doc.quote)).filter((id): id is Id => id !== null && id !== undefined);
+  return quoteIds.length > 0 ? { id: { in: quoteIds } } : false;
+};
+
 /** Administrators, and editors for the sites they manage ("My company"). */
 export const siteManagers: Access = ({ req: { user } }) => {
   if (!user) return false;
