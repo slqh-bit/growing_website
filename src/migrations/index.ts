@@ -16,6 +16,7 @@ import * as migration_20261001_085746_upcoming_block from './20261001_085746_upc
 import * as migration_20261001_100000_hikview_home_quote_buttons from './20261001_100000_hikview_home_quote_buttons';
 import * as migration_20261001_142539_group_site from './20261001_142539_group_site';
 import * as migration_20261003_103824_service_icons_analysis_ai from './20261003_103824_service_icons_analysis_ai';
+import * as migration_20261016_094726_media_sites from './20261016_094726_media_sites';
 
 export const migrations = [
   {
@@ -106,6 +107,11 @@ export const migrations = [
   {
     up: migration_20261003_103824_service_icons_analysis_ai.up,
     down: migration_20261003_103824_service_icons_analysis_ai.down,
-    name: '20261003_103824_service_icons_analysis_ai'
+    name: '20261003_103824_service_icons_analysis_ai',
+  },
+  {
+    up: migration_20261016_094726_media_sites.up,
+    down: migration_20261016_094726_media_sites.down,
+    name: '20261016_094726_media_sites'
   },
 ];

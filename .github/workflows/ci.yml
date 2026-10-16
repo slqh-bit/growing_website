@@ -54,7 +54,7 @@ jobs:
     env:
       NEXT_PUBLIC_SITE_URL: http://localhost:3100
       DATABASE_URI: postgres://growingtech:ci-password@localhost:5432/growingtech
-      PAYLOAD_SECRET: ci-only-secret-0123456789abcdef
+      PAYLOAD_SECRET: ci-only-secret-0123456789abcdef01
       SEED_ADMIN_EMAIL: ci-admin@example.com
       SEED_ADMIN_PASSWORD: ci-admin-password-123
     steps:
@@ -115,7 +115,7 @@ jobs:
     env:
       RUN_ENV: >-
         -e DATABASE_URI=postgres://growingtech:ci-password@localhost:5432/growingtech
-        -e PAYLOAD_SECRET=ci-only-secret-0123456789abcdef
+        -e PAYLOAD_SECRET=ci-only-secret-0123456789abcdef01
         -e SERVER_URL=http://localhost:3000
     steps:
       - uses: actions/checkout@v4

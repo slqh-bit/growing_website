@@ -43,6 +43,23 @@ export function managedSiteIds(user: unknown): Id[] | null {
   return ids.length > 0 ? ids : null;
 }
 
+/**
+ * Sites of a document published on several sites (`sites`) after a save: an
+ * editor only adds or removes the sites they manage; the other companies'
+ * sites stay as they were.
+ */
+export function keepOtherSites(user: unknown, next: unknown, previous: unknown): unknown {
+  const managed = managedSiteIds(user);
+  if (!managed || !Array.isArray(next)) return next;
+  const isManaged = (id: Id) => managed.some((allowed) => String(allowed) === String(id));
+  return [...relationIds(previous).filter((id) => !isManaged(id)), ...relationIds(next).filter(isManaged)];
+}
+
+/** Ids of a hasMany relationship value (ids or populated documents). */
+export function relationIds(value: unknown): Id[] {
+  return (Array.isArray(value) ? value : []).map(idOf).filter((id): id is Id => id !== null && id !== undefined);
+}
+
 /** Staff only, limited to the sites they manage (quote requests and their files). */
 export const ownSites: Access = ({ req: { user } }) => {
   if (!user) return false;
