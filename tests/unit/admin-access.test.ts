@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import type { Access, Field, Tab } from "payload";
 import { siteContentAccess, siteManagers } from "../../src/cms/access";
+import { Media } from "../../src/collections/Media";
 import { Sites } from "../../src/collections/Sites";
 
 type AccessArgs = Parameters<Access>[0];
@@ -10,6 +11,7 @@ const as = (user: unknown, data?: Record<string, unknown>) => ({ req: { user }, 
 const admin = { id: 1, role: "admin" };
 const growingEditor = { id: 2, role: "editor", sites: [10] };
 const anyEditor = { id: 3, role: "editor", sites: [] };
+const hikviewEditor = { id: 4, role: "editor", sites: [{ id: 11, key: "hikview" }] };
 
 describe("siteContentAccess().create", () => {
   const { create } = siteContentAccess();
@@ -82,5 +84,53 @@ describe("Sites form", () => {
       assert.equal(tab.admin?.condition, undefined, labelOf(tab));
       for (const field of named(tab.fields)) assert.equal(editorMayUpdate(field), true, labelOf(tab));
     }
+  });
+});
+
+describe("Media access", () => {
+  const access = Media.access!;
+  const call = (fn: Access | undefined, user: unknown, data?: Record<string, unknown>) => fn!(as(user, data));
+  const sitesField = Media.fields.find((field) => "name" in field && field.name === "sites") as Field & {
+    hasMany: boolean;
+    access: { update: (args: never) => boolean };
+    filterOptions: (args: never) => unknown;
+  };
+
+  it("keeps images public, also for editors of another company (files are served through read)", async () => {
+    for (const user of [null, hikviewEditor, growingEditor, admin]) assert.equal(await call(access.read, user), true);
+  });
+
+  it("limits an editor's changes to their companies' images", async () => {
+    assert.deepEqual(await call(access.update, hikviewEditor), { sites: { in: [11] } });
+    assert.deepEqual(await call(access.update, growingEditor), { sites: { in: [10] } });
+    assert.equal(await call(access.update, admin), true);
+    assert.equal(await call(access.update, anyEditor), true);
+    assert.equal(await call(access.update, null), false);
+  });
+
+  it("lets an editor upload for their own company only", async () => {
+    assert.equal(await call(access.create, hikviewEditor, { alt: "x", sites: [11] }), true);
+    assert.equal(await call(access.create, hikviewEditor, { alt: "x" }), true);
+    assert.equal(await call(access.create, hikviewEditor, { alt: "x", sites: [10] }), false);
+    assert.equal(await call(access.create, hikviewEditor, { alt: "x", sites: [11, 10] }), false);
+    assert.equal(await call(access.create, null, { alt: "x", sites: [11] }), false);
+  });
+
+  it("leaves deleting to administrators", async () => {
+    assert.equal(await call(access.delete, admin), true);
+    assert.equal(await call(access.delete, hikviewEditor), false);
+    assert.equal(await call(access.delete, anyEditor), false);
+  });
+
+  it("lets only administrators share an image with, or move it to, another site", async () => {
+    assert.equal(sitesField.hasMany, true);
+    assert.equal(sitesField.access.update({ req: { user: hikviewEditor } } as never), false);
+    assert.equal(sitesField.access.update({ req: { user: admin } } as never), true);
+  });
+
+  it("offers an editor their own sites on upload, and keeps another company's site on a shared image", () => {
+    assert.deepEqual(sitesField.filterOptions({ user: hikviewEditor } as never), { id: { in: [11] } });
+    assert.equal(sitesField.filterOptions({ id: 5, user: hikviewEditor } as never), true);
+    assert.equal(sitesField.filterOptions({ user: admin } as never), true);
   });
 });

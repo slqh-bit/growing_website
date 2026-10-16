@@ -164,9 +164,9 @@ async function seedSites(payload: Payload): Promise<Record<SiteKey, Id | undefin
 
     const site = await payload.findByID({ collection: "sites", id: result.id, depth: 0 });
     if (s.logoFile && !site.logo) {
-      const logo = await uploadImage(payload, s.logoFile, () => `${s.companyName} — logo`);
+      const logo = await uploadImage(payload, s.logoFile, () => `${s.companyName} — logo`, site.id);
       const logoDark = s.logoDarkFile
-        ? await uploadImage(payload, s.logoDarkFile, () => `${s.companyName} — logo (dark)`)
+        ? await uploadImage(payload, s.logoDarkFile, () => `${s.companyName} — logo (dark)`, site.id)
         : undefined;
       await payload.update({
         collection: "sites",
@@ -182,11 +182,11 @@ async function seedSites(payload: Payload): Promise<Record<SiteKey, Id | undefin
   return ids;
 }
 
-/** Uploads an image from the repo into Media (alt text in every locale). */
-async function uploadImage(payload: Payload, file: string, alt: (l: Locale) => string): Promise<number> {
+/** Uploads an image from the repo into a site's Media (alt text in every locale). */
+async function uploadImage(payload: Payload, file: string, alt: (l: Locale) => string, site: number): Promise<number> {
   const media = await payload.create({
     collection: "media",
-    data: { alt: alt(defaultLocale) },
+    data: { alt: alt(defaultLocale), sites: [site] },
     filePath: path.resolve(dirname, "..", file),
     locale: defaultLocale,
     depth: 0,
