@@ -1,9 +1,12 @@
 import { APIError, type CollectionConfig } from "payload";
+import { allowedBlockSlugs } from "../blocks/allowed";
 import { pageBlocks } from "../blocks/config";
+import { groupBlocks } from "../blocks/group-config";
 import { siteContentAccess } from "../cms/access";
 import { seoField, siteField, slugField, uniqueSlugPerSite } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
+import { workspaceFilter, workspaceSiteId } from "../cms/workspace-server";
 
 /** Flexible, block-built marketing pages of each site: Home (slug "home"), About… (devplan §4.3). */
 export const Pages: CollectionConfig = {
@@ -13,8 +16,9 @@ export const Pages: CollectionConfig = {
     plural: t3("Pages", "Pages", "الصفحات"),
   },
   admin: {
+    baseFilter: workspaceFilter("site"),
     useAsTitle: "title",
-    defaultColumns: ["title", "slug", "site", "updatedAt"],
+    defaultColumns: ["title", "slug", "updatedAt"],
     group: groups.content,
   },
   access: siteContentAccess(),
@@ -52,6 +56,20 @@ export const Pages: CollectionConfig = {
       name: "layout",
       type: "blocks",
       blocks: pageBlocks,
+      // The group site's own sections are only offered on the group site.
+      filterOptions: async ({ data, req }) => {
+        const { site, layout } = data as { site?: number | { id: number } | null; layout?: { blockType: string }[] | null };
+        const siteId = (typeof site === "object" ? site?.id : site) ?? (await workspaceSiteId(req));
+        const doc = siteId
+          ? await req.payload.findByID({ collection: "sites", id: siteId, depth: 0, req }).catch(() => null)
+          : null;
+        return allowedBlockSlugs({
+          all: pageBlocks.map((block) => block.slug),
+          groupOnly: groupBlocks.map((block) => block.slug),
+          siteKey: doc?.key ?? null,
+          used: (layout ?? []).map((block) => block.blockType),
+        });
+      },
       label: t3("Sections", "Sections", "الأقسام"),
       labels: {
         singular: t3("Section", "Section", "قسم"),

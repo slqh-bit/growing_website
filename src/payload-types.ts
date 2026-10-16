@@ -210,50 +210,33 @@ export interface Page {
  */
 export interface Site {
   id: number;
+  email: string;
+  phone: string;
+  whatsapp?: string | null;
   /**
-   * Technical id of the site (don't change it once live).
+   * @username
    */
-  key: 'growing' | 'hikview' | 'group';
-  /**
-   * Shown for an unknown domain (and locally on localhost).
-   */
-  isDefault?: boolean | null;
-  /**
-   * E.g. https://growing-technologies.tn — used for canonical links, sharing and SEO. Empty = NEXT_PUBLIC_SITE_URL.
-   */
-  url?: string | null;
-  /**
-   * Domains that show this site (www. is matched automatically). Locally: <site>.localhost:3000.
-   */
-  domains?:
-    | {
-        domain: string;
-        id?: string | null;
-      }[]
-    | null;
-  companyName: string;
-  legalName: string;
-  /**
-   * Format : 1234567/A/B/M/000
-   */
-  matriculeFiscal?: string | null;
-  certification?: string | null;
-  /**
-   * The schema.org category announced to Google for the company.
-   */
-  businessType: 'Electrician' | 'HomeAndConstructionBusiness' | 'ProfessionalService' | 'Store' | 'LocalBusiness';
-  /**
-   * Shown on the company documents page.
-   */
-  rne?: string | null;
-  /**
-   * Subtitle of /services, e.g. “Four activities, from solar pumping to PV plants.”
-   */
-  servicesIntro?: string | null;
+  telegram?: string | null;
+  address: string;
+  city: string;
+  hours?: string | null;
+  coords: {
+    lat: number;
+    lng: number;
+  };
+  socials?: {
+    facebook?: string | null;
+    instagram?: string | null;
+    linkedin?: string | null;
+  };
   /**
    * One sentence: browser tab title, search engines, home visual.
    */
   tagline: string;
+  /**
+   * Subtitle of /services, e.g. “Four activities, from solar pumping to PV plants.”
+   */
+  servicesIntro?: string | null;
   /**
    * PNG/WebP, transparent background. Empty = badge with the initials below.
    */
@@ -288,20 +271,6 @@ export interface Site {
   theme?: {
     primary?: string | null;
     accent?: string | null;
-  };
-  email: string;
-  phone: string;
-  whatsapp?: string | null;
-  /**
-   * @username
-   */
-  telegram?: string | null;
-  address: string;
-  city: string;
-  hours?: string | null;
-  coords: {
-    lat: number;
-    lng: number;
   };
   /**
    * Header menu. The “Request a quote” button is added automatically.
@@ -340,6 +309,49 @@ export interface Site {
         }[]
       | null;
   };
+  stats?:
+    | {
+        value: string;
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Technical id of the site (don't change it once live).
+   */
+  key: 'growing' | 'hikview' | 'group';
+  /**
+   * Shown for an unknown domain (and locally on localhost).
+   */
+  isDefault?: boolean | null;
+  /**
+   * E.g. https://growing-technologies.tn — used for canonical links, sharing and SEO. Empty = NEXT_PUBLIC_SITE_URL.
+   */
+  url?: string | null;
+  /**
+   * Domains that show this site (www. is matched automatically). Locally: <site>.localhost:3000.
+   */
+  domains?:
+    | {
+        domain: string;
+        id?: string | null;
+      }[]
+    | null;
+  companyName: string;
+  legalName: string;
+  /**
+   * Format : 1234567/A/B/M/000
+   */
+  matriculeFiscal?: string | null;
+  certification?: string | null;
+  /**
+   * The schema.org category announced to Google for the company.
+   */
+  businessType: 'Electrician' | 'HomeAndConstructionBusiness' | 'ProfessionalService' | 'Store' | 'LocalBusiness';
+  /**
+   * Shown on the company documents page.
+   */
+  rne?: string | null;
   /**
    * Each new request on this site is sent to these addresses and this Telegram group. Empty = the site's email (and, for the default site, DEVIS_NOTIFY_EMAIL / TELEGRAM_CHAT_ID).
    */
@@ -355,18 +367,6 @@ export interface Site {
      */
     telegramChatId?: string | null;
   };
-  socials?: {
-    facebook?: string | null;
-    instagram?: string | null;
-    linkedin?: string | null;
-  };
-  stats?:
-    | {
-        value: string;
-        label: string;
-        id?: string | null;
-      }[]
-    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -869,7 +869,6 @@ export interface QuoteFormBlock {
  */
 export interface Service {
   id: number;
-  title: string;
   /**
    * URL segment shared by all 3 languages, e.g. pompage-solaire. Generated from the title if empty.
    */
@@ -894,6 +893,7 @@ export interface Service {
    * Adds a “Company documents” box linking to the /documents page (e.g. B2G and PV plant pages).
    */
   showDocuments?: boolean | null;
+  title: string;
   /**
    * Links the service to the quote form. Empty = the quote button leads to the Contact page.
    */
@@ -936,6 +936,7 @@ export interface Service {
    * Shown on cards (≈ 1 sentence).
    */
   shortDescription: string;
+  heroImage?: (number | null) | Media;
   body?: {
     root: {
       type: string;
@@ -1013,7 +1014,6 @@ export interface Service {
         id?: string | null;
       }[]
     | null;
-  heroImage?: (number | null) | Media;
   benefits?:
     | {
         text: string;
@@ -1114,7 +1114,6 @@ export interface DevisForm {
  */
 export interface Project {
   id: number;
-  title: string;
   /**
    * URL segment shared by all 3 languages, e.g. pompage-solaire. Generated from the title if empty.
    */
@@ -1123,6 +1122,8 @@ export interface Project {
    * The website that publishes this content.
    */
   site: number | Site;
+  featured?: boolean | null;
+  title: string;
   activity: number | Service;
   clientType: 'residentiel' | 'agricole' | 'industriel' | 'public';
   /**
@@ -1137,6 +1138,7 @@ export interface Project {
   powerKwc?: number | null;
   date: string;
   summary: string;
+  coverImage?: (number | null) | Media;
   body?: {
     root: {
       type: string;
@@ -1152,9 +1154,7 @@ export interface Project {
     };
     [k: string]: unknown;
   } | null;
-  coverImage?: (number | null) | Media;
   gallery?: (number | Media)[] | null;
-  featured?: boolean | null;
   /**
    * Optional — overrides the title and description used by search engines.
    */
@@ -1992,17 +1992,18 @@ export interface QuoteFormBlockSelect<T extends boolean = true> {
  * via the `definition` "services_select".
  */
 export interface ServicesSelect<T extends boolean = true> {
-  title?: T;
   slug?: T;
   site?: T;
   parent?: T;
   devisForm?: T;
   showPublicReferences?: T;
   showDocuments?: T;
+  title?: T;
   activityKey?: T;
   icon?: T;
   order?: T;
   shortDescription?: T;
+  heroImage?: T;
   body?: T;
   sections?:
     | T
@@ -2014,7 +2015,6 @@ export interface ServicesSelect<T extends boolean = true> {
         image?: T;
         id?: T;
       };
-  heroImage?: T;
   benefits?:
     | T
     | {
@@ -2045,9 +2045,10 @@ export interface ServicesSelect<T extends boolean = true> {
  * via the `definition` "projects_select".
  */
 export interface ProjectsSelect<T extends boolean = true> {
-  title?: T;
   slug?: T;
   site?: T;
+  featured?: T;
+  title?: T;
   activity?: T;
   clientType?: T;
   client?: T;
@@ -2056,10 +2057,9 @@ export interface ProjectsSelect<T extends boolean = true> {
   powerKwc?: T;
   date?: T;
   summary?: T;
-  body?: T;
   coverImage?: T;
+  body?: T;
   gallery?: T;
-  featured?: T;
   seo?:
     | T
     | {
@@ -2343,36 +2343,6 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "sites_select".
  */
 export interface SitesSelect<T extends boolean = true> {
-  key?: T;
-  isDefault?: T;
-  url?: T;
-  domains?:
-    | T
-    | {
-        domain?: T;
-        id?: T;
-      };
-  companyName?: T;
-  legalName?: T;
-  matriculeFiscal?: T;
-  certification?: T;
-  businessType?: T;
-  rne?: T;
-  servicesIntro?: T;
-  tagline?: T;
-  logo?: T;
-  logoDark?: T;
-  logoIncludesName?: T;
-  monogram?: T;
-  logoSubline?: T;
-  ogImage?: T;
-  favicon?: T;
-  theme?:
-    | T
-    | {
-        primary?: T;
-        accent?: T;
-      };
   email?: T;
   phone?: T;
   whatsapp?: T;
@@ -2385,6 +2355,28 @@ export interface SitesSelect<T extends boolean = true> {
     | {
         lat?: T;
         lng?: T;
+      };
+  socials?:
+    | T
+    | {
+        facebook?: T;
+        instagram?: T;
+        linkedin?: T;
+      };
+  tagline?: T;
+  servicesIntro?: T;
+  logo?: T;
+  logoDark?: T;
+  logoIncludesName?: T;
+  monogram?: T;
+  logoSubline?: T;
+  ogImage?: T;
+  favicon?: T;
+  theme?:
+    | T
+    | {
+        primary?: T;
+        accent?: T;
       };
   navItems?:
     | T
@@ -2413,6 +2405,28 @@ export interface SitesSelect<T extends boolean = true> {
               id?: T;
             };
       };
+  stats?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        id?: T;
+      };
+  key?: T;
+  isDefault?: T;
+  url?: T;
+  domains?:
+    | T
+    | {
+        domain?: T;
+        id?: T;
+      };
+  companyName?: T;
+  legalName?: T;
+  matriculeFiscal?: T;
+  certification?: T;
+  businessType?: T;
+  rne?: T;
   notify?:
     | T
     | {
@@ -2423,20 +2437,6 @@ export interface SitesSelect<T extends boolean = true> {
               id?: T;
             };
         telegramChatId?: T;
-      };
-  socials?:
-    | T
-    | {
-        facebook?: T;
-        instagram?: T;
-        linkedin?: T;
-      };
-  stats?:
-    | T
-    | {
-        value?: T;
-        label?: T;
-        id?: T;
       };
   updatedAt?: T;
   createdAt?: T;

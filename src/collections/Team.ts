@@ -3,6 +3,7 @@ import { siteContentAccess } from "../cms/access";
 import { siteField } from "../cms/fields";
 import { groups, t3 } from "../cms/labels";
 import { revalidateCollection } from "../cms/revalidate";
+import { workspaceFilter } from "../cms/workspace-server";
 
 /** Team members (devplan §4.5). The /team page stays "Coming soon" while empty. */
 export const Team: CollectionConfig = {
@@ -12,8 +13,9 @@ export const Team: CollectionConfig = {
     plural: t3("Équipe", "Team", "الفريق"),
   },
   admin: {
+    baseFilter: workspaceFilter("site"),
     useAsTitle: "name",
-    defaultColumns: ["name", "role", "order", "site"],
+    defaultColumns: ["name", "role", "order"],
     group: groups.content,
   },
   defaultSort: "order",

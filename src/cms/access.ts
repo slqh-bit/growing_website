@@ -16,6 +16,8 @@ export const authenticated: Access = ({ req: { user } }) => Boolean(user);
 
 export const admins: Access = ({ req: { user } }) => hasRole(user, "admin");
 
+export const isAdmin = (user: unknown): boolean => hasRole(user, "admin");
+
 /** Admins see everyone; editors only their own user record. */
 export const adminsOrSelf: Access = ({ req: { user } }) => {
   if (!user) return false;
@@ -48,6 +50,13 @@ export const ownSites: Access = ({ req: { user } }) => {
   return ids ? { site: { in: ids } } : true;
 };
 
+/** Administrators, and editors for the sites they manage ("My company"). */
+export const siteManagers: Access = ({ req: { user } }) => {
+  if (!user) return false;
+  const ids = managedSiteIds(user);
+  return ids ? { id: { in: ids } } : true;
+};
+
 /**
  * Access for documents owned by one site (`site` field) or several (`sites`):
  * the public reads everything published (the site filters its own queries),
@@ -65,8 +74,10 @@ export function siteContentAccess(field: "site" | "sites" = "site") {
       if (!user) return false;
       const ids = managedSiteIds(user);
       if (!ids || !data) return true; // no data = "may the Create button show?"
-      const chosen = [data[field]].flat().map(idOf).filter((id) => id !== null);
-      return chosen.length > 0 && chosen.every((id) => ids.some((allowed) => String(allowed) === String(id)));
+      const chosen = [data[field]].flat().map(idOf).filter((id) => id !== null && id !== undefined);
+      // No site sent (editors don't see the field): its default is the admin's
+      // workspace, always one of the user's own sites.
+      return chosen.every((id) => ids.some((allowed) => String(allowed) === String(id)));
     }) as Access,
     update: scoped,
     delete: admins,

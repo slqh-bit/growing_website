@@ -1,5 +1,5 @@
-import type { CollectionAfterChangeHook, CollectionConfig } from "payload";
-import { admins, anyone } from "../cms/access";
+import type { CollectionAfterChangeHook, CollectionConfig, Field } from "payload";
+import { admins, adminsFieldLevel, anyone, isAdmin, siteManagers } from "../cms/access";
 import { groups, t3 } from "../cms/labels";
 import { linkFields } from "../cms/fields";
 import { revalidateCollection } from "../cms/revalidate";
@@ -50,6 +50,14 @@ const keepSingleDefault: CollectionAfterChangeHook = async ({ doc, req, context 
 
 const revalidate = revalidateCollection("sites");
 
+/** Fields only an administrator may change, through the admin or the API. */
+const adminOnly = (fields: Field[]): Field[] =>
+  fields.map((field) =>
+    field.type === "row"
+      ? { ...field, fields: adminOnly(field.fields) }
+      : ({ ...field, access: { ...("access" in field ? field.access : undefined), update: adminsFieldLevel } } as Field),
+  );
+
 /**
  * The group's websites (plan §2, §5): one document per site with its domains,
  * company identity, contacts, key figures and brand (logo, colours). Replaces
@@ -69,9 +77,10 @@ export const Sites: CollectionConfig = {
   },
   access: {
     read: anyone,
-    // Legal identifiers, contacts and domains: admins only.
     create: admins,
-    update: admins,
+    // Editors keep their own company's contacts, brand and menus up to date;
+    // legal identifiers and domains (the Advanced tab) stay with administrators.
+    update: siteManagers,
     delete: admins,
   },
   hooks: {
@@ -83,122 +92,70 @@ export const Sites: CollectionConfig = {
       type: "tabs",
       tabs: [
         {
-          label: t3("Site web", "Website", "الموقع"),
+          label: t3("Contact", "Contact", "الاتصال"),
           fields: [
             {
               type: "row",
               fields: [
+                { name: "email", type: "email", required: true, label: t3("E-mail", "Email", "البريد الإلكتروني") },
+                { name: "phone", type: "text", required: true, label: t3("Téléphone", "Phone", "الهاتف") },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
+                { name: "whatsapp", type: "text", label: "WhatsApp" },
+                { name: "telegram", type: "text", label: "Telegram", admin: { description: "@username" } },
+              ],
+            },
+            { name: "address", type: "textarea", localized: true, required: true, label: t3("Adresse", "Address", "العنوان") },
+            {
+              type: "row",
+              fields: [
+                { name: "city", type: "text", localized: true, required: true, label: t3("Ville", "City", "المدينة") },
+                { name: "hours", type: "text", localized: true, label: t3("Horaires", "Opening hours", "أوقات العمل") },
+              ],
+            },
+            {
+              name: "coords",
+              type: "group",
+              label: t3("Coordonnées GPS (carte)", "GPS coordinates (map)", "الإحداثيات (الخريطة)"),
+              fields: [
                 {
-                  name: "key",
-                  type: "select",
-                  required: true,
-                  unique: true,
-                  label: t3("Site", "Site", "الموقع"),
-                  options: siteKeys.map((value) => ({ value, label: siteLabels[value] })),
-                  admin: {
-                    description: t3(
-                      "Identifiant technique du site (ne pas changer après la mise en ligne).",
-                      "Technical id of the site (don't change it once live).",
-                      "المعرّف التقني للموقع (لا يُغيَّر بعد النشر).",
-                    ),
-                  },
-                },
-                {
-                  name: "isDefault",
-                  type: "checkbox",
-                  defaultValue: false,
-                  label: t3("Site par défaut", "Default site", "الموقع الافتراضي"),
-                  admin: {
-                    description: t3(
-                      "Affiché pour un nom de domaine inconnu (et en local sur localhost).",
-                      "Shown for an unknown domain (and locally on localhost).",
-                      "يُعرض لاسم نطاق غير معروف (ومحلياً على localhost).",
-                    ),
-                  },
+                  type: "row",
+                  fields: [
+                    { name: "lat", type: "number", required: true, min: -90, max: 90, label: "Latitude" },
+                    { name: "lng", type: "number", required: true, min: -180, max: 180, label: "Longitude" },
+                  ],
                 },
               ],
             },
             {
-              name: "url",
-              type: "text",
-              validate: origin,
-              label: t3("Adresse publique", "Public address", "العنوان العمومي"),
-              admin: {
-                description: t3(
-                  "Ex. https://growing-technologies.tn — utilisée pour les liens canoniques, le partage et le SEO. Vide = NEXT_PUBLIC_SITE_URL.",
-                  "E.g. https://growing-technologies.tn — used for canonical links, sharing and SEO. Empty = NEXT_PUBLIC_SITE_URL.",
-                  "مثال https://growing-technologies.tn — يُستعمل للروابط الأساسية والمشاركة وSEO. فارغ = NEXT_PUBLIC_SITE_URL.",
-                ),
-              },
-            },
-            {
-              name: "domains",
-              type: "array",
-              label: t3("Noms de domaine", "Domains", "أسماء النطاقات"),
-              labels: {
-                singular: t3("Domaine", "Domain", "نطاق"),
-                plural: t3("Domaines", "Domains", "نطاقات"),
-              },
-              admin: {
-                description: t3(
-                  "Domaines qui affichent ce site (le www. est reconnu automatiquement). En local : <site>.localhost:3000.",
-                  "Domains that show this site (www. is matched automatically). Locally: <site>.localhost:3000.",
-                  "النطاقات التي تعرض هذا الموقع (يُتعرّف على www. تلقائياً). محلياً: ‎<site>.localhost:3000.",
-                ),
-              },
-              fields: [{ name: "domain", type: "text", required: true, validate: hostname, label: t3("Domaine", "Domain", "النطاق") }],
+              name: "socials",
+              type: "group",
+              label: t3("Réseaux sociaux", "Social networks", "الشبكات الاجتماعية"),
+              fields: [
+                { name: "facebook", type: "text", validate: httpsUrl, label: "Facebook" },
+                { name: "instagram", type: "text", validate: httpsUrl, label: "Instagram" },
+                { name: "linkedin", type: "text", validate: httpsUrl, label: "LinkedIn" },
+              ],
             },
           ],
         },
         {
-          label: t3("Entreprise", "Company", "الشركة"),
+          label: t3("Marque", "Brand", "الهوية البصرية"),
           fields: [
             {
-              type: "row",
-              fields: [
-                { name: "companyName", type: "text", required: true, label: t3("Nom commercial", "Trade name", "الاسم التجاري") },
-                { name: "legalName", type: "text", required: true, label: t3("Raison sociale", "Legal name", "الاسم القانوني") },
-              ],
-            },
-            {
-              type: "row",
-              fields: [
-                {
-                  name: "matriculeFiscal",
-                  type: "text",
-                  // Every company has one; the group site (not a legal entity) may not.
-                  validate: (value: string | null | undefined, { data }: { data: { key?: string } }) =>
-                    data?.key === "group" || Boolean(value?.trim()) || "Le matricule fiscal est obligatoire.",
-                  label: t3("Matricule fiscal", "Tax ID (matricule fiscal)", "المعرّف الجبائي"),
-                  admin: { description: "Format : 1234567/A/B/M/000" },
-                },
-                { name: "certification", type: "text", label: t3("Certification", "Certification", "الاعتماد") },
-              ],
-            },
-            {
-              name: "businessType",
-              type: "select",
-              required: true,
-              defaultValue: "LocalBusiness",
-              options: businessTypes.map((t) => ({ value: t.value, label: t.label })),
-              label: t3("Type d'activité (moteurs de recherche)", "Business type (search engines)", "نوع النشاط (محركات البحث)"),
-              admin: {
-                description: t3(
-                  "Catégorie schema.org annoncée à Google pour l'entreprise.",
-                  "The schema.org category announced to Google for the company.",
-                  "صنف schema.org المُعلن لمحرّك Google.",
-                ),
-              },
-            },
-            {
-              name: "rne",
+              name: "tagline",
               type: "text",
-              label: t3("Identifiant unique (RNE)", "Company ID (RNE)", "المعرّف الوحيد (السجل الوطني للمؤسسات)"),
+              localized: true,
+              required: true,
+              label: t3("Slogan", "Tagline", "الشعار النصي"),
               admin: {
                 description: t3(
-                  "Affiché sur la page Documents administratifs.",
-                  "Shown on the company documents page.",
-                  "يظهر في صفحة الوثائق الإدارية.",
+                  "Une phrase : titre de l'onglet, moteurs de recherche, visuel d'accueil.",
+                  "One sentence: browser tab title, search engines, home visual.",
+                  "جملة واحدة: عنوان التبويب، محركات البحث، صورة الصفحة الرئيسية.",
                 ),
               },
             },
@@ -215,25 +172,6 @@ export const Sites: CollectionConfig = {
                 ),
               },
             },
-            {
-              name: "tagline",
-              type: "text",
-              localized: true,
-              required: true,
-              label: t3("Slogan", "Tagline", "الشعار النصي"),
-              admin: {
-                description: t3(
-                  "Une phrase : titre de l'onglet, moteurs de recherche, visuel d'accueil.",
-                  "One sentence: browser tab title, search engines, home visual.",
-                  "جملة واحدة: عنوان التبويب، محركات البحث، صورة الصفحة الرئيسية.",
-                ),
-              },
-            },
-          ],
-        },
-        {
-          label: t3("Marque", "Brand", "الهوية البصرية"),
-          fields: [
             {
               type: "row",
               fields: [
@@ -355,47 +293,6 @@ export const Sites: CollectionConfig = {
           ],
         },
         {
-          label: t3("Contact", "Contact", "الاتصال"),
-          fields: [
-            {
-              type: "row",
-              fields: [
-                { name: "email", type: "email", required: true, label: t3("E-mail", "Email", "البريد الإلكتروني") },
-                { name: "phone", type: "text", required: true, label: t3("Téléphone", "Phone", "الهاتف") },
-              ],
-            },
-            {
-              type: "row",
-              fields: [
-                { name: "whatsapp", type: "text", label: "WhatsApp" },
-                { name: "telegram", type: "text", label: "Telegram", admin: { description: "@username" } },
-              ],
-            },
-            { name: "address", type: "textarea", localized: true, required: true, label: t3("Adresse", "Address", "العنوان") },
-            {
-              type: "row",
-              fields: [
-                { name: "city", type: "text", localized: true, required: true, label: t3("Ville", "City", "المدينة") },
-                { name: "hours", type: "text", localized: true, label: t3("Horaires", "Opening hours", "أوقات العمل") },
-              ],
-            },
-            {
-              name: "coords",
-              type: "group",
-              label: t3("Coordonnées GPS (carte)", "GPS coordinates (map)", "الإحداثيات (الخريطة)"),
-              fields: [
-                {
-                  type: "row",
-                  fields: [
-                    { name: "lat", type: "number", required: true, min: -90, max: 90, label: "Latitude" },
-                    { name: "lng", type: "number", required: true, min: -180, max: 180, label: "Longitude" },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
           label: t3("Menu", "Menu", "القائمة"),
           fields: [
             {
@@ -460,8 +357,143 @@ export const Sites: CollectionConfig = {
           ],
         },
         {
-          label: t3("Demandes de devis", "Quote requests", "طلبات التسعيرة"),
+          label: t3("Chiffres clés", "Key figures", "أرقام رئيسية"),
           fields: [
+            {
+              name: "stats",
+              type: "array",
+              maxRows: 6,
+              label: t3("Chiffres (bandeau d'accueil)", "Figures (home stats band)", "الأرقام (شريط الرئيسية)"),
+              fields: [
+                {
+                  type: "row",
+                  fields: [
+                    { name: "value", type: "text", required: true, label: t3("Valeur", "Value", "القيمة"), admin: { width: "30%" } },
+                    { name: "label", type: "text", localized: true, required: true, label: t3("Libellé", "Label", "التسمية"), admin: { width: "70%" } },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          // Identity, domains and notification routing: administrators only. The
+          // tab is hidden from editors and its fields refuse their changes.
+          label: t3("Avancé", "Advanced", "متقدّم"),
+          admin: { condition: (_data, _siblingData, { user }) => isAdmin(user) },
+          fields: adminOnly([
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "key",
+                  type: "select",
+                  required: true,
+                  unique: true,
+                  label: t3("Site", "Site", "الموقع"),
+                  options: siteKeys.map((value) => ({ value, label: siteLabels[value] })),
+                  admin: {
+                    description: t3(
+                      "Identifiant technique du site (ne pas changer après la mise en ligne).",
+                      "Technical id of the site (don't change it once live).",
+                      "المعرّف التقني للموقع (لا يُغيَّر بعد النشر).",
+                    ),
+                  },
+                },
+                {
+                  name: "isDefault",
+                  type: "checkbox",
+                  defaultValue: false,
+                  label: t3("Site par défaut", "Default site", "الموقع الافتراضي"),
+                  admin: {
+                    description: t3(
+                      "Affiché pour un nom de domaine inconnu (et en local sur localhost).",
+                      "Shown for an unknown domain (and locally on localhost).",
+                      "يُعرض لاسم نطاق غير معروف (ومحلياً على localhost).",
+                    ),
+                  },
+                },
+              ],
+            },
+            {
+              name: "url",
+              type: "text",
+              validate: origin,
+              label: t3("Adresse publique", "Public address", "العنوان العمومي"),
+              admin: {
+                description: t3(
+                  "Ex. https://growing-technologies.tn — utilisée pour les liens canoniques, le partage et le SEO. Vide = NEXT_PUBLIC_SITE_URL.",
+                  "E.g. https://growing-technologies.tn — used for canonical links, sharing and SEO. Empty = NEXT_PUBLIC_SITE_URL.",
+                  "مثال https://growing-technologies.tn — يُستعمل للروابط الأساسية والمشاركة وSEO. فارغ = NEXT_PUBLIC_SITE_URL.",
+                ),
+              },
+            },
+            {
+              name: "domains",
+              type: "array",
+              label: t3("Noms de domaine", "Domains", "أسماء النطاقات"),
+              labels: {
+                singular: t3("Domaine", "Domain", "نطاق"),
+                plural: t3("Domaines", "Domains", "نطاقات"),
+              },
+              admin: {
+                description: t3(
+                  "Domaines qui affichent ce site (le www. est reconnu automatiquement). En local : <site>.localhost:3000.",
+                  "Domains that show this site (www. is matched automatically). Locally: <site>.localhost:3000.",
+                  "النطاقات التي تعرض هذا الموقع (يُتعرّف على www. تلقائياً). محلياً: ‎<site>.localhost:3000.",
+                ),
+              },
+              fields: [{ name: "domain", type: "text", required: true, validate: hostname, label: t3("Domaine", "Domain", "النطاق") }],
+            },
+            {
+              type: "row",
+              fields: [
+                { name: "companyName", type: "text", required: true, label: t3("Nom commercial", "Trade name", "الاسم التجاري") },
+                { name: "legalName", type: "text", required: true, label: t3("Raison sociale", "Legal name", "الاسم القانوني") },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "matriculeFiscal",
+                  type: "text",
+                  // Every company has one; the group site (not a legal entity) may not.
+                  validate: (value: string | null | undefined, { data }: { data: { key?: string } }) =>
+                    data?.key === "group" || Boolean(value?.trim()) || "Le matricule fiscal est obligatoire.",
+                  label: t3("Matricule fiscal", "Tax ID (matricule fiscal)", "المعرّف الجبائي"),
+                  admin: { description: "Format : 1234567/A/B/M/000" },
+                },
+                { name: "certification", type: "text", label: t3("Certification", "Certification", "الاعتماد") },
+              ],
+            },
+            {
+              name: "businessType",
+              type: "select",
+              required: true,
+              defaultValue: "LocalBusiness",
+              options: businessTypes.map((t) => ({ value: t.value, label: t.label })),
+              label: t3("Type d'activité (moteurs de recherche)", "Business type (search engines)", "نوع النشاط (محركات البحث)"),
+              admin: {
+                description: t3(
+                  "Catégorie schema.org annoncée à Google pour l'entreprise.",
+                  "The schema.org category announced to Google for the company.",
+                  "صنف schema.org المُعلن لمحرّك Google.",
+                ),
+              },
+            },
+            {
+              name: "rne",
+              type: "text",
+              label: t3("Identifiant unique (RNE)", "Company ID (RNE)", "المعرّف الوحيد (السجل الوطني للمؤسسات)"),
+              admin: {
+                description: t3(
+                  "Affiché sur la page Documents administratifs.",
+                  "Shown on the company documents page.",
+                  "يظهر في صفحة الوثائق الإدارية.",
+                ),
+              },
+            },
             {
               name: "notify",
               type: "group",
@@ -498,42 +530,7 @@ export const Sites: CollectionConfig = {
                 },
               ],
             },
-          ],
-        },
-        {
-          label: t3("Réseaux sociaux", "Social", "الشبكات الاجتماعية"),
-          fields: [
-            {
-              name: "socials",
-              type: "group",
-              label: false,
-              fields: [
-                { name: "facebook", type: "text", validate: httpsUrl, label: "Facebook" },
-                { name: "instagram", type: "text", validate: httpsUrl, label: "Instagram" },
-                { name: "linkedin", type: "text", validate: httpsUrl, label: "LinkedIn" },
-              ],
-            },
-          ],
-        },
-        {
-          label: t3("Chiffres clés", "Key figures", "أرقام رئيسية"),
-          fields: [
-            {
-              name: "stats",
-              type: "array",
-              maxRows: 6,
-              label: t3("Chiffres (bandeau d'accueil)", "Figures (home stats band)", "الأرقام (شريط الرئيسية)"),
-              fields: [
-                {
-                  type: "row",
-                  fields: [
-                    { name: "value", type: "text", required: true, label: t3("Valeur", "Value", "القيمة"), admin: { width: "30%" } },
-                    { name: "label", type: "text", localized: true, required: true, label: t3("Libellé", "Label", "التسمية"), admin: { width: "70%" } },
-                  ],
-                },
-              ],
-            },
-          ],
+          ]),
         },
       ],
     },

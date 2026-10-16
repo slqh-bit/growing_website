@@ -1,0 +1,776 @@
+// Admin screens of this project: sidebar and company switcher (.ws-nav,
+// .ws-switcher), home (.ws-home) and the quote-request inbox (.ws-inbox).
+// Colours come from Payload's theme variables so light and dark both work;
+// --ws-accent is the brand colour of the company being worked on (set inline).
+// Spacing uses logical properties so the layout mirrors in Arabic.
+
+$accent: var(--ws-accent, #1f7a4d);
+$accent-tint: color-mix(in srgb, #{$accent} 12%, transparent);
+$line: var(--theme-elevation-150);
+$muted: var(--theme-elevation-600);
+$radius: 8px;
+
+// Arabic admin: the typeface the public sites already ship.
+@font-face {
+  font-family: "IBM Plex Sans Arabic";
+  font-weight: 400 500;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-arabic-400-v15.woff2") format("woff2");
+  unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFC;
+}
+@font-face {
+  font-family: "IBM Plex Sans Arabic";
+  font-weight: 600 700;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-arabic-700-v15.woff2") format("woff2");
+  unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFC;
+}
+html[dir="rtl"] {
+  --font-body: "IBM Plex Sans Arabic", system-ui, sans-serif;
+}
+
+.ws-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.ws-muted {
+  color: $muted;
+  margin: 0;
+}
+
+.ws-empty {
+  color: $muted;
+  padding: 24px 16px;
+  margin: 0;
+}
+
+.ws-error {
+  color: var(--theme-error-600);
+  margin: 8px 0 0;
+  flex-basis: 100%;
+}
+
+.ws-flip {
+  [dir="rtl"] & {
+    transform: scaleX(-1);
+  }
+}
+
+// --- Buttons ---------------------------------------------------------------
+
+.ws-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--theme-elevation-250);
+  border-radius: $radius;
+  background: var(--theme-elevation-0);
+  color: var(--theme-text);
+  font: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+
+  &:hover {
+    background: var(--theme-elevation-50);
+  }
+  &:focus-visible {
+    outline: 2px solid $accent;
+    outline-offset: 2px;
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+  @media (pointer: coarse) {
+    min-height: 44px;
+  }
+}
+
+.ws-button--primary {
+  background: $accent;
+  border-color: $accent;
+  color: #fff;
+
+  &:hover {
+    background: color-mix(in srgb, #{$accent} 88%, #000);
+  }
+}
+
+.ws-button--quiet {
+  border-color: transparent;
+  background: transparent;
+  color: $muted;
+  // Kept apart from the main action it sits beside.
+  margin-inline-start: auto;
+}
+
+// --- Sidebar ---------------------------------------------------------------
+
+.ws-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.ws-nav__list,
+.ws-nav__children,
+.ws-switcher__menu,
+.ws-rows,
+.ws-counters,
+.ws-waiting,
+.ws-files,
+.ws-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ws-nav__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.ws-nav__item--apart {
+  margin-block-start: 12px;
+  padding-block-start: 12px;
+  border-block-start: 1px solid $line;
+}
+
+.ws-nav__link,
+.ws-nav__sublink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: $radius;
+  background: transparent;
+  color: var(--theme-elevation-800);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+
+  &:hover {
+    background: var(--theme-elevation-50);
+  }
+  &:focus-visible {
+    outline: 2px solid $accent;
+    outline-offset: -2px;
+  }
+  @media (pointer: coarse) {
+    min-height: 44px;
+  }
+
+  svg {
+    flex: none;
+    color: $muted;
+  }
+}
+
+.ws-nav__link--active,
+.ws-nav__sublink--active {
+  background: $accent-tint;
+  color: var(--theme-text);
+  font-weight: 600;
+
+  svg {
+    color: $accent;
+  }
+}
+
+.ws-nav__link--within {
+  color: var(--theme-text);
+  font-weight: 600;
+}
+
+.ws-nav__label {
+  flex: 1;
+  min-width: 0;
+}
+
+.ws-nav__count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--theme-error-500);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.ws-nav__chevron {
+  transition: transform 150ms ease;
+}
+.ws-nav__chevron--open {
+  transform: rotate(180deg);
+}
+
+.ws-nav__children {
+  margin-block: 2px 4px;
+  margin-inline-start: 19px;
+  padding-inline-start: 9px;
+  border-inline-start: 1px solid $line;
+}
+
+.ws-nav__sublink {
+  min-height: 34px;
+}
+
+// --- Company switcher ------------------------------------------------------
+
+.ws-switcher {
+  position: relative;
+  width: 100%;
+}
+
+.ws-switcher__current {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid var(--theme-elevation-200);
+  border-radius: $radius;
+  background: var(--theme-elevation-0);
+  color: var(--theme-text);
+  font: inherit;
+  text-align: start;
+}
+
+.ws-switcher__button {
+  cursor: pointer;
+
+  &:hover {
+    background: var(--theme-elevation-50);
+  }
+  &:focus-visible {
+    outline: 2px solid $accent;
+    outline-offset: 2px;
+  }
+  svg {
+    flex: none;
+    color: $muted;
+  }
+}
+
+.ws-switcher__badge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: #1f7a4d;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.ws-switcher__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ws-switcher__menu {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: calc(100% + 4px);
+  z-index: 20;
+  padding: 4px;
+  border: 1px solid var(--theme-elevation-200);
+  border-radius: $radius;
+  background: var(--theme-elevation-0);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 40px;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--theme-text);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--theme-elevation-50);
+      outline: none;
+    }
+  }
+}
+
+// --- Home ------------------------------------------------------------------
+
+.ws-home,
+.ws-inbox {
+  padding-block: 24px 48px;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+  }
+  h2 {
+    margin: 0 0 8px;
+    font-size: 16px;
+  }
+  h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: $muted;
+  }
+  section {
+    margin-block-start: 28px;
+  }
+}
+
+.ws-counters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-block-start: 20px;
+}
+
+.ws-counter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid $line;
+  border-radius: $radius;
+  background: var(--theme-elevation-0);
+  color: var(--theme-text);
+  text-decoration: none;
+  transition: border-color 150ms ease;
+
+  &:hover {
+    border-color: var(--theme-elevation-400);
+  }
+  &:focus-visible {
+    outline: 2px solid $accent;
+    outline-offset: 2px;
+  }
+}
+
+.ws-counter__label {
+  color: $muted;
+}
+
+.ws-counter__value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.ws-counter__value--alert {
+  color: var(--theme-warning-650, var(--theme-warning-600));
+}
+
+.ws-waiting {
+  border: 1px solid $line;
+  border-radius: $radius;
+  background: var(--theme-elevation-0);
+
+  li + li {
+    border-block-start: 1px solid $line;
+  }
+}
+
+.ws-waiting__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  min-height: 48px;
+  padding: 10px 16px;
+  color: var(--theme-text);
+  text-decoration: none;
+
+  &:hover {
+    background: var(--theme-elevation-50);
+  }
+}
+
+.ws-waiting__main {
+  font-weight: 600;
+}
+
+.ws-pill {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ws-pill--new {
+  background: var(--theme-error-100);
+  color: var(--theme-error-750, var(--theme-error-700));
+}
+
+.ws-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+// --- Inbox -----------------------------------------------------------------
+
+.ws-inbox__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-block-end: 16px;
+
+  h1 {
+    margin-inline-end: auto;
+  }
+}
+
+.ws-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding-inline: 10px;
+  border: 1px solid var(--theme-elevation-250);
+  border-radius: $radius;
+  background: var(--theme-elevation-0);
+  color: $muted;
+
+  &:focus-within {
+    outline: 2px solid $accent;
+    outline-offset: 2px;
+  }
+  input {
+    width: 220px;
+    max-width: 50vw;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--theme-text);
+    font: inherit;
+  }
+}
+
+.ws-inbox__panes {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  border: 1px solid $line;
+  border-radius: $radius;
+  background: var(--theme-elevation-0);
+  overflow: hidden;
+}
+
+.ws-inbox__list {
+  margin: 0 !important;
+  border-inline-end: 1px solid $line;
+}
+
+.ws-inbox__detail {
+  margin: 0 !important;
+  padding: 20px 24px;
+  min-width: 0;
+}
+
+.ws-inbox__back {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  margin-block-end: 16px;
+}
+
+// One pane at a time on narrow screens: the list, or the chosen request.
+@media (max-width: 1023px) {
+  .ws-inbox__panes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ws-inbox__list {
+    border-inline-end: 0;
+  }
+  .ws-inbox:not(.ws-inbox--chosen) .ws-inbox__detail,
+  .ws-inbox--chosen .ws-inbox__list {
+    display: none;
+  }
+  .ws-inbox__back {
+    display: inline-flex;
+  }
+}
+
+.ws-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 10px;
+  border-block-end: 1px solid $line;
+  overflow-x: auto;
+}
+
+.ws-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: $muted;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--theme-elevation-50);
+  }
+}
+
+.ws-tabs__tab--active {
+  background: $accent-tint;
+  color: var(--theme-text);
+  font-weight: 600;
+}
+
+.ws-tabs__count {
+  font-variant-numeric: tabular-nums;
+}
+
+.ws-rows li + li {
+  border-block-start: 1px solid $line;
+}
+
+.ws-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-inline-start: 3px solid transparent;
+  color: var(--theme-text);
+  text-decoration: none;
+
+  &:hover {
+    background: var(--theme-elevation-50);
+  }
+}
+
+.ws-row--active {
+  background: var(--theme-elevation-50);
+  border-inline-start-color: $accent;
+}
+
+.ws-row__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ws-row__name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ws-row__time {
+  flex: none;
+  color: $muted;
+  font-size: 12px;
+}
+
+.ws-row__subject {
+  color: $muted;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ws-pager {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-block-start: 1px solid $line;
+}
+
+.ws-request__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+  }
+}
+
+.ws-request__reach {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ws-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-block: 20px 12px;
+}
+
+.ws-steps__step {
+  padding: 3px 12px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  color: $muted;
+}
+
+.ws-steps__step--past {
+  border-color: transparent;
+  background: var(--theme-elevation-100);
+  color: var(--theme-text);
+}
+
+.ws-steps__step--current {
+  border-color: $accent;
+  background: $accent-tint;
+  color: var(--theme-text);
+  font-weight: 600;
+}
+
+.ws-steps__step--lost {
+  border-color: var(--theme-error-300);
+  background: var(--theme-error-100);
+  color: var(--theme-error-750, var(--theme-error-700));
+  font-weight: 600;
+}
+
+.ws-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.ws-facts {
+  display: grid;
+  gap: 0;
+  margin: 0;
+
+  > div {
+    display: grid;
+    grid-template-columns: minmax(120px, 34%) minmax(0, 1fr);
+    gap: 12px;
+    padding-block: 7px;
+    border-block-end: 1px solid var(--theme-elevation-100);
+  }
+  dt {
+    color: $muted;
+  }
+  dd {
+    margin: 0;
+    font-weight: 500;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    // Phone numbers and references stay left-to-right but align with the rest.
+    text-align: start;
+  }
+}
+
+.ws-files {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.ws-file-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ws-drop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px dashed var(--theme-elevation-300);
+  border-radius: $radius;
+  color: $muted;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.ws-drop--over {
+  border-color: $accent;
+  background: $accent-tint;
+}
+
+.ws-drop__prompt {
+  flex: 1;
+  min-width: 140px;
+}
+
+// The file input stays focusable; its label is the visible button.
+.ws-drop__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+
+  &:focus-visible + label {
+    outline: 2px solid $accent;
+    outline-offset: 2px;
+  }
+}
+
+.ws-hint {
+  margin-block-start: 6px;
+}
+
+.ws-notes {
+  margin: 0;
+  white-space: pre-line;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-nav *,
+  .ws-home *,
+  .ws-inbox * {
+    transition: none !important;
+  }
+}
